@@ -4,72 +4,77 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeWill FX — Support Chatbot</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{--primary:#1a56db;--primary-dark:#1e429f;--primary-light:#e8f0fe;--bg:#f0f4f8;--card:#fff;--text:#1a202c;--muted:#6b7280;--border:#e2e8f0;--success:#059669;--danger:#dc2626}
+:root{--primary:#1a56db;--primary-dark:#1e429f;--primary-light:#e8f0fe;--bg:#f0f4f8;--card:#fff;--text:#1a202c;--muted:#6b7280;--border:#e2e8f0;--success:#059669;--danger:#dc2626;--warning:#d97706}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);height:100vh;display:flex;flex-direction:column}
+/* ===== HEADER ===== */
 .header{background:linear-gradient(135deg,#1a56db,#1e429f);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.15);flex-shrink:0}
-.logo{width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-wrap{position:relative;cursor:pointer;flex-shrink:0}
+.logo{width:40px;height:40px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden}
+.logo:hover{opacity:.85}
+.logo img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.logo-edit-hint{position:absolute;bottom:-2px;right:-2px;background:#f59e0b;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:9px;border:2px solid white}
 .header-info h1{font-size:15px;font-weight:700}
 .header-info p{font-size:11px;opacity:.8;margin-top:1px}
-.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .status{display:flex;align-items:center;gap:5px;font-size:12px;opacity:.9}
 .dot{width:7px;height:7px;background:#34d399;border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-.admin-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s}
-.admin-btn:hover{background:rgba(255,255,255,.25)}
+.hbtn{border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 11px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s;position:relative}
+.hbtn.blue{background:rgba(255,255,255,.15)}.hbtn.blue:hover{background:rgba(255,255,255,.28)}
+.hbtn.yellow{background:rgba(255,193,7,.25)}.hbtn.yellow:hover{background:rgba(255,193,7,.4)}
+.hbtn.green{background:rgba(52,211,153,.2)}.hbtn.green:hover{background:rgba(52,211,153,.35)}
+.hbtn.purple{background:rgba(167,139,250,.25)}.hbtn.purple:hover{background:rgba(167,139,250,.4)}
+.task-badge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:1.5px solid white}
+.task-badge.show{display:flex}
+/* ===== LAYOUT ===== */
 .main{display:flex;flex:1;overflow:hidden}
-.sidebar{width:255px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
-.sidebar-title{padding:12px 14px 8px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+/* ===== SIDEBAR ===== */
+.sidebar{width:240px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar-top{padding:10px 12px 8px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.sidebar-edit-btn{background:none;border:1px solid var(--border);border-radius:5px;padding:2px 7px;font-size:10px;cursor:pointer;color:var(--muted);font-family:inherit}
+.sidebar-edit-btn:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
 .quick-links{overflow-y:auto;flex:1;padding:6px}
-.ls-title{font-size:10px;font-weight:600;color:var(--muted);padding:4px 8px;margin:4px 0 2px}
-.li{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text);text-decoration:none;transition:background .12s;border:none;background:none;width:100%;text-align:left}
+/* Accordion section */
+.ql-section{margin-bottom:2px}
+.ql-section-hdr{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:7px;cursor:pointer;font-size:11px;font-weight:700;color:var(--muted);user-select:none;transition:background .12s}
+.ql-section-hdr:hover{background:var(--bg)}
+.ql-chevron{font-size:10px;transition:transform .2s;margin-left:auto;flex-shrink:0}
+.ql-chevron.open{transform:rotate(90deg)}
+.ql-body{overflow:hidden;max-height:0;transition:max-height .25s ease}
+.ql-body.open{max-height:500px}
+.li{display:flex;align-items:center;gap:7px;padding:6px 9px 6px 20px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text);text-decoration:none;transition:background .12s;border:none;background:none;width:100%;text-align:left;position:relative}
 .li:hover{background:var(--primary-light);color:var(--primary)}
 .li-badge{font-size:9px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-weight:600;margin-left:auto}
+.li-del{display:none;position:absolute;right:4px;background:#fee2e2;border:none;border-radius:4px;padding:1px 5px;font-size:10px;cursor:pointer;color:var(--danger)}
+.li:hover .li-del{display:block}
+/* ===== CHAT ===== */
 .chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
 .msg{display:flex;gap:8px;max-width:90%;animation:fadeIn .2s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .msg.user{align-self:flex-end;flex-direction:row-reverse}
-.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px;overflow:hidden}
 .av.bot{background:var(--primary-light)}
+.av.bot img{width:100%;height:100%;object-fit:cover}
 .av.usr{background:var(--primary);color:#fff}
 .bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;max-width:100%}
 .bot .bubble{background:var(--card);border:1px solid var(--border);border-top-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.05);color:var(--text)}
 .user .bubble{background:var(--primary);color:#fff;border-top-right-radius:3px}
 .bubble h3{font-size:13px;font-weight:700;margin-bottom:6px;color:var(--primary)}
 .user .bubble h3{color:#fff}
-.bubble p{margin-bottom:5px}
-.bubble p:last-child{margin-bottom:0}
+.bubble p{margin-bottom:5px}.bubble p:last-child{margin-bottom:0}
 .step{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
 .snum{width:20px;height:20px;background:var(--primary);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
 .lcard{display:flex;align-items:center;gap:8px;background:var(--primary-light);border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-top:6px;text-decoration:none;color:var(--primary-dark);font-size:12px;font-weight:600;transition:background .12s}
 .lcard:hover{background:#dbeafe}
-.lcard .lc-u{font-size:10px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-u{font-size:10px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tag{display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;padding:2px 7px;border-radius:15px;margin:2px}
-.tag.green{background:#d1fae5;color:#065f46}
-.tag.orange{background:#fef3c7;color:#92400e}
 .codeblock{background:#1e293b;color:#e2e8f0;border-radius:7px;padding:10px;font-family:'Courier New',monospace;font-size:11px;margin-top:6px;white-space:pre-wrap;word-break:break-all}
-
-/* teach bubble */
-.teach-bubble{background:#fefce8;border:1px solid #fde047;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6}
-.teach-bubble h3{color:#854d0e;margin-bottom:6px}
-.teach-form{display:flex;flex-direction:column;gap:8px;margin-top:8px}
-.teach-form input,.teach-form textarea{padding:7px 10px;border:1px solid #fde047;border-radius:7px;font-size:12px;font-family:inherit;outline:none;background:#fffbeb}
-.teach-form input:focus,.teach-form textarea:focus{border-color:#f59e0b}
-.teach-form textarea{resize:vertical;min-height:60px}
-.teach-form label{font-size:11px;font-weight:600;color:#78350f;margin-bottom:2px}
-.teach-btns{display:flex;gap:6px}
-.tbtn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
-.tbtn-ok{background:#f59e0b;color:#fff}
-.tbtn-ok:hover{background:#d97706}
-.tbtn-cancel{background:#f3f4f6;color:var(--text)}
-.tbtn-cancel:hover{background:#e5e7eb}
-
-/* cmd hint */
 .cmd-hint{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 12px;font-size:12px;color:#166534;margin-top:4px}
 .cmd-hint b{color:#15803d}
-
 .suggs{padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px}
 .sbtn{background:var(--card);border:1px solid var(--primary);color:var(--primary);padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;transition:all .12s;font-family:inherit}
 .sbtn:hover{background:var(--primary);color:#fff}
@@ -80,574 +85,908 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 #userInput::placeholder{color:var(--muted)}
 .send-btn{width:38px;height:38px;background:var(--primary);border:none;border-radius:10px;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .send-btn:hover{background:var(--primary-dark)}
-.typing{display:flex;gap:4px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;border-top-left-radius:3px;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.typing{display:flex;gap:4px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;border-top-left-radius:3px;width:fit-content}
 .dot2{width:6px;height:6px;background:var(--primary);border-radius:50%;animation:bounce 1.2s infinite}
 .dot2:nth-child(2){animation-delay:.2s}.dot2:nth-child(3){animation-delay:.4s}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @media(max-width:600px){.sidebar{display:none}}
-
-/* ADMIN */
+/* ===== OVERLAY / PANEL ===== */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
 .overlay.open{display:flex}
-.admin-panel{background:var(--card);border-radius:14px;width:100%;max-width:860px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;max-height:90vh}
-.ap-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
-.ap-header h2{font-size:16px;font-weight:700;flex:1}
+.panel{background:var(--card);border-radius:14px;width:100%;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;max-height:90vh}
+.panel.wide{max-width:960px}.panel.mid{max-width:720px}.panel.sm{max-width:520px}
+.panel-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.panel-hdr h2{font-size:15px;font-weight:700;flex:1}
 .close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
 .close-btn:hover{color:var(--text)}
-.ap-toolbar{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
-.ap-toolbar input{flex:1;min-width:180px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
-.ap-toolbar input:focus{border-color:var(--primary)}
-.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .12s;display:flex;align-items:center;gap:5px}
+.toolbar{padding:10px 18px;border-bottom:1px solid var(--border);display:flex;gap:7px;flex-wrap:wrap;align-items:center;flex-shrink:0}
+.toolbar input,.toolbar select{flex:1;min-width:140px;padding:7px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+.toolbar input:focus,.toolbar select:focus{border-color:var(--primary)}
+.btn{padding:7px 13px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .12s;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
 .btn-success{background:#059669;color:#fff}.btn-success:hover{background:#047857}
+.btn-amber{background:#f59e0b;color:#fff}.btn-amber:hover{background:#d97706}
+.btn-purple{background:#7c3aed;color:#fff}.btn-purple:hover{background:#6d28d9}
 .btn-ghost{background:var(--bg);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:var(--border)}
-.kb-list{overflow-y:auto;flex:1;padding:12px 20px}
-.kb-count{font-size:12px;color:var(--muted);margin-bottom:10px}
-.kb-item{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
-.kb-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.kb-item-header{padding:10px 14px;display:flex;align-items:center;gap:10px;background:var(--bg)}
-.kb-item-header:hover{background:#e8eef5}
-.kb-title{font-size:13px;font-weight:600;flex:1}
-.kb-kw{font-size:11px;color:var(--muted);margin-top:1px}
-.kb-actions{display:flex;gap:5px;flex-shrink:0}
-.kb-actions button{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
-.btn-edit{background:#eff6ff;color:var(--primary)}.btn-edit:hover{background:var(--primary-light)}
-.btn-del{background:#fee2e2;color:var(--danger)}.btn-del:hover{background:#fca5a5}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:hover{background:#b91c1c}
+.panel-body{overflow-y:auto;flex:1;padding:12px 18px}
+.panel-footer{padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;align-items:center}
+/* ===== MODAL ===== */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
-.modal{background:var(--card);border-radius:12px;width:100%;max-width:620px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.modal-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;position:sticky;top:0;background:var(--card);z-index:1}
-.modal-header h3{font-size:14px;font-weight:700;flex:1}
-.modal-body{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.modal{background:var(--card);border-radius:12px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;position:sticky;top:0;background:var(--card);z-index:1}
+.modal-hdr h3{font-size:14px;font-weight:700;flex:1}
+.modal-body{padding:16px 18px;display:flex;flex-direction:column;gap:11px}
+.modal-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--card)}
 .field label{display:block;font-size:12px;font-weight:600;margin-bottom:4px}
-.field input,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
-.field input:focus,.field textarea:focus{border-color:var(--primary)}
-.field textarea{resize:vertical;min-height:70px}
+.field input,.field textarea,.field select{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--primary)}
+.field textarea{resize:vertical;min-height:68px}
 .field .hint{font-size:11px;color:var(--muted);margin-top:3px}
-.link-rows{display:flex;flex-direction:column;gap:6px}
-.link-row{display:grid;grid-template-columns:42px 1fr 1fr auto;gap:6px;align-items:center}
+.link-rows{display:flex;flex-direction:column;gap:5px}
+.link-row{display:grid;grid-template-columns:40px 1fr 1fr auto;gap:5px;align-items:center}
 .link-row input{padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none}
 .link-row input:focus{border-color:var(--primary)}
 .del-link{background:#fee2e2;color:var(--danger);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px}
 .add-link-btn{background:var(--bg);border:1px dashed var(--border);color:var(--muted);padding:6px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;text-align:center}
 .add-link-btn:hover{border-color:var(--primary);color:var(--primary)}
-.modal-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--card)}
-.ap-footer{padding:10px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;align-items:center}
+/* ===== KB LIST ===== */
+.kb-item{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.kb-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kb-row{padding:10px 14px;display:flex;align-items:center;gap:10px;background:var(--bg)}
+.kb-row:hover{background:#e8eef5}
+.kb-title{font-size:13px;font-weight:600;flex:1}
+.kb-kw{font-size:11px;color:var(--muted);margin-top:1px}
+.btn-edit{background:#eff6ff;color:var(--primary);padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.btn-edit:hover{background:var(--primary-light)}
+.btn-del{background:#fee2e2;color:var(--danger);padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.btn-del:hover{background:#fca5a5}
+/* ===== PW ===== */
+.pw-hdr-bg{background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:14px 14px 0 0}
+.pw-hdr-bg h2{color:#78350f}
+.pw-item{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.pw-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.pw-row{padding:10px 14px;display:grid;grid-template-columns:26px 1.4fr 1fr 1fr auto;gap:10px;align-items:center;background:#fffbeb}
+.pw-row:hover{background:#fef3c7}
+.pw-col{padding:5px 14px;display:grid;grid-template-columns:26px 1.4fr 1fr 1fr auto;gap:10px;background:var(--bg);font-size:11px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)}
+.pw-company{font-weight:700;font-size:13px;color:#78350f}
+.pw-user{font-size:13px;font-family:monospace;cursor:pointer}
+.pw-pass{font-size:13px;font-family:monospace;cursor:pointer;user-select:all}
+.pw-pass.hidden{color:transparent;text-shadow:0 0 7px rgba(0,0,0,.45);letter-spacing:2px}
+.pw-note{font-size:11px;color:var(--muted)}
+.pw-copy{background:#d1fae5;color:#065f46;padding:3px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.pw-modal-hdr{background:#fef3c7;border-radius:12px 12px 0 0}
+.pw-modal-hdr h3{color:#78350f}
+/* ===== SIDEBAR EDITOR ===== */
+.sl-section{margin-bottom:12px}
+.sl-section-title{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.sl-item{display:flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid var(--border);border-radius:7px;margin-bottom:4px;background:var(--bg)}
+.sl-item input{border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:12px;font-family:inherit;outline:none}
+.sl-item input:focus{border-color:var(--primary)}
+.sl-del{background:#fee2e2;color:var(--danger);border:none;border-radius:5px;padding:2px 7px;font-size:11px;cursor:pointer}
+/* ===== TASK MANAGER ===== */
+.task-panel-hdr{background:var(--card);border-radius:14px 14px 0 0;border-bottom:1px solid var(--border)}
+.task-panel-hdr h2{color:var(--text)}
+/* stats row */
+.task-stats{display:flex;gap:10px;padding:12px 18px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.tstat{flex:1;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .15s}
+.tstat:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.tstat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tstat-num{font-size:20px;font-weight:700}
+.tstat-lbl{font-size:11px;color:var(--muted)}
+/* view toggle */
+.task-view-bar{display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--card);border-bottom:1px solid var(--border);flex-shrink:0}
+.tvtoggle{display:flex;gap:2px;background:var(--bg);padding:3px;border-radius:8px;border:1px solid var(--border)}
+.tvbtn{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;color:var(--muted);background:none;font-family:inherit;transition:all .12s}
+.tvbtn.active{background:var(--primary);color:#fff}
+/* kanban */
+.tk-kanban{display:flex;gap:14px;padding:14px 18px;overflow-x:auto;flex:1;align-items:flex-start}
+.tk-col{flex:1;min-width:260px}
+.tk-col-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px 10px 0 0;font-size:12px;font-weight:700}
+.tk-col-hdr.received{background:#fefce8;border:1px solid #fde68a;border-bottom:none;color:#92400e}
+.tk-col-hdr.checking{background:#eff6ff;border:1px solid #bfdbfe;border-bottom:none;color:#1e40af}
+.tk-col-hdr.done{background:#f0fdf4;border:1px solid #bbf7d0;border-bottom:none;color:#065f46}
+.tk-col-cnt{margin-left:auto;background:rgba(0,0,0,.07);border-radius:20px;padding:1px 8px;font-size:11px}
+.tk-col-body{border-radius:0 0 10px 10px;padding:8px;display:flex;flex-direction:column;gap:7px;min-height:80px}
+.tk-col-body.received{border:1px solid #fde68a;border-top:none}
+.tk-col-body.checking{border:1px solid #bfdbfe;border-top:none}
+.tk-col-body.done{border:1px solid #bbf7d0;border-top:none}
+/* task card minimal */
+.task-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .14s;position:relative}
+.task-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.09);border-color:#c7d2fe}
+.task-card.status-received{border-left:3px solid #f59e0b}
+.task-card.status-checking{border-left:3px solid #3b82f6}
+.task-card.status-done{border-left:3px solid #10b981;opacity:.72}
+.tc-company{font-weight:700;font-size:13px;color:var(--text);margin-bottom:5px}
+.tc-pic-tag{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--muted);margin-bottom:6px}
+.tc-detail-preview{font-size:12px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.tc-imgs-sm{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.tc-imgs-sm img{width:44px;height:34px;object-fit:cover;border-radius:5px;border:1px solid var(--border);cursor:pointer}
+.tc-footer{display:flex;align-items:center;justify-content:space-between;padding-top:7px;border-top:1px solid #f1f5f9}
+.tc-date{font-size:10px;color:#94a3b8}
+.tc-btn-sm{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .12s}
+.tc-btn-sm.edit{background:#eff6ff;color:var(--primary)}.tc-btn-sm.edit:hover{background:var(--primary-light)}
+.tc-btn-sm.del{background:#fee2e2;color:var(--danger)}.tc-btn-sm.del:hover{background:#fca5a5}
+.tc-status-sel{border:none;background:none;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;padding:0}
+.tc-status-sel.received{color:#f59e0b}.tc-status-sel.checking{color:#3b82f6}.tc-status-sel.done{color:#10b981}
+.tk-empty{text-align:center;padding:24px;color:#cbd5e1;font-size:12px}
+/* table view */
+.tk-table-wrap{overflow-y:auto;flex:1;padding:0 18px 18px}
+.tk-table{width:100%;border-collapse:collapse;font-size:13px}
+.tk-table thead th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);background:var(--bg);border-bottom:2px solid var(--border);white-space:nowrap;text-transform:uppercase;letter-spacing:.4px}
+.tk-table tbody td{padding:11px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.tk-table tbody tr{transition:background .1s}
+.tk-table tbody tr:hover td{background:#fafbff}
+.tk-table tbody tr.tr-done{opacity:.6}
+.tk-table tbody tr:last-child td{border-bottom:none}
+.tk-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.tk-pill.received{background:#fef9c3;color:#92400e}
+.tk-pill.checking{background:#dbeafe;color:#1e40af}
+.tk-pill.done{background:#dcfce7;color:#065f46}
+/* task form */
+.task-modal-hdr{background:var(--card);border-radius:12px 12px 0 0;border-bottom:1px solid var(--border)}
+.task-modal-hdr h3{color:var(--text)}
+/* autocomplete */
+.ac-wrap{position:relative}
+.ac-dropdown{position:absolute;top:calc(100% + 2px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;max-height:200px;overflow-y:auto;display:none}
+.ac-dropdown.open{display:block}
+.ac-item{padding:8px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.ac-item:hover{background:var(--primary-light);color:var(--primary)}
+/* detail editor */
+.detail-editor{width:100%;min-height:90px;border:1px solid var(--border);border-radius:8px;padding:8px 11px;font-size:13px;font-family:inherit;outline:none;resize:vertical;line-height:1.6}
+.detail-editor:focus{border-color:var(--primary)}
+.paste-hint{font-size:11px;color:var(--muted);margin-top:3px}
+.img-preview-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.img-preview-item{position:relative;width:76px;height:58px}
+.img-preview-item img{width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+.img-preview-item .rm-img{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:none;align-items:center;justify-content:center}
+.lightbox.open{display:flex}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:8px}
+.status-select{padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid var(--border);outline:none;cursor:pointer;font-family:inherit}
+/* Logo */
+.logo-preview{width:70px;height:70px;border-radius:14px;border:3px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--primary-light)}
+.logo-preview img{width:100%;height:100%;object-fit:cover}
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1a202c;color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo">🛰️</div>
+  <div class="logo-wrap" onclick="openLogoEditor()" title="คลิกเปลี่ยน logo">
+    <div class="logo" id="logoDisplay">🛰️</div>
+    <div class="logo-edit-hint">✏️</div>
+  </div>
   <div class="header-info">
-    <h1>FreeWill FX — Support Assistant</h1>
-    <p>Terminus Fleet Management | GPS Support Bot</p>
+    <h1 id="appTitle">FreeWill FX — Support Assistant</h1>
+    <p id="appSubtitle">Terminus Fleet Management | GPS Support Bot</p>
   </div>
   <div class="header-right">
     <div class="status"><div class="dot"></div>Online</div>
-    <button class="admin-btn" onclick="openAdmin()">⚙️ จัดการ KB</button>
+    <button class="hbtn purple" onclick="openTaskPanel()">📋 งาน<span class="task-badge" id="taskBadge">0</span></button>
+    <button class="hbtn yellow" onclick="openPW()">🔑 Password</button>
+    <button class="hbtn green" onclick="openSidebarEditor()">🔗 Quick Links</button>
+    <button class="hbtn blue" onclick="openAdmin()">⚙️ KB</button>
   </div>
 </div>
 
 <div class="main">
+  <!-- Sidebar accordion -->
   <div class="sidebar">
-    <div class="sidebar-title">🔗 Quick Links</div>
+    <div class="sidebar-top">
+      <span>🔗 Quick Links</span>
+      <button class="sidebar-edit-btn" onclick="openSidebarEditor()">✏️</button>
+    </div>
     <div class="quick-links" id="sidebarLinks"></div>
   </div>
+
+  <!-- Chat -->
   <div class="chat-area">
     <div class="messages" id="messages">
       <div class="msg bot">
-        <div class="av bot">🤖</div>
+        <div class="av bot" id="botAvatar">🤖</div>
         <div class="bubble">
           <h3>สวัสดีครับ! 👋 ยินดีต้อนรับสู่ FreeWill FX Support Bot</h3>
-          <p>ผมช่วยค้นหาข้อมูลจาก Knowledge Base ของทีมได้เลยครับ</p>
+          <p>ผมช่วยค้นหาข้อมูลจาก Knowledge Base ได้เลยครับ</p>
           <div class="cmd-hint">
-            <b>💡 สอน chatbot ได้ผ่านแชทเลย:</b><br>
-            <b>/เพิ่ม</b> หรือ <b>/สอน</b> — เพิ่ม topic ใหม่<br>
-            <b>/แก้ไข [คำค้น]</b> — แก้ไข topic ที่มีอยู่<br>
-            <b>/ลบ [คำค้น]</b> — ลบ topic<br>
-            <b>/ดู</b> — ดูรายการ topic ทั้งหมด<br>
-            <b>/export</b> — บันทึก KB เป็นไฟล์
+            <b>💡 คำสั่ง:</b> <b>/เพิ่ม</b> สอน | <b>/pw [บริษัท]</b> password | <b>/ดู</b> KB | <b>/export</b> | <b>/help</b>
           </div>
         </div>
       </div>
     </div>
     <div class="suggs" id="suggs"></div>
     <div class="input-area">
-      <div class="iw"><textarea id="userInput" rows="1" placeholder="พิมพ์คำถาม หรือ /เพิ่ม /สอน /แก้ไข /ลบ /ดู /export ..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea></div>
+      <div class="iw"><textarea id="userInput" rows="1" placeholder="พิมพ์คำถาม หรือ /เพิ่ม /pw /ดู /help ..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea></div>
       <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
   </div>
 </div>
 
-<!-- Admin Overlay -->
-<div class="overlay" id="adminOverlay" onclick="closeAdminIfBg(event)">
-  <div class="admin-panel">
-    <div class="ap-header">
-      <span style="font-size:20px">⚙️</span>
-      <h2>จัดการ Knowledge Base</h2>
-      <span id="kb-total" style="font-size:12px;color:var(--muted)"></span>
-      <button class="close-btn" onclick="closeAdmin()">×</button>
+<!-- ===== TASK PANEL ===== -->
+<div class="overlay" id="taskOverlay" onclick="closeOverlayBg(event,'taskOverlay')">
+  <div class="panel wide" style="max-height:92vh">
+    <!-- Header -->
+    <div class="panel-hdr task-panel-hdr">
+      <span style="font-size:20px">📋</span>
+      <h2>ติดตามงาน</h2>
+      <span id="task-total" style="font-size:12px;color:var(--muted)"></span>
+      <button class="close-btn" onclick="closePanel('taskOverlay')">×</button>
     </div>
-    <div class="ap-toolbar">
-      <input type="text" id="kbSearch" placeholder="🔍 ค้นหา topic..." oninput="renderKBList()">
-      <button class="btn btn-primary" onclick="openForm()">➕ เพิ่ม Topic</button>
-      <button class="btn btn-ghost" onclick="exportKB()">📥 Export JSON</button>
-      <label class="btn btn-ghost" style="cursor:pointer">📤 Import JSON<input type="file" accept=".json" style="display:none" onchange="importKB(event)"></label>
+    <!-- Search + toolbar -->
+    <div class="toolbar">
+      <input type="text" id="taskSearch" placeholder="🔍 ค้นหา บริษัท / ผู้รับผิดชอบ / รายละเอียด..." oninput="renderTasks()" style="flex:2">
+      <select id="taskFilterPIC" onchange="renderTasks()" style="max-width:140px"><option value="">👤 ทุกคน</option></select>
+      <button class="btn btn-purple" onclick="openTaskForm()">➕ เพิ่มงาน</button>
+      <button class="btn btn-ghost" onclick="exportTasksXlsx()">📥 xlsx</button>
+      <label class="btn btn-ghost" style="cursor:pointer">📤 Import<input type="file" accept=".xlsx" style="display:none" onchange="importTasksXlsx(event)"></label>
     </div>
-    <div class="kb-list" id="kbList"></div>
-    <div class="ap-footer">
-      <span style="font-size:12px;color:var(--muted);flex:1">💡 แก้ไขมีผลทันที | Export JSON เพื่อ backup แล้ว upload ขึ้น GitHub</span>
+    <!-- Stats row -->
+    <div class="task-stats">
+      <div class="tstat" onclick="setTaskFilter('')">
+        <div class="tstat-dot" style="background:#94a3b8"></div>
+        <div><div class="tstat-num" id="tstat-all">0</div><div class="tstat-lbl">ทั้งหมด</div></div>
+      </div>
+      <div class="tstat" onclick="setTaskFilter('received')">
+        <div class="tstat-dot" style="background:#f59e0b"></div>
+        <div><div class="tstat-num" style="color:#f59e0b" id="tstat-received">0</div><div class="tstat-lbl">รับเรื่อง</div></div>
+      </div>
+      <div class="tstat" onclick="setTaskFilter('checking')">
+        <div class="tstat-dot" style="background:#3b82f6"></div>
+        <div><div class="tstat-num" style="color:#3b82f6" id="tstat-checking">0</div><div class="tstat-lbl">กำลังตรวจสอบ</div></div>
+      </div>
+      <div class="tstat" onclick="setTaskFilter('done')">
+        <div class="tstat-dot" style="background:#10b981"></div>
+        <div><div class="tstat-num" style="color:#10b981" id="tstat-done">0</div><div class="tstat-lbl">เรียบร้อย</div></div>
+      </div>
+    </div>
+    <!-- View toggle -->
+    <div class="task-view-bar">
+      <div class="tvtoggle">
+        <button class="tvbtn active" id="tvbtn-kanban" onclick="setTaskView('kanban')">⬛ Kanban</button>
+        <button class="tvbtn" id="tvbtn-table" onclick="setTaskView('table')">📊 ตาราง</button>
+      </div>
+      <span style="font-size:12px;color:var(--muted);margin-left:6px">💡 Ctrl+V วางรูปในรายละเอียดได้เลย</span>
+    </div>
+    <!-- Kanban -->
+    <div class="tk-kanban" id="tk-kanban">
+      <div class="tk-col">
+        <div class="tk-col-hdr received">📥 รับเรื่อง <span class="tk-col-cnt" id="tk-cnt-received">0</span></div>
+        <div class="tk-col-body received" id="tk-col-received"></div>
+      </div>
+      <div class="tk-col">
+        <div class="tk-col-hdr checking">🔎 กำลังตรวจสอบ <span class="tk-col-cnt" id="tk-cnt-checking">0</span></div>
+        <div class="tk-col-body checking" id="tk-col-checking"></div>
+      </div>
+      <div class="tk-col">
+        <div class="tk-col-hdr done">✅ เรียบร้อย <span class="tk-col-cnt" id="tk-cnt-done">0</span></div>
+        <div class="tk-col-body done" id="tk-col-done"></div>
+      </div>
+    </div>
+    <!-- Table view -->
+    <div class="tk-table-wrap" id="tk-table" style="display:none">
+      <table class="tk-table">
+        <thead><tr>
+          <th>#</th><th>บริษัท</th><th>ผู้รับผิดชอบ</th><th>รายละเอียด</th><th>สถานะ</th><th>อัพเดต</th><th></th>
+        </tr></thead>
+        <tbody id="tk-tbody"></tbody>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- Form Modal -->
-<div class="modal-overlay" id="formModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="formTitle">➕ เพิ่ม Topic ใหม่</h3>
-      <button class="close-btn" onclick="closeForm()">×</button>
-    </div>
+<!-- Task Form Modal -->
+<div class="modal-overlay" id="taskFormModal">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-hdr task-modal-hdr"><h3 id="taskFormTitle">➕ เพิ่มงานใหม่</h3><button class="close-btn" style="color:var(--muted)" onclick="closeModal('taskFormModal')">×</button></div>
     <div class="modal-body">
-      <div class="field"><label>ชื่อ Topic *</label><input type="text" id="f-title" placeholder="เช่น 📋 งานติดตั้ง Daily"></div>
+      <!-- บริษัท autocomplete -->
       <div class="field">
-        <label>Keywords (คั่นด้วย comma) *</label>
-        <input type="text" id="f-keywords" placeholder="เช่น daily, งานช่าง, ติดตั้ง">
-        <div class="hint">คำที่ใช้จับคู่กับคำถาม — ยิ่งมาก ยิ่งหาเจอง่าย</div>
+        <label>🏢 บริษัท *</label>
+        <div class="ac-wrap">
+          <input type="text" id="t-company" placeholder="พิมพ์ชื่อบริษัท หรือเลือกจากรายการ..." autocomplete="off"
+            oninput="acSearch(this.value,'t-company-dd','COMPANIES',setTaskCompany)"
+            onfocus="acSearch(this.value,'t-company-dd','COMPANIES',setTaskCompany)"
+            onblur="setTimeout(()=>closeAC('t-company-dd'),200)">
+          <div class="ac-dropdown" id="t-company-dd"></div>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <input type="text" id="t-new-company" placeholder="เพิ่มบริษัทใหม่..." style="flex:1;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none">
+          <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="addNewCompany()">+ เพิ่ม</button>
+        </div>
       </div>
-      <div class="field"><label>คำตอบ / ข้อมูลหลัก</label><textarea id="f-answer" placeholder="คำตอบสั้นๆ"></textarea></div>
+      <!-- ผู้รับผิดชอบ -->
       <div class="field">
-        <label>ขั้นตอน (Steps) — ใส่ทีละบรรทัด</label>
-        <textarea id="f-steps" placeholder="ขั้นตอนที่ 1&#10;ขั้นตอนที่ 2" style="min-height:80px"></textarea>
+        <label>👤 ผู้รับผิดชอบ *</label>
+        <div class="ac-wrap">
+          <input type="text" id="t-pic" placeholder="พิมพ์ชื่อ หรือเลือก..." autocomplete="off"
+            oninput="acSearch(this.value,'t-pic-dd','TEAM',setTaskPIC)"
+            onfocus="acSearch(this.value,'t-pic-dd','TEAM',setTaskPIC)"
+            onblur="setTimeout(()=>closeAC('t-pic-dd'),200)">
+          <div class="ac-dropdown" id="t-pic-dd"></div>
+        </div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <input type="text" id="t-new-pic" placeholder="เพิ่มสมาชิกทีมใหม่..." style="flex:1;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none">
+          <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="addNewPIC()">+ เพิ่ม</button>
+        </div>
       </div>
+      <!-- สถานะ -->
       <div class="field">
-        <label>ข้อมูลเพิ่มเติม (รองรับ HTML)</label>
-        <textarea id="f-extra" placeholder='<div class="codeblock">code หรือข้อมูล technical</div>'></textarea>
+        <label>📌 สถานะ</label>
+        <select id="t-status" class="status-select" style="width:100%">
+          <option value="received">🟡 รับเรื่อง</option>
+          <option value="checking">🔵 กำลังตรวจสอบ</option>
+          <option value="done">🟢 เรียบร้อย</option>
+        </select>
       </div>
+      <!-- รายละเอียด -->
       <div class="field">
-        <label>ลิงก์ที่เกี่ยวข้อง</label>
-        <div class="link-rows" id="linkRows"></div>
-        <button class="add-link-btn" onclick="addLinkRow()">+ เพิ่มลิงก์</button>
+        <label>📝 รายละเอียด</label>
+        <textarea class="detail-editor" id="t-detail" placeholder="รายละเอียดงาน..." rows="4"
+          onpaste="handleDetailPaste(event)"></textarea>
+        <div class="paste-hint">💡 วางรูปภาพ (Ctrl+V) หรือลากรูปมาวางได้เลย</div>
+        <div class="img-preview-list" id="t-img-list"></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeForm()">ยกเลิก</button>
-      <button class="btn btn-success" onclick="saveForm()">💾 บันทึก</button>
+      <button class="btn btn-ghost" onclick="closeModal('taskFormModal')">ยกเลิก</button>
+      <button class="btn btn-purple" onclick="saveTask()">💾 บันทึก</button>
     </div>
   </div>
 </div>
 
+<!-- Image Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- KB Admin -->
+<div class="overlay" id="adminOverlay" onclick="closeOverlayBg(event,'adminOverlay')">
+  <div class="panel wide">
+    <div class="panel-hdr"><span style="font-size:20px">⚙️</span><h2>จัดการ Knowledge Base</h2><span id="kb-total" style="font-size:12px;color:var(--muted)"></span><button class="close-btn" onclick="closePanel('adminOverlay')">×</button></div>
+    <div class="toolbar">
+      <input type="text" id="kbSearch" placeholder="🔍 ค้นหา topic..." oninput="renderKBList()">
+      <button class="btn btn-primary" onclick="openForm()">➕ เพิ่ม</button>
+      <button class="btn btn-ghost" onclick="exportKBxlsx()">📥 xlsx</button>
+      <label class="btn btn-ghost" style="cursor:pointer">📤 Import .xlsx<input type="file" accept=".xlsx" style="display:none" onchange="importKBxlsx(event)"></label>
+    </div>
+    <div class="panel-body" id="kbList"></div>
+    <div class="panel-footer"><span style="font-size:12px;color:var(--muted);flex:1">💡 Export .xlsx → เปิดใน Excel แก้ไขแล้ว Import กลับ</span></div>
+  </div>
+</div>
+
+<!-- PW Panel -->
+<div class="overlay" id="pwOverlay" onclick="closeOverlayBg(event,'pwOverlay')">
+  <div class="panel wide">
+    <div class="panel-hdr pw-hdr-bg"><span style="font-size:22px">🔑</span><h2>Password Manager</h2><span id="pw-total" style="font-size:12px;color:#92400e"></span><button class="close-btn" style="color:#78350f" onclick="closePanel('pwOverlay')">×</button></div>
+    <div class="toolbar">
+      <input type="text" id="pwSearch" placeholder="🔍 ค้นหา บริษัท / username / alias..." oninput="renderPWList()">
+      <button class="btn btn-amber" onclick="openPWForm()">➕ เพิ่ม</button>
+      <button class="btn btn-ghost" onclick="exportPWxlsx()">📥 xlsx</button>
+      <label class="btn btn-ghost" style="cursor:pointer">📤 Import<input type="file" accept=".xlsx" style="display:none" onchange="importPWxlsx(event)"></label>
+    </div>
+    <div class="pw-col"><span>#</span><span>บริษัท / Alias</span><span>Username</span><span>Password</span><span>หมายเหตุ</span></div>
+    <div class="panel-body" id="pwList"></div>
+    <div class="panel-footer" style="background:#fffbeb"><span style="font-size:12px;color:#92400e;flex:1">💡 คลิก 👁️ แสดง/ซ่อน | คลิก password เพื่อ copy</span></div>
+  </div>
+</div>
+
+<!-- Sidebar Editor -->
+<div class="overlay" id="sidebarOverlay" onclick="closeOverlayBg(event,'sidebarOverlay')">
+  <div class="panel mid">
+    <div class="panel-hdr"><span style="font-size:20px">🔗</span><h2>แก้ไข Quick Links</h2><button class="close-btn" onclick="closePanel('sidebarOverlay')">×</button></div>
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="addSLSection()">➕ หมวดหมู่</button>
+      <button class="btn btn-ghost" onclick="exportSLxlsx()">📥 xlsx</button>
+      <label class="btn btn-ghost" style="cursor:pointer">📤 Import<input type="file" accept=".xlsx" style="display:none" onchange="importSLxlsx(event)"></label>
+    </div>
+    <div class="panel-body" id="slEditor"></div>
+    <div class="panel-footer">
+      <span style="font-size:12px;color:var(--muted);flex:1">💡 แก้ไขแล้วกด บันทึก</span>
+      <button class="btn btn-success" onclick="saveSL()">💾 บันทึก Quick Links</button>
+    </div>
+  </div>
+</div>
+
+<!-- Logo Editor -->
+<div class="overlay" id="logoOverlay" onclick="closeOverlayBg(event,'logoOverlay')">
+  <div class="panel sm">
+    <div class="panel-hdr"><span style="font-size:20px">🎨</span><h2>ปรับแต่ง Logo & ชื่อแอป</h2><button class="close-btn" onclick="closePanel('logoOverlay')">×</button></div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:6px 0">
+        <div class="logo-preview" id="logoPreview">🛰️</div>
+        <label class="btn btn-primary" style="cursor:pointer">🖼️ อัพโหลดรูป<input type="file" accept="image/*" style="display:none" onchange="handleLogoUpload(event)"></label>
+        <button class="btn btn-ghost" onclick="clearLogo()">🗑️ ใช้ Emoji</button>
+      </div>
+      <div class="field"><label>Emoji Logo</label><input type="text" id="logoEmoji" placeholder="🛰️" maxlength="4" style="font-size:22px;text-align:center"></div>
+      <div class="field"><label>ชื่อแอป บรรทัด 1</label><input type="text" id="appTitleInput"></div>
+      <div class="field"><label>ชื่อแอป บรรทัด 2</label><input type="text" id="appSubtitleInput"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closePanel('logoOverlay')">ยกเลิก</button><button class="btn btn-success" onclick="saveLogo()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<!-- KB Form -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-hdr"><h3 id="formTitle">➕ เพิ่ม Topic</h3><button class="close-btn" onclick="closeModal('formModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>ชื่อ Topic *</label><input type="text" id="f-title" placeholder="📋 งานติดตั้ง Daily"></div>
+      <div class="field"><label>Keywords (comma) *</label><input type="text" id="f-keywords" placeholder="daily, งานช่าง, ติดตั้ง"></div>
+      <div class="field"><label>คำตอบหลัก</label><textarea id="f-answer" placeholder="คำตอบ..."></textarea></div>
+      <div class="field"><label>ขั้นตอน (ทีละบรรทัด)</label><textarea id="f-steps" style="min-height:70px"></textarea></div>
+      <div class="field"><label>ข้อมูลเพิ่มเติม (HTML)</label><textarea id="f-extra"></textarea></div>
+      <div class="field"><label>ลิงก์</label><div class="link-rows" id="linkRows"></div><button class="add-link-btn" onclick="addLinkRow()">+ เพิ่มลิงก์</button></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('formModal')">ยกเลิก</button><button class="btn btn-success" onclick="saveForm()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<!-- PW Form -->
+<div class="modal-overlay" id="pwFormModal">
+  <div class="modal">
+    <div class="modal-hdr pw-modal-hdr"><h3 id="pwFormTitle">➕ เพิ่มรหัสผ่าน</h3><button class="close-btn" onclick="closeModal('pwFormModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>ชื่อบริษัท *</label><input type="text" id="pw-f-company"></div>
+      <div class="field"><label>Alias (comma)</label><input type="text" id="pw-f-alias" placeholder="scco, สยาม"><div class="hint">ใช้ค้นหาด้วย /pw [alias]</div></div>
+      <div class="field"><label>URL</label><input type="text" id="pw-f-url" placeholder="https://..."></div>
+      <div class="field"><label>Username *</label><input type="text" id="pw-f-user" autocomplete="off"></div>
+      <div class="field"><label>Password *</label><div style="display:flex;gap:6px"><input type="text" id="pw-f-pass" autocomplete="off" style="flex:1;font-family:monospace"><button class="btn btn-ghost" onclick="genPass()">🎲 สุ่ม</button></div></div>
+      <div class="field"><label>หมายเหตุ</label><input type="text" id="pw-f-note"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('pwFormModal')">ยกเลิก</button><button class="btn btn-amber" onclick="savePWForm()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<!-- SL Link Form -->
+<div class="modal-overlay" id="slLinkModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-hdr"><h3>➕ เพิ่มลิงก์</h3><button class="close-btn" onclick="closeModal('slLinkModal')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Emoji</label><input type="text" id="sl-f-icon" value="🔗" maxlength="4" style="font-size:20px;text-align:center"></div>
+      <div class="field"><label>ชื่อลิงก์ *</label><input type="text" id="sl-f-name"></div>
+      <div class="field"><label>URL *</label><input type="text" id="sl-f-url" placeholder="https://..."></div>
+      <div class="field"><label>Badge</label><input type="text" id="sl-f-badge" placeholder="Daily, New..."></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('slLinkModal')">ยกเลิก</button><button class="btn btn-primary" onclick="saveSLLink()">💾 บันทึก</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-// ==================== DEFAULT KB ====================
-const DEFAULT_KB = [
-  {id:1,keywords:['daily','งานช่าง','ติดตั้ง','งานติดตั้ง','ผูกกล่อง','billing','ประจำวัน'],title:'📋 งานติดตั้ง / ผูกกล่อง (Daily)',answer:'งาน Daily ที่ต้องทำทุกวันครับ:',steps:['งานติดตั้งใหม่ — ต้องเช็คทุกคันว่า ผูกกล่องรถ และ Billing หรือยัง','งานซ่อมเปลี่ยนกล่องรถโม่ — ต้องเช็คว่าแชร์เข้า SCCO หรือยัง','ตรวจให้เสร็จก่อน 14:00 ของทุกวัน','งานตามโซนสามารถจ่ายช่างได้เลย'],links:[{icon:'🔧',title:'งานติดตั้ง Daily',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician'},{icon:'🔄',title:'งานซ่อมเปลี่ยนกล่อง Daily',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'}]},
-  {id:2,keywords:['scco','monitoring','ผูกกล่องงานซ่อม','รถโม่','สร้างอุปกรณ์'],title:'🖥️ Monitoring — ผูกกล่องงานซ่อมรถ SCCO',answer:'ขั้นตอนผูกกล่องงานซ่อม SCCO:',steps:['เช็คงานซ่อมเปลี่ยนกล่อง ดูเฉพาะรถ SCCO','สร้างอุปกรณ์ (เลือก server SCCO)','ผูกกล่องใหม่ ติ๊กเลือก server SCCO'],links:[{icon:'🔄',title:'งานซ่อมเปลี่ยนกล่อง',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'},{icon:'➕',title:'สร้างอุปกรณ์',url:'https://login.terminusfleet.com/receiver/installation/create_device.php'}]},
-  {id:3,keywords:['dlt','masterfile','master file','กรมขนส่ง','ส่งรายงาน','finish page','อัพเดท master','ลบ master'],title:'🏛️ DLT / กรมขนส่งทางบก',answer:'ข้อมูลงาน DLT ครับ:',extra:'งานที่ต้องทำ: รันบอทอัพเดท master ทุกวัน | ลบ master รถยกเลิกสัญญา',links:[{icon:'📑',title:'DLT Finish Page',url:'https://gpstmc.dlt.go.th/dltgps/web/finish_page/'},{icon:'📂',title:'DLT Masterfile (p34)',url:'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php'},{icon:'📊',title:'DLT Report',url:'https://login.terminusfleet.com/report/report/dltreport'}]},
-  {id:4,keywords:['orc','แจ้งซ่อม orc','rmc feed','หัวหน้าโซน'],title:'📡 ORC — การแจ้งซ่อม',answer:'ขั้นตอน ORC:',steps:['Login: user@orc / password','แจ้งซ่อม — ติดต่อเบอร์หัวหน้าโซน'],links:[{icon:'📡',title:'RMC Feed (ORC)',url:'https://login.terminusfleet.com/rmc/feed'}]},
-  {id:5,keywords:['fleetlink','cpac','fleet link','gps ขาดการติดต่อ','disconnect'],title:'🚛 FleetLink / CPAC',answer:'ระบบ FleetLink สำหรับ CPAC ครับ:',links:[{icon:'🚛',title:'FleetLink หลัก',url:'https://fleetlink.cipcloud.net/'},{icon:'📉',title:'GPS Disconnect on Trip',url:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'},{icon:'🛠️',title:'Maintenance Device',url:'https://fleetlink.cipcloud.net/maintenancedevice'}]},
-  {id:6,keywords:['ใบงานช่าง','เปิดใบงาน','v1','บันทึกการซ่อม','เปิดงาน'],title:'📄 วิธีเปิดใบงานช่าง (V1)',answer:'ขั้นตอนเปิดใบงานช่าง V1:',steps:['การจัดการอุปกรณ์','บันทึกการซ่อมแซม','สร้าง','เลือกบริษัท ใส่ข้อมูล'],extra:'หน้า Tablet ช่าง: Login tech14@test | สมศักดิ์ อาจอุดม',links:[{icon:'📲',title:'หน้า Tablet ช่าง',url:'https://login.terminusfleet.com/mobile/authenticatetech/login/msg/please_login/?redir=/mobile/worktechnician'}]},
-  {id:7,keywords:['รูดบัตร','ใบขับขี่','device code','iccid','สถานะรูด'],title:'💳 ตรวจสอบสถานะรูดบัตรใบขับขี่',answer:'วิธีตรวจสอบรูดบัตรใบขับขี่:',steps:['V1 → การติดตั้งอุปกรณ์','รายการติดตั้ง → Search ทะเบียน','ดู Device code (หากมีตัวเลขในวงเล็บ = รูดบัตรได้ปกติ)','เช็คเพิ่มเติมจากเว็บขนส่ง gpstmc.dlt.go.th'],links:[{icon:'🏛️',title:'เว็บขนส่ง',url:'http://gpstmc.dlt.go.th/dltgps/web/finish_page/'}]},
-  {id:8,keywords:['event','pto','boom','ความเร็ว','เตือนความเร็ว','velalarm','accalarm','brkalarm'],title:'⚡ เช็ค Event / PTO / Boom / ความเร็ว',answer:'ข้อมูล Event Data และความหมาย:',extra:'<div class="codeblock">ValveSensorToggle = PTO / Boom / ประตู\nVelAlarm = ความเร็วเกิน\nStopPoint = จุดจอด\nAccAlarm = ออกตัวกระชาก\nBrkAlarm = เบรคกระทันหัน\n\nESP: d":[0,1,1]\nFOX: d":[0,0,1,1,1,1,0,0]\nISU: "Extra":[1,1,1,0,1,1,1,1]</div>',links:[{icon:'⚡',title:'Event Data V2',url:'https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php'}]},
-  {id:9,keywords:['ftp','filezilla','ดึงวิดีโอ','video','mp4'],title:'📹 FTP ดึงวิดีโอ (FileZilla)',answer:'วิธีดึงวิดีโอผ่าน FTP:',steps:['Host: sftp://login.terminusfleet.com','User: terminus-app | Pass: 9uJgx]ujpo.0','Path: /home/terminus-app/fleet1.1/public/upload/websocket','Shell: cd /mnt/m_external_sd/capture → ls *','cp [ไฟล์].mp4 /sdcard/[ไฟล์].mp4','Browsefile Sdcard → ดาวน์โหลด']},
-  {id:10,keywords:['กล้องเสีย','กล้อง esp','esp camera','camera error'],title:'📷 กล้อง ESP เช็คกล้องเสีย',answer:'วิธีเช็คกล้อง ESP เสีย:',steps:['V1 → การติดตั้งอุปกรณ์ → shell → Screencap','Browsefile /sdcard → เลือกไฟล์ล่างสุด → ดาวน์โหลด','ดู log: cat /sdcard/terminus/terminus/exception/YYYYMMDD.log'],extra:'<div class="codeblock">Error ที่พบบ่อย:\nCAMERA: try to take pict\nEXCEPTION: setParameters failed\n→ กล้องเสีย ต้องเปลี่ยน</div>'},
-  {id:11,keywords:['tracksolid','jc400','jc200','j40','imei','device command'],title:'📡 Tracksolid / Tracksolid Pro',answer:'วิธีใช้ Tracksolid:',steps:['Monitor → ค้นหา IMEI','3 จุด → Device Command → เลือก type'],extra:'<div class="codeblock">Command JC400:\nVOLUME,&lt;A&gt; (A=0-3)</div>',links:[{icon:'📷',title:'Tracksolid',url:'https://tracksolid.com/mainFrame'},{icon:'🎥',title:'Tracksolid Pro',url:'https://hk.tracksolidpro.com/resource/dev/index.html#/login'}]},
-  {id:12,keywords:['ดาวเทียม','satellite','gpgga','แบตสำรอง','battery','voltage'],title:'🛰️ เช็คดาวเทียม + แบตสำรอง',extra:'<div class="codeblock">ดาวเทียม:\nHNT/J40: GPGGA >20\nFOX: numberOfSat >20\n\nแบตสำรอง:\nJ40: voltage[2] ≥ 4000\nHNT: vol[0] ≥ 4.0</div>'},
-  {id:13,keywords:['เซ็นเซอร์โม่','โม่','drum','dp'],title:'🥁 เช็คเซ็นเซอร์โม่',steps:['เช็คเปอร์เซ็น DP ที่เสีย','ดึงรายงานขาดการติดต่อขณะวิ่งงาน'],links:[{icon:'🥁',title:'เช็คเซ็นเซอร์โม่',url:'https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php'},{icon:'📉',title:'GPS Disconnect',url:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'}]},
-  {id:14,keywords:['ซิม','sim','iccid','ตรวจซิม'],title:'📶 การตรวจสอบซิม',steps:['เช็คเลขทะเบียนผ่าน V1','เอาเลข ICCID กับทะเบียนรถ','ส่งลงไลน์: TDG FREEwill AFS'],extra:'DataSim: support / 9uJ:yrrvm'},
-  {id:15,keywords:['sql','query','คิวรี','model code','0300'],title:'💾 SQL Query — DLT Device Model',extra:'<div class="codeblock">ESP→0300004 | FOX/EZY→0300006\nHNT→0300007 | J4P→0300012\nJ40→0300010 | J4D→0300011\nISU→0300013 | อื่นๆ→0300001</div>'},
-  {id:16,keywords:['cache','แคช','ลบ cache','android'],title:'🗑️ วิธีลบ Cache มือถือ Android',steps:['Settings → Apps','เลือกแอปที่ต้องการ','Storage → Clear Cache']},
-  {id:17,keywords:['น้ำมัน','เซ็นเซอร์น้ำมัน','fuel','ลูกลอย'],title:'⛽ เซ็นเซอร์น้ำมัน',extra:'กราฟเป็นแนวโน้มเท่านั้น ปัจจัยที่ทำให้คลาดเคลื่อน: เกจ์น้ำมัน, แรงดันไฟ, สัญญาณพัลส์\n\n** Flow meter sensor ความแม่นยำ >95%'},
-  {id:18,keywords:['ปิดเสียง','mute','เสียงกล้อง','แจ้งเตือนกล้อง'],title:'🔇 ปิดเสียงแจ้งเตือนกล้อง',steps:['V1 → รายการติดตั้ง → iv code / เลขกล้อง → Edit','จัดเก็บ → ตั้งค่าอุปกรณ์','Mute Sound → จัดเก็บ']},
-  {id:19,keywords:['แชร์พาหนะ','share vehicle'],title:'🔗 การแชร์พาหนะ',steps:['การจัดการ → อื่นๆ','สร้าง → แชร์พาหนะ']},
-];
+/* ===== UTILS ===== */
+function showToast(msg,dur=2000){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function closePanel(id){document.getElementById(id).classList.remove('open');}
+function closeOverlayBg(e,id){if(e.target===document.getElementById(id))closePanel(id);}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function copyText(txt){navigator.clipboard.writeText(txt).then(()=>showToast('📋 คัดลอกแล้ว!')).catch(()=>alert(txt));}
+function fmtDateFull(ts){const d=new Date(ts);return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}
 
-// ==================== STATE ====================
-const STORAGE_KEY = 'freewill_kb_v3';
-let KB = loadKB();
-let editingId = null;
-let nextId = () => Math.max(...KB.map(k=>k.id||0), 0) + 1;
-// Teach state
-let teachState = null; // {step, data}
-
-function loadKB(){
-  try{ const s=localStorage.getItem(STORAGE_KEY); if(s) return JSON.parse(s); }catch(e){}
-  return JSON.parse(JSON.stringify(DEFAULT_KB));
+/* ===== SETTINGS / LOGO ===== */
+const SETTINGS_KEY='fw_settings_v1';
+let SETTINGS=loadSettings();
+function loadSettings(){try{const s=localStorage.getItem(SETTINGS_KEY);if(s)return JSON.parse(s);}catch(e){}return{logoImg:'',logoEmoji:'🛰️',title:'FreeWill FX — Support Assistant',subtitle:'Terminus Fleet Management | GPS Support Bot'};}
+function saveSettings(){try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(SETTINGS));}catch(e){}}
+function applySettings(){
+  const{logoImg,logoEmoji,title,subtitle}=SETTINGS;
+  const ld=document.getElementById('logoDisplay'),ba=document.getElementById('botAvatar');
+  if(logoImg){ld.innerHTML=`<img src="${logoImg}">`;ba.innerHTML=`<img src="${logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;}
+  else{ld.textContent=logoEmoji||'🛰️';ba.textContent=logoEmoji||'🤖';}
+  document.getElementById('appTitle').textContent=title;
+  document.getElementById('appSubtitle').textContent=subtitle;
+  document.title=(title||'FreeWill FX')+' — Chatbot';
 }
-function saveKB(){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(KB)); }catch(e){} }
+function openLogoEditor(){
+  document.getElementById('logoEmoji').value=SETTINGS.logoEmoji||'🛰️';
+  document.getElementById('appTitleInput').value=SETTINGS.title||'';
+  document.getElementById('appSubtitleInput').value=SETTINGS.subtitle||'';
+  const prev=document.getElementById('logoPreview');
+  prev.innerHTML=SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}">`:(SETTINGS.logoEmoji||'🛰️');
+  document.getElementById('logoOverlay').classList.add('open');
+}
+function handleLogoUpload(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{SETTINGS.logoImg=ev.target.result;document.getElementById('logoPreview').innerHTML=`<img src="${ev.target.result}">`;};r.readAsDataURL(f);e.target.value='';}
+function clearLogo(){SETTINGS.logoImg='';document.getElementById('logoPreview').textContent=document.getElementById('logoEmoji').value||'🛰️';}
+function saveLogo(){SETTINGS.logoEmoji=document.getElementById('logoEmoji').value||'🛰️';SETTINGS.title=document.getElementById('appTitleInput').value||'FreeWill FX';SETTINGS.subtitle=document.getElementById('appSubtitleInput').value||'';saveSettings();applySettings();closePanel('logoOverlay');showToast('✅ บันทึกแล้ว!');}
 
-// ==================== SEARCH (fuzzy + partial) ====================
-function normalize(s){ return s.toLowerCase().replace(/\s+/g,' ').trim(); }
-function tokenize(s){ return normalize(s).split(/[\s,/]+/).filter(w=>w.length>1); }
+/* ===== TASK MANAGER ===== */
+const TASK_KEY='fw_tasks_v1',COMPANIES_KEY='fw_companies_v1',TEAM_KEY='fw_team_v1';
+let TASKS=loadData(TASK_KEY,[]),COMPANIES=loadData(COMPANIES_KEY,['SCCO','CPAC','DLT','ORC','ATP','CPF']),TEAM=loadData(TEAM_KEY,['Takky','Admin','Support L1','Support L2']);
+let editingTaskId=null,taskImgs=[],taskFilterStatus='',taskCurrentView='kanban';
+function loadData(key,def){try{const s=localStorage.getItem(key);if(s)return JSON.parse(s);}catch(e){}return def;}
+function saveData(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
+function nxtTaskId(){return TASKS.length?Math.max(...TASKS.map(t=>t.id||0))+1:1;}
+function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtDate(ts){if(!ts)return'-';const d=new Date(ts),now=new Date(),diff=Math.floor((now-d)/1000);if(diff<60)return'เมื่อกี้';if(diff<3600)return Math.floor(diff/60)+'m ago';if(diff<86400)return Math.floor(diff/3600)+'h ago';return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short'});}
+const SL_LABEL={received:'🟡 รับเรื่อง',checking:'🔵 กำลังตรวจสอบ',done:'🟢 เรียบร้อย'};
 
-function searchKB(query){
-  const q = normalize(query);
-  const qTokens = tokenize(query);
-  let best=null, bestScore=0;
-  for(const item of KB){
-    let score=0;
-    for(const kw of item.keywords){
-      const nkw = normalize(kw);
-      if(q===nkw) score+=10;
-      else if(q.includes(nkw)) score+=4;
-      else if(nkw.includes(q)) score+=3;
-      else{
-        for(const t of qTokens){
-          if(nkw.includes(t)) score+=2;
-          else if(t.includes(nkw)) score+=1;
-          // fuzzy: char overlap
-          else{
-            let overlap=0;
-            for(const c of t) if(nkw.includes(c)) overlap++;
-            if(overlap/t.length > 0.7) score+=1;
-          }
-        }
-      }
-    }
-    // title match bonus
-    const ntitle=normalize(item.title);
-    if(ntitle.includes(q)) score+=3;
-    for(const t of qTokens) if(ntitle.includes(t)) score+=1;
-    if(score>bestScore){ bestScore=score; best=item; }
+function updateTaskBadge(){
+  const pending=TASKS.filter(t=>t.status!=='done').length;
+  const b=document.getElementById('taskBadge');
+  b.textContent=pending;b.classList.toggle('show',pending>0);
+}
+
+function openTaskPanel(){
+  document.getElementById('taskOverlay').classList.add('open');
+  renderTasks();
+}
+
+function setTaskFilter(s){
+  taskFilterStatus=s;
+  document.getElementById('taskSearch').value='';
+  renderTasks();
+}
+
+function setTaskView(v){
+  taskCurrentView=v;
+  document.getElementById('tk-kanban').style.display=v==='kanban'?'flex':'none';
+  document.getElementById('tk-table').style.display=v==='table'?'block':'none';
+  document.getElementById('tvbtn-kanban').classList.toggle('active',v==='kanban');
+  document.getElementById('tvbtn-table').classList.toggle('active',v==='table');
+  renderTasks();
+}
+
+function renderTasks(){
+  const q=(document.getElementById('taskSearch').value||'').toLowerCase();
+  const pf=document.getElementById('taskFilterPIC').value;
+  const all=TASKS.length,rec=TASKS.filter(t=>t.status==='received').length,chk=TASKS.filter(t=>t.status==='checking').length,don=TASKS.filter(t=>t.status==='done').length;
+  // stats
+  document.getElementById('tstat-all').textContent=all;
+  document.getElementById('tstat-received').textContent=rec;
+  document.getElementById('tstat-checking').textContent=chk;
+  document.getElementById('tstat-done').textContent=don;
+  document.getElementById('task-total').textContent=`${all} งาน`;
+  // pic filter
+  const cur=pf;
+  document.getElementById('taskFilterPIC').innerHTML='<option value="">👤 ทุกคน</option>'+TEAM.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+
+  const getList=(status)=>TASKS.filter(t=>{
+    if(status&&t.status!==status)return false;
+    if(pf&&t.pic!==pf)return false;
+    if(q){const s=(t.company+' '+(t.pic||'')+' '+(t.detail||'')).toLowerCase();if(!s.includes(q))return false;}
+    return true;
+  }).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+
+  if(taskCurrentView==='kanban'){
+    ['received','checking','done'].forEach(s=>{
+      const list=getList(s);
+      document.getElementById('tk-cnt-'+s).textContent=list.length;
+      document.getElementById('tk-col-'+s).innerHTML=list.length
+        ?list.map(t=>renderCard(t)).join('')
+        :`<div class="tk-empty">ไม่มีงาน${s==='done'?' ที่เสร็จแล้ว':''} 🎉</div>`;
+    });
+  } else {
+    const list=getList(taskFilterStatus||'');
+    document.getElementById('tk-tbody').innerHTML=list.length
+      ?list.map((t,i)=>`<tr class="${t.status==='done'?'tr-done':''}">
+        <td style="color:var(--muted);font-size:12px">${i+1}</td>
+        <td><span style="font-weight:700">${t.company}</span></td>
+        <td><span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:12px">${t.pic||'-'}</span></td>
+        <td style="max-width:260px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.detail||'-')}</td>
+        <td><span class="tk-pill ${t.status||'received'}">${SL_LABEL[t.status]||t.status}</span></td>
+        <td style="font-size:11px;color:var(--muted);white-space:nowrap">${fmtDate(t.updatedAt||t.createdAt)}</td>
+        <td onclick="event.stopPropagation()">
+          <button class="tc-btn-sm edit" onclick="openTaskForm(${t.id})">✏️</button>
+          <button class="tc-btn-sm del" onclick="deleteTask(${t.id})">🗑️</button>
+        </td>
+      </tr>`).join('')
+      :`<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">ไม่พบงานครับ</td></tr>`;
   }
-  return bestScore>=2 ? best : null;
 }
 
-// ==================== SIDEBAR ====================
-const SIDEBAR_LINKS=[
-  {s:'📋 งานช่าง Daily',l:[
-    {i:'🔧',n:'งานติดตั้ง Daily',u:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician',b:'Daily'},
-    {i:'🔄',n:'งานซ่อมเปลี่ยนกล่อง',u:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'},
-    {i:'➕',n:'สร้างอุปกรณ์ SCCO',u:'https://login.terminusfleet.com/receiver/installation/create_device.php'},
-  ]},
-  {s:'🏛️ DLT',l:[
-    {i:'📑',n:'DLT Finish Page',u:'https://gpstmc.dlt.go.th/dltgps/web/finish_page/',b:'Daily'},
-    {i:'📂',n:'DLT Masterfile',u:'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php'},
-    {i:'📊',n:'DLT Report',u:'https://login.terminusfleet.com/report/report/dltreport'},
-  ]},
-  {s:'🖥️ Terminus',l:[
-    {i:'🌐',n:'Terminus V2',u:'https://app-v2.terminusfleet.com'},
-    {i:'🔑',n:'Terminus V1',u:'https://login.terminusfleet.com'},
-    {i:'📡',n:'RMC Feed (ORC)',u:'https://login.terminusfleet.com/rmc/feed'},
-    {i:'⚡',n:'Event Data',u:'https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php'},
-  ]},
-  {s:'🚛 FleetLink / CPAC',l:[
-    {i:'🚛',n:'FleetLink',u:'https://fleetlink.cipcloud.net/'},
-    {i:'📉',n:'GPS Disconnect',u:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'},
-    {i:'🛠️',n:'Maintenance Device',u:'https://fleetlink.cipcloud.net/maintenancedevice'},
-  ]},
-  {s:'📹 Camera',l:[
-    {i:'📷',n:'Tracksolid',u:'https://tracksolid.com/mainFrame'},
-    {i:'🎥',n:'Tracksolid Pro',u:'https://hk.tracksolidpro.com/resource/dev/index.html#/login'},
-    {i:'🖥️',n:'Video Monitoring',u:'https://login.terminusfleet.com/receiver/test/video_monitoring.php'},
-  ]},
-  {s:'📱 อื่นๆ',l:[
-    {i:'📲',n:'Tablet ช่าง',u:'https://login.terminusfleet.com/mobile/authenticatetech/login/msg/please_login/?redir=/mobile/worktechnician'},
-    {i:'🥁',n:'เซ็นเซอร์โม่',u:'https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php'},
-  ]},
+function renderCard(t){
+  const imgs=t.images||[];
+  return `<div class="task-card ${`status-${t.status}`}" onclick="openTaskForm(${t.id})">
+    <div class="tc-company">🏢 ${t.company}</div>
+    ${t.pic?`<div class="tc-pic-tag">👤 ${t.pic}</div>`:''}
+    ${t.detail?`<div class="tc-detail-preview">${escHtml(t.detail)}</div>`:''}
+    ${imgs.length?`<div class="tc-imgs-sm">${imgs.slice(0,3).map(img=>`<img src="${img}" onclick="event.stopPropagation();openLightbox('${img}')">`).join('')}${imgs.length>3?`<div style="width:44px;height:34px;background:var(--bg);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted)">+${imgs.length-3}</div>`:''}</div>`:''}
+    <div class="tc-footer">
+      <span class="tc-date">${fmtDate(t.updatedAt||t.createdAt)}</span>
+      <div style="display:flex;align-items:center;gap:4px" onclick="event.stopPropagation()">
+        <select class="tc-status-sel ${t.status||'received'}" onchange="quickUpdateStatus(${t.id},this.value)">
+          <option value="received" ${t.status==='received'?'selected':''}>🟡 รับเรื่อง</option>
+          <option value="checking" ${t.status==='checking'?'selected':''}>🔵 ตรวจสอบ</option>
+          <option value="done" ${t.status==='done'?'selected':''}>🟢 เรียบร้อย</option>
+        </select>
+        <button class="tc-btn-sm del" onclick="deleteTask(${t.id})">🗑️</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function quickUpdateStatus(id,status){
+  const t=TASKS.find(x=>x.id===id);if(!t)return;
+  t.status=status;t.updatedAt=Date.now();
+  saveData(TASK_KEY,TASKS);renderTasks();updateTaskBadge();
+  showToast(`✅ ${SL_LABEL[status]}`);
+}
+
+function deleteTask(id){if(!confirm('ลบงานนี้?'))return;TASKS=TASKS.filter(t=>t.id!==id);saveData(TASK_KEY,TASKS);renderTasks();updateTaskBadge();}
+
+function openTaskForm(id=null){
+  editingTaskId=id;taskImgs=[];
+  const t=id?TASKS.find(x=>x.id===id):null;
+  document.getElementById('taskFormTitle').textContent=id?'✏️ แก้ไขงาน':'➕ เพิ่มงานใหม่';
+  document.getElementById('t-company').value=t?.company||'';
+  document.getElementById('t-pic').value=t?.pic||'';
+  document.getElementById('t-status').value=t?.status||'received';
+  document.getElementById('t-detail').value=t?.detail||'';
+  taskImgs=t?.images?[...t.images]:[];
+  renderImgPreview();
+  document.getElementById('taskFormModal').classList.add('open');
+}
+
+function saveTask(){
+  const company=document.getElementById('t-company').value.trim();
+  const pic=document.getElementById('t-pic').value.trim();
+  if(!company){alert('กรุณาระบุบริษัท');return;}
+  const now=Date.now();
+  const item={id:editingTaskId||nxtTaskId(),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:taskImgs.length?[...taskImgs]:undefined,createdAt:editingTaskId?(TASKS.find(t=>t.id===editingTaskId)?.createdAt||now):now,updatedAt:now};
+  if(!COMPANIES.includes(company)){COMPANIES.push(company);saveData(COMPANIES_KEY,COMPANIES);}
+  if(pic&&!TEAM.includes(pic)){TEAM.push(pic);saveData(TEAM_KEY,TEAM);}
+  if(editingTaskId)TASKS=TASKS.map(t=>t.id===editingTaskId?item:t);else TASKS.push(item);
+  saveData(TASK_KEY,TASKS);
+  closeModal('taskFormModal');renderTasks();updateTaskBadge();
+  showToast(editingTaskId?'✅ แก้ไขแล้ว!':'✅ เพิ่มงานแล้ว!');
+}
+
+function handleDetailPaste(e){
+  const items=e.clipboardData?.items||[];
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      e.preventDefault();
+      const file=item.getAsFile();
+      const reader=new FileReader();
+      reader.onload=ev=>{taskImgs.push(ev.target.result);renderImgPreview();showToast('🖼️ วางรูปแล้ว!');};
+      reader.readAsDataURL(file);
+    }
+  }
+}
+function renderImgPreview(){document.getElementById('t-img-list').innerHTML=taskImgs.map((img,i)=>`<div class="img-preview-item"><img src="${img}" onclick="openLightbox('${img}')"><button class="rm-img" onclick="taskImgs.splice(${i},1);renderImgPreview()">✕</button></div>`).join('');}
+function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('open');}
+function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
+
+function acSearch(val,ddId,dataKey,onSelect){
+  const dd=document.getElementById(ddId);
+  const data=dataKey==='COMPANIES'?COMPANIES:TEAM;
+  const q=val.toLowerCase();
+  const filtered=q?data.filter(d=>d.toLowerCase().includes(q)):data;
+  if(!filtered.length){dd.classList.remove('open');return;}
+  dd.innerHTML=filtered.map(d=>`<div class="ac-item" onmousedown="event.preventDefault();${onSelect.name}('${d.replace(/'/g,"\\'")}','${ddId}')">${d}</div>`).join('');
+  dd.classList.add('open');
+}
+function setTaskCompany(val,ddId){document.getElementById('t-company').value=val;closeAC(ddId);}
+function setTaskPIC(val,ddId){document.getElementById('t-pic').value=val;closeAC(ddId);}
+function closeAC(ddId){const d=document.getElementById(ddId);if(d)d.classList.remove('open');}
+function addNewCompany(){const v=document.getElementById('t-new-company').value.trim();if(!v)return;if(!COMPANIES.includes(v)){COMPANIES.push(v);saveData(COMPANIES_KEY,COMPANIES);}document.getElementById('t-company').value=v;document.getElementById('t-new-company').value='';showToast('✅ เพิ่มบริษัทแล้ว');}
+function addNewPIC(){const v=document.getElementById('t-new-pic').value.trim();if(!v)return;if(!TEAM.includes(v)){TEAM.push(v);saveData(TEAM_KEY,TEAM);}document.getElementById('t-pic').value=v;document.getElementById('t-new-pic').value='';showToast('✅ เพิ่มสมาชิกแล้ว');}
+
+/* Task xlsx export/import */
+function exportTasksXlsx(){
+  const rows=[['id','company','pic','status','detail','createdAt','updatedAt']];
+  TASKS.forEach(t=>rows.push([t.id,t.company,t.pic||'',SL_LABEL[t.status]||t.status,t.detail||'',fmtDate(t.createdAt),fmtDate(t.updatedAt)]));
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:5},{wch:25},{wch:20},{wch:20},{wch:60},{wch:20},{wch:20}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Tasks');XLSX.writeFile(wb,'tasks.xlsx');
+}
+function importTasksXlsx(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'binary'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[1]);
+      const statusMap={'รับเรื่อง':'received','กำลังตรวจสอบ':'checking','เรียบร้อย':'done','🟡 รับเรื่อง':'received','🔵 กำลังตรวจสอบ':'checking','🟢 เรียบร้อย':'done'};
+      const data=rows.map((r,i)=>({id:parseInt(r[0])||Date.now()+i,company:r[1],pic:r[2]||'',status:statusMap[r[3]]||'received',detail:r[4]||undefined,createdAt:Date.now(),updatedAt:Date.now()}));
+      if(confirm(`Import ${data.length} งาน? (จะเพิ่มต่อจากที่มีอยู่)`)){TASKS=[...TASKS,...data];saveData(TASK_KEY,TASKS);renderTasks();updateTaskBadge();showToast('✅ Import สำเร็จ!');}
+    }catch(err){alert('❌ '+err.message);}
+  };r.readAsBinaryString(f);e.target.value='';
+}
+
+/* ===== QUICK LINKS SIDEBAR ===== */
+const SL_KEY='fw_sidebar_v1';
+const DEFAULT_SL=[
+  {s:'📋 งานช่าง Daily',open:true,l:[{i:'🔧',n:'งานติดตั้ง Daily',u:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician',b:'Daily'},{i:'🔄',n:'งานซ่อมเปลี่ยนกล่อง',u:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'},{i:'➕',n:'สร้างอุปกรณ์ SCCO',u:'https://login.terminusfleet.com/receiver/installation/create_device.php'}]},
+  {s:'🏛️ DLT',open:true,l:[{i:'📑',n:'DLT Finish Page',u:'https://gpstmc.dlt.go.th/dltgps/web/finish_page/',b:'Daily'},{i:'📂',n:'DLT Masterfile',u:'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php'},{i:'📊',n:'DLT Report',u:'https://login.terminusfleet.com/report/report/dltreport'}]},
+  {s:'🖥️ Terminus',open:false,l:[{i:'🌐',n:'Terminus V2',u:'https://app-v2.terminusfleet.com'},{i:'🔑',n:'Terminus V1',u:'https://login.terminusfleet.com'},{i:'📡',n:'RMC Feed (ORC)',u:'https://login.terminusfleet.com/rmc/feed'},{i:'⚡',n:'Event Data',u:'https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php'}]},
+  {s:'🚛 FleetLink / CPAC',open:false,l:[{i:'🚛',n:'FleetLink',u:'https://fleetlink.cipcloud.net/'},{i:'📉',n:'GPS Disconnect',u:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'},{i:'🛠️',n:'Maintenance Device',u:'https://fleetlink.cipcloud.net/maintenancedevice'}]},
+  {s:'📹 Camera',open:false,l:[{i:'📷',n:'Tracksolid',u:'https://tracksolid.com/mainFrame'},{i:'🎥',n:'Tracksolid Pro',u:'https://hk.tracksolidpro.com/resource/dev/index.html#/login'},{i:'🖥️',n:'Video Monitoring',u:'https://login.terminusfleet.com/receiver/test/video_monitoring.php'}]},
+  {s:'📱 อื่นๆ',open:false,l:[{i:'📲',n:'Tablet ช่าง',u:'https://login.terminusfleet.com/mobile/authenticatetech/login/msg/please_login/?redir=/mobile/worktechnician'},{i:'🥁',n:'เซ็นเซอร์โม่',u:'https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php'}]},
 ];
+let SL=loadData(SL_KEY,null)||JSON.parse(JSON.stringify(DEFAULT_SL));
+let editingSLSection=null;
+function saveDataSL(){saveData(SL_KEY,SL);}
+
 function buildSidebar(){
-  document.getElementById('sidebarLinks').innerHTML=SIDEBAR_LINKS.map(sec=>`
-    <div class="ls-title">${sec.s}</div>
-    ${sec.l.map(l=>`<a class="li" href="${l.u}" target="_blank"><span style="font-size:14px;flex-shrink:0">${l.i}</span><span style="flex:1;line-height:1.3">${l.n}</span>${l.b?`<span class="li-badge">${l.b}</span>`:''}</a>`).join('')}
-  `).join('');
+  document.getElementById('sidebarLinks').innerHTML=SL.map((sec,si)=>`
+    <div class="ql-section">
+      <div class="ql-section-hdr" onclick="toggleSection(${si})">
+        <span>${sec.s}</span>
+        <span class="ql-chevron ${sec.open?'open':''}">▶</span>
+      </div>
+      <div class="ql-body ${sec.open?'open':''}">
+        ${sec.l.map((l,li)=>`<a class="li" href="${l.u}" target="_blank">
+          <span style="font-size:13px;flex-shrink:0">${l.i}</span>
+          <span style="flex:1;line-height:1.3;font-size:12px">${l.n}</span>
+          ${l.b?`<span class="li-badge">${l.b}</span>`:''}
+          <button class="li-del" onclick="delSLLink(event,${si},${li})">✕</button>
+        </a>`).join('')}
+        <div style="padding:3px 9px 5px 20px">
+          <button onclick="openAddSLLink(${si})" style="background:none;border:1px dashed var(--border);border-radius:5px;padding:3px 8px;font-size:10px;color:var(--muted);cursor:pointer;width:100%;font-family:inherit">+ เพิ่มลิงก์</button>
+        </div>
+      </div>
+    </div>`).join('');
 }
 
-// ==================== SUGGESTIONS ====================
-const SUGGS=['📋 งานช่าง daily','วิธีเปิดใบงานช่าง','⚡ Event/PTO','🏛️ DLT masterfile','📹 ดึงวิดีโอ FTP','📡 Device Code','📷 กล้อง ESP เสีย','🛰️ เช็คแบตสำรอง'];
-function buildSuggs(){
-  document.getElementById('suggs').innerHTML=SUGGS.map(t=>`<button class="sbtn" onclick="handleSugg('${t}')">${t}</button>`).join('');
-}
+function toggleSection(si){SL[si].open=!SL[si].open;saveDataSL();buildSidebar();}
+function delSLLink(e,si,li){e.preventDefault();e.stopPropagation();if(!confirm('ลบลิงก์?'))return;SL[si].l.splice(li,1);saveDataSL();buildSidebar();}
 
-// ==================== CHAT UTILS ====================
-function addMsg(role,html,cls=''){
-  const msgs=document.getElementById('messages');
-  const d=document.createElement('div');
-  d.className=`msg ${role}`;
-  d.innerHTML = role==='bot'
-    ? `<div class="av bot">🤖</div><div class="${cls||'bubble'}">${html}</div>`
-    : `<div class="av usr">👤</div><div class="bubble">${html}</div>`;
-  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
+function openSidebarEditor(){renderSLEditor();document.getElementById('sidebarOverlay').classList.add('open');}
+function renderSLEditor(){
+  document.getElementById('slEditor').innerHTML=SL.map((sec,si)=>`
+    <div class="sl-section">
+      <div class="sl-section-title">
+        <input type="text" value="${sec.s}" onchange="SL[${si}].s=this.value" style="border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:12px;font-weight:600;color:var(--muted);width:200px;font-family:inherit;outline:none">
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-primary" style="padding:3px 9px;font-size:11px" onclick="openAddSLLink(${si})">➕</button>
+          <button class="btn btn-ghost" style="padding:3px 9px;font-size:11px;color:var(--danger)" onclick="SL.splice(${si},1);renderSLEditor()">🗑️</button>
+        </div>
+      </div>
+      ${sec.l.map((l,li)=>`<div class="sl-item">
+        <input type="text" value="${l.i}" onchange="SL[${si}].l[${li}].i=this.value" style="width:34px;text-align:center;font-size:15px">
+        <input type="text" value="${l.n}" onchange="SL[${si}].l[${li}].n=this.value" placeholder="ชื่อ">
+        <input type="text" value="${l.u}" onchange="SL[${si}].l[${li}].u=this.value" placeholder="URL" style="flex:2">
+        <input type="text" value="${l.b||''}" onchange="SL[${si}].l[${li}].b=this.value||undefined" placeholder="badge" style="width:52px">
+        <button class="sl-del" onclick="SL[${si}].l.splice(${li},1);renderSLEditor()">✕</button>
+      </div>`).join('')}
+    </div>`).join('');
 }
-function showTyping(){ const msgs=document.getElementById('messages'); const d=document.createElement('div'); d.className='msg bot'; d.id='typing'; d.innerHTML=`<div class="av bot">🤖</div><div class="typing"><div class="dot2"></div><div class="dot2"></div><div class="dot2"></div></div>`; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
-function removeTyping(){ const t=document.getElementById('typing'); if(t)t.remove(); }
+function addSLSection(){SL.push({s:'📌 หมวดหมู่ใหม่',open:true,l:[]});renderSLEditor();}
+function saveSL(){saveDataSL();buildSidebar();closePanel('sidebarOverlay');showToast('✅ บันทึก Quick Links แล้ว!');}
+function openAddSLLink(si){editingSLSection=si;document.getElementById('sl-f-icon').value='🔗';document.getElementById('sl-f-name').value='';document.getElementById('sl-f-url').value='';document.getElementById('sl-f-badge').value='';document.getElementById('slLinkModal').classList.add('open');}
+function saveSLLink(){const icon=document.getElementById('sl-f-icon').value||'🔗',name=document.getElementById('sl-f-name').value.trim(),url=document.getElementById('sl-f-url').value.trim(),badge=document.getElementById('sl-f-badge').value.trim();if(!name||!url){alert('กรุณากรอกชื่อและ URL');return;}SL[editingSLSection].l.push({i:icon,n:name,u:url,b:badge||undefined});closeModal('slLinkModal');renderSLEditor();buildSidebar();}
+function exportSLxlsx(){const rows=[['section','icon','name','url','badge']];SL.forEach(sec=>sec.l.forEach(l=>rows.push([sec.s,l.i,l.n,l.u,l.b||''])));const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:25},{wch:6},{wch:30},{wch:70},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'QuickLinks');XLSX.writeFile(wb,'quick_links.xlsx');}
+function importSLxlsx(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'binary'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[2]&&r[3]);const smap={};rows.forEach(r=>{const sec=r[0]||'อื่นๆ';if(!smap[sec])smap[sec]=[];smap[sec].push({i:r[1]||'🔗',n:r[2],u:r[3],b:r[4]||undefined});});const newSL=Object.entries(smap).map(([s,l])=>({s,open:true,l}));if(confirm(`Import ${rows.length} ลิงก์?`)){SL=newSL;saveDataSL();buildSidebar();renderSLEditor();showToast('✅ Import สำเร็จ!');}}catch(err){alert('❌ '+err.message);}};r.readAsBinaryString(f);e.target.value='';}
 
-// ==================== RENDER KB RESULT ====================
+/* ===== KB ===== */
+const KB_KEY='freewill_kb_v3';
+const DEFAULT_KB=[
+  {id:1,keywords:['daily','งานช่าง','ติดตั้ง','ผูกกล่อง','billing'],title:'📋 งานติดตั้ง / ผูกกล่อง (Daily)',answer:'งาน Daily ที่ต้องทำทุกวัน:',steps:['งานติดตั้งใหม่ — เช็คผูกกล่อง+Billing','งานซ่อมรถโม่ — เช็คแชร์เข้า SCCO','ตรวจให้เสร็จก่อน 14:00'],links:[{icon:'🔧',title:'งานติดตั้ง',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician'},{icon:'🔄',title:'งานซ่อมเปลี่ยน',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'}]},
+  {id:2,keywords:['dlt','masterfile','กรมขนส่ง','finish page'],title:'🏛️ DLT / กรมขนส่งทางบก',extra:'รันบอทอัพเดท master ทุกวัน | ลบ master รถยกเลิกสัญญา',links:[{icon:'📑',title:'DLT Finish Page',url:'https://gpstmc.dlt.go.th/dltgps/web/finish_page/'},{icon:'📂',title:'DLT Masterfile',url:'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php'},{icon:'📊',title:'DLT Report',url:'https://login.terminusfleet.com/report/report/dltreport'}]},
+  {id:3,keywords:['orc','rmc feed','แจ้งซ่อม'],title:'📡 ORC — การแจ้งซ่อม',steps:['Login: user@orc / password','แจ้งซ่อม — ติดต่อหัวหน้าโซน'],links:[{icon:'📡',title:'RMC Feed',url:'https://login.terminusfleet.com/rmc/feed'}]},
+  {id:4,keywords:['fleetlink','cpac','disconnect'],title:'🚛 FleetLink / CPAC',links:[{icon:'🚛',title:'FleetLink',url:'https://fleetlink.cipcloud.net/'},{icon:'📉',title:'GPS Disconnect',url:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'}]},
+  {id:5,keywords:['event','pto','boom','velalarm'],title:'⚡ Event / PTO / Boom',extra:'<div class="codeblock">ValveSensorToggle=PTO/Boom\nVelAlarm=ความเร็วเกิน\nAccAlarm=ออกตัวกระชาก</div>',links:[{icon:'⚡',title:'Event Data',url:'https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php'}]},
+  {id:6,keywords:['ftp','filezilla','วิดีโอ','mp4'],title:'📹 FTP ดึงวิดีโอ',steps:['Host: sftp://login.terminusfleet.com','User: terminus-app | Pass: 9uJgx]ujpo.0','Shell: cd /mnt/m_external_sd/capture → ls *']},
+  {id:7,keywords:['กล้องเสีย','esp camera','camera error'],title:'📷 กล้อง ESP เสีย',steps:['V1 → shell → Screencap → /sdcard','ดู log: /sdcard/terminus/exception/YYYYMMDD.log'],extra:'<div class="codeblock">EXCEPTION: setParameters failed → เปลี่ยนกล้อง</div>'},
+  {id:8,keywords:['tracksolid','jc400','j40','imei'],title:'📡 Tracksolid',steps:['Monitor → ค้นหา IMEI → 3จุด → Device Command'],links:[{icon:'📷',title:'Tracksolid',url:'https://tracksolid.com/mainFrame'},{icon:'🎥',title:'Tracksolid Pro',url:'https://hk.tracksolidpro.com/resource/dev/index.html#/login'}]},
+  {id:9,keywords:['ดาวเทียม','gpgga','แบตสำรอง','voltage'],title:'🛰️ เช็คดาวเทียม+แบตสำรอง',extra:'<div class="codeblock">HNT/J40: GPGGA>20 | FOX: numberOfSat>20\nJ40 แบต: voltage[2]≥4000 | HNT: vol[0]≥4.0</div>'},
+  {id:10,keywords:['เซ็นเซอร์โม่','drum','dp'],title:'🥁 เซ็นเซอร์โม่',steps:['เช็คเปอร์เซ็น DP','ดึงรายงาน GPS Disconnect'],links:[{icon:'🥁',title:'เซ็นเซอร์โม่',url:'https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php'}]},
+  {id:11,keywords:['ซิม','iccid'],title:'📶 ตรวจสอบซิม',steps:['ดู ICCID จาก V1','ส่งลง Line: TDG FREEwill AFS']},
+  {id:12,keywords:['sql','model code','0300'],title:'💾 SQL Device Model',extra:'<div class="codeblock">ESP→0300004|FOX→0300006|HNT→0300007\nJ4P→0300012|J40→0300010|ISU→0300013</div>'},
+  {id:13,keywords:['cache','แคช','android'],title:'🗑️ ลบ Cache Android',steps:['Settings→Apps→เลือกแอป','Storage→Clear Cache']},
+];
+let KB=loadData(KB_KEY,null)||JSON.parse(JSON.stringify(DEFAULT_KB));
+let editingId=null;
+function nxtId(){return Math.max(...KB.map(k=>k.id||0),0)+1;}
+function normalize(s){return s.toLowerCase().replace(/\s+/g,' ').trim();}
+function tokenize(s){return normalize(s).split(/[\s,/]+/).filter(w=>w.length>1);}
+function searchKB(query){
+  const q=normalize(query),qt=tokenize(query);let best=null,bs=0;
+  for(const item of KB){let score=0;for(const kw of item.keywords){const nkw=normalize(kw);if(q===nkw)score+=10;else if(q.includes(nkw))score+=4;else if(nkw.includes(q))score+=3;else{for(const t of qt){if(nkw.includes(t))score+=2;else if(t.includes(nkw))score+=1;else{let ov=0;for(const c of t)if(nkw.includes(c))ov++;if(ov/t.length>.7)score+=1;}}}}
+    const nt=normalize(item.title);if(nt.includes(q))score+=3;for(const t of qt)if(nt.includes(t))score+=1;if(score>bs){bs=score;best=item;}}
+  return bs>=2?best:null;
+}
 function renderResult(item){
   let h=`<h3>${item.title}</h3>`;
-  if(item.answer) h+=`<p>${item.answer}</p>`;
-  if(item.steps?.length) h+=item.steps.map((s,i)=>`<div class="step"><div class="snum">${i+1}</div><div style="font-size:12px;line-height:1.5">${s}</div></div>`).join('');
-  if(item.extra) h+=`<p style="margin-top:6px">${item.extra}</p>`;
-  if(item.links?.length) h+=item.links.map(l=>`<a class="lcard" href="${l.url}" target="_blank"><span style="font-size:15px;flex-shrink:0">${l.icon}</span><span style="flex:1;overflow:hidden"><div style="font-weight:700;font-size:12px">${l.title}</div><div class="lc-u">${l.url}</div></span><span style="font-size:12px;margin-left:auto">↗</span></a>`).join('');
+  if(item.answer)h+=`<p>${item.answer}</p>`;
+  if(item.steps?.length)h+=item.steps.map((s,i)=>`<div class="step"><div class="snum">${i+1}</div><div style="font-size:12px;line-height:1.5">${s}</div></div>`).join('');
+  if(item.extra)h+=`<p style="margin-top:6px">${item.extra}</p>`;
+  if(item.links?.length)h+=item.links.map(l=>`<a class="lcard" href="${l.url}" target="_blank"><span style="font-size:15px;flex-shrink:0">${l.icon}</span><span style="flex:1;overflow:hidden"><div style="font-weight:700;font-size:12px">${l.title}</div><div class="lc-u">${l.url}</div></span><span style="font-size:12px;margin-left:auto">↗</span></a>`).join('');
   return h;
 }
-
-// ==================== TEACH FLOW ====================
-function startTeach(){
-  teachState = {step:'title', data:{}};
-  showTeachPrompt('📝 <b>โหมดสอน chatbot</b><br>กรอกชื่อหัวข้อที่ต้องการสอน เช่น "วิธีแจ้งซ่อม MDVR"\n<span style="font-size:11px;color:var(--muted)">(พิมพ์ /ยกเลิก เพื่อหยุด)</span>');
-}
-
-function showTeachPrompt(msg){
-  addMsg('bot', msg);
-}
-
-function handleTeachInput(input){
-  if(!teachState) return false;
-  if(input.startsWith('/ยกเลิก') || input.startsWith('/cancel')){
-    teachState=null;
-    addMsg('bot','<p>❌ ยกเลิกการสอนแล้วครับ</p>');
-    return true;
-  }
-  const {step, data} = teachState;
-
-  if(step==='title'){
-    data.title = input;
-    teachState.step = 'keywords';
-    addMsg('bot',`<p>✅ ชื่อหัวข้อ: <b>${input}</b></p><p>🔑 ใส่ <b>keywords</b> ที่ใช้ค้นหา (คั่นด้วย comma)<br><span style="font-size:11px;color:var(--muted)">เช่น: mdvr, กล้องวีดีโอ, แจ้งซ่อม mdvr</span></p>`);
-    return true;
-  }
-  if(step==='keywords'){
-    data.keywords = input.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);
-    teachState.step = 'answer';
-    addMsg('bot',`<p>✅ Keywords: <b>${data.keywords.join(', ')}</b></p><p>💬 ใส่ <b>คำตอบหลัก</b> หรือข้อมูลสั้นๆ<br><span style="font-size:11px;color:var(--muted)">(พิมพ์ - เพื่อข้ามขั้นตอนนี้)</span></p>`);
-    return true;
-  }
-  if(step==='answer'){
-    if(input!=='-') data.answer = input;
-    teachState.step = 'steps';
-    addMsg('bot',`<p>📋 ใส่ <b>ขั้นตอน</b> (ทีละบรรทัด หรือใช้ , คั่น)<br><span style="font-size:11px;color:var(--muted)">(พิมพ์ - เพื่อข้ามขั้นตอนนี้)</span></p>`);
-    return true;
-  }
-  if(step==='steps'){
-    if(input!=='-'){
-      data.steps = input.includes('\n')
-        ? input.split('\n').map(s=>s.trim()).filter(Boolean)
-        : input.split(',').map(s=>s.trim()).filter(Boolean);
-    }
-    teachState.step = 'link';
-    addMsg('bot',`<p>🔗 มีลิงก์ที่เกี่ยวข้องไหมครับ?<br>พิมพ์: <b>ชื่อ|URL</b> เช่น <code>FleetLink|https://fleetlink.cipcloud.net</code><br><span style="font-size:11px;color:var(--muted)">(พิมพ์ - ถ้าไม่มีลิงก์)</span></p>`);
-    return true;
-  }
-  if(step==='link'){
-    if(input!=='-'){
-      data.links = [];
-      input.split('\n').forEach(line=>{
-        const parts=line.split('|');
-        if(parts.length>=2) data.links.push({icon:'🔗',title:parts[0].trim(),url:parts[1].trim()});
-        else if(line.startsWith('http')) data.links.push({icon:'🔗',title:line,url:line});
-      });
-    }
-    // SAVE
-    const newItem = {
-      id: nextId(),
-      title: data.title,
-      keywords: data.keywords,
-      answer: data.answer||undefined,
-      steps: data.steps?.length ? data.steps : undefined,
-      extra: undefined,
-      links: data.links?.length ? data.links : undefined
-    };
-    KB.push(newItem);
-    saveKB();
-    teachState=null;
-    const preview = renderResult(newItem);
-    addMsg('bot',`<h3>✅ สอนสำเร็จ! บันทึกแล้วครับ</h3><p>ตัวอย่างผลลัพธ์:</p>${preview}`);
-    addMsg('bot',`<p>💡 <b>ทดสอบ:</b> ลองพิมพ์ "${data.keywords[0]}" เพื่อทดสอบครับ</p><p>📥 อย่าลืม <b>/export</b> เพื่อ backup KB แล้ว upload ขึ้น GitHub ด้วยนะครับ</p>`);
-    return true;
-  }
-  return false;
-}
-
-// ==================== COMMAND HANDLER ====================
-function handleCommand(input){
-  const q = input.trim();
-  const cmd = q.split(' ')[0].toLowerCase();
-  const arg = q.slice(cmd.length).trim();
-
-  // /เพิ่ม /สอน /teach /add
-  if(['/เพิ่ม','/สอน','/teach','/add'].includes(cmd)){
-    startTeach(); return true;
-  }
-  // /ดู /list
-  if(['/ดู','/list','/kb'].includes(cmd)){
-    const list = KB.map((k,i)=>`<span class="tag">${i+1}. ${k.title}</span>`).join(' ');
-    addMsg('bot',`<h3>📚 Knowledge Base — ${KB.length} topics</h3><p>${list}</p><p style="margin-top:8px;font-size:12px;color:var(--muted)">ใช้ /แก้ไข [คำค้น] หรือ ⚙️ จัดการ KB เพื่อแก้ไขครับ</p>`);
-    return true;
-  }
-  // /ลบ /delete
-  if(['/ลบ','/delete','/del'].includes(cmd)){
-    if(!arg){ addMsg('bot','<p>กรุณาระบุคำค้น เช่น <b>/ลบ tracksolid</b></p>'); return true; }
-    const found = searchKB(arg);
-    if(!found){ addMsg('bot',`<p>❌ ไม่พบ topic ที่ตรงกับ "<b>${arg}</b>"</p>`); return true; }
-    if(confirm(`ลบ topic: "${found.title}" ?`)){
-      KB = KB.filter(k=>k.id!==found.id);
-      saveKB();
-      addMsg('bot',`<p>🗑️ ลบ <b>"${found.title}"</b> แล้วครับ</p>`);
-    }
-    return true;
-  }
-  // /แก้ไข /edit
-  if(['/แก้ไข','/edit'].includes(cmd)){
-    if(!arg){ addMsg('bot','<p>กรุณาระบุคำค้น เช่น <b>/แก้ไข dlt</b></p>'); return true; }
-    const found = searchKB(arg);
-    if(!found){ addMsg('bot',`<p>❌ ไม่พบ topic ที่ตรงกับ "<b>${arg}</b>"</p>`); return true; }
-    openAdmin(); setTimeout(()=>openForm(found.id), 100);
-    return true;
-  }
-  // /export
-  if(['/export','/backup'].includes(cmd)){
-    exportKB();
-    addMsg('bot','<p>📥 Export KB เรียบร้อยแล้วครับ! นำไฟล์ <b>knowledge_base.json</b> ไป upload ขึ้น GitHub ผ่าน uploader.html ได้เลยครับ</p>');
-    return true;
-  }
-  // /ช่วยเหลือ /help
-  if(['/ช่วยเหลือ','/help','/?'].includes(cmd)){
-    addMsg('bot',`<h3>📖 คำสั่งทั้งหมด</h3>
-      <div class="cmd-hint">
-        <b>/เพิ่ม</b> หรือ <b>/สอน</b> — เพิ่ม topic ใหม่ผ่านแชท<br>
-        <b>/แก้ไข [คำค้น]</b> — แก้ไข topic<br>
-        <b>/ลบ [คำค้น]</b> — ลบ topic<br>
-        <b>/ดู</b> — ดูรายการทั้งหมด<br>
-        <b>/export</b> — บันทึก KB เป็นไฟล์ JSON<br>
-        <b>/ยกเลิก</b> — ยกเลิกขณะกรอกข้อมูล<br>
-        <b>/help</b> — แสดงคำสั่งนี้
-      </div>
-      <p style="margin-top:8px;font-size:12px;color:var(--muted)">หรือกด ⚙️ จัดการ KB เพื่อจัดการผ่านหน้า UI</p>`);
-    return true;
-  }
-  return false;
-}
-
-// ==================== MAIN SEND ====================
-function sendMessage(){
-  const inp=document.getElementById('userInput');
-  const q=inp.value.trim(); if(!q) return;
-  document.getElementById('suggs').style.display='none';
-  addMsg('user',q); inp.value=''; inp.style.height='auto';
-
-  // teach flow
-  if(teachState){ handleTeachInput(q); return; }
-
-  // commands
-  if(q.startsWith('/')){
-    const handled=handleCommand(q);
-    if(!handled) addMsg('bot',`<p>ไม่รู้จักคำสั่ง <b>${q}</b> ครับ ลอง <b>/help</b> เพื่อดูคำสั่งทั้งหมด</p>`);
-    return;
-  }
-
-  // normal search
-  showTyping();
-  setTimeout(()=>{
-    removeTyping();
-    const r=searchKB(q);
-    if(r) addMsg('bot',renderResult(r));
-    else addMsg('bot',`<h3>🔍 ไม่พบข้อมูล: "${q}"</h3>
-      <p>ลองถามด้วยคำอื่น หรือสอน chatbot ได้เลยครับ!</p>
-      <div class="cmd-hint">พิมพ์ <b>/เพิ่ม</b> เพื่อเพิ่มข้อมูลนี้เข้า Knowledge Base ได้เลยครับ 👆</div>`);
-  },400);
-}
-
-function handleSugg(t){ document.getElementById('userInput').value=t; sendMessage(); }
-function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
-function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,90)+'px'; }
-
-// ==================== ADMIN ====================
-function openAdmin(){ document.getElementById('adminOverlay').classList.add('open'); renderKBList(); }
-function closeAdmin(){ document.getElementById('adminOverlay').classList.remove('open'); }
-function closeAdminIfBg(e){ if(e.target===document.getElementById('adminOverlay')) closeAdmin(); }
-
+function openAdmin(){document.getElementById('adminOverlay').classList.add('open');renderKBList();}
 function renderKBList(){
   const q=(document.getElementById('kbSearch').value||'').toLowerCase();
-  const filtered=KB.filter(k=>!q||k.title.toLowerCase().includes(q)||k.keywords.some(kw=>kw.includes(q)));
+  const f=KB.filter(k=>!q||k.title.toLowerCase().includes(q)||k.keywords.some(kw=>kw.includes(q)));
   document.getElementById('kb-total').textContent=`${KB.length} topics`;
-  document.getElementById('kbList').innerHTML=filtered.length
-    ? `<div class="kb-count">แสดง ${filtered.length} / ${KB.length} topics</div>
-      ${filtered.map(k=>`<div class="kb-item">
-        <div class="kb-item-header">
-          <div style="flex:1">
-            <div class="kb-title">${k.title}</div>
-            <div class="kb-kw">🔑 ${k.keywords.slice(0,6).join(', ')}${k.keywords.length>6?'...':''}</div>
-          </div>
-          <div class="kb-actions">
-            <button class="btn-edit" onclick="openForm(${k.id})">✏️ แก้ไข</button>
-            <button class="btn-del" onclick="deleteItem(${k.id})">🗑️ ลบ</button>
-          </div>
-        </div></div>`).join('')}`
-    : `<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ topic</div>`;
+  document.getElementById('kbList').innerHTML=f.length?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${f.length}/${KB.length}</div>${f.map(k=>`<div class="kb-item"><div class="kb-row"><div style="flex:1"><div class="kb-title">${k.title}</div><div class="kb-kw">🔑 ${k.keywords.slice(0,5).join(', ')}</div></div><div><button class="btn-edit" onclick="openForm(${k.id})">✏️</button> <button class="btn-del" onclick="delKB(${k.id})">🗑️</button></div></div></div>`).join('')}`:'<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';
+}
+function delKB(id){if(!confirm('ลบ?'))return;KB=KB.filter(k=>k.id!==id);saveData(KB_KEY,KB);renderKBList();}
+function openForm(id=null){editingId=id;const item=id?KB.find(k=>k.id===id):null;document.getElementById('formTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่ม Topic';document.getElementById('f-title').value=item?.title||'';document.getElementById('f-keywords').value=item?.keywords?.join(', ')||'';document.getElementById('f-answer').value=item?.answer||'';document.getElementById('f-steps').value=item?.steps?.join('\n')||'';document.getElementById('f-extra').value=item?.extra||'';const rows=document.getElementById('linkRows');rows.innerHTML='';(item?.links||[]).forEach(l=>addLinkRow(l));document.getElementById('formModal').classList.add('open');}
+function addLinkRow(l=null){const rows=document.getElementById('linkRows');const d=document.createElement('div');d.className='link-row';d.innerHTML=`<input type="text" value="${l?.icon||'🔗'}" maxlength="4" style="text-align:center"><input type="text" value="${l?.title||''}" placeholder="ชื่อ"><input type="text" value="${l?.url||''}" placeholder="https://..."><button class="del-link" onclick="this.parentElement.remove()">✕</button>`;rows.appendChild(d);}
+function saveForm(){const title=document.getElementById('f-title').value.trim(),kwRaw=document.getElementById('f-keywords').value.trim();if(!title||!kwRaw){alert('กรุณากรอกชื่อและ keywords');return;}const keywords=kwRaw.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);const answer=document.getElementById('f-answer').value.trim()||undefined;const stepsRaw=document.getElementById('f-steps').value.trim();const steps=stepsRaw?stepsRaw.split('\n').map(s=>s.trim()).filter(Boolean):undefined;const extra=document.getElementById('f-extra').value.trim()||undefined;const linkEls=document.getElementById('linkRows').querySelectorAll('.link-row');const links=[];linkEls.forEach(row=>{const inp=row.querySelectorAll('input');const icon=inp[0].value.trim(),ttl=inp[1].value.trim(),url=inp[2].value.trim();if(ttl&&url)links.push({icon:icon||'🔗',title:ttl,url});});const item={id:editingId||nxtId(),title,keywords,answer,steps:steps?.length?steps:undefined,extra,links:links.length?links:undefined};if(editingId)KB=KB.map(k=>k.id===editingId?item:k);else KB.push(item);saveData(KB_KEY,KB);closeModal('formModal');renderKBList();showToast(editingId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');}
+function exportKBxlsx(){const rows=[['id','title','keywords','answer','steps','extra','links']];KB.forEach(k=>rows.push([k.id,k.title,(k.keywords||[]).join(', '),k.answer||'',(k.steps||[]).join('\n'),k.extra||'',(k.links||[]).map(l=>l.icon+'|'+l.title+'|'+l.url).join('\n')]));const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:5},{wch:35},{wch:40},{wch:40},{wch:60},{wch:50},{wch:80}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'KB');XLSX.writeFile(wb,'knowledge_base.xlsx');}
+function importKBxlsx(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'binary'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[1]);const data=rows.map((r,i)=>({id:parseInt(r[0])||i+1,title:r[1]||'',keywords:(r[2]||'').split(',').map(k=>k.trim().toLowerCase()).filter(Boolean),answer:r[3]||undefined,steps:r[4]?r[4].split('\n').map(s=>s.trim()).filter(Boolean):undefined,extra:r[5]||undefined,links:r[6]?(r[6].split('\n').map(l=>{const p=l.split('|');return p.length>=3?{icon:p[0],title:p[1],url:p[2]}:null;}).filter(Boolean)):undefined}));if(confirm(`Import ${data.length} topics?`)){KB=data;saveData(KB_KEY,KB);renderKBList();showToast('✅ Import สำเร็จ!');}}catch(err){alert('❌ '+err.message);}};r.readAsBinaryString(f);e.target.value='';}
+
+/* ===== PASSWORD MANAGER ===== */
+const PW_KEY='freewill_pw_v1';
+let PW=loadData(PW_KEY,[{id:1,company:'SCCO',alias:['scco'],url:'https://app-v2.terminusfleet.com',username:'scco_admin',password:'Scco@2024',note:'Admin V2'},{id:2,company:'CPAC',alias:['cpac'],url:'https://fleetlink.cipcloud.net',username:'freewill@gpsvendor',password:'password',note:'FleetLink'}]);
+let editingPWId=null,showPassIds=new Set();
+function nxtPWId(){return Math.max(...PW.map(p=>p.id||0),0)+1;}
+function normA(s){return s.toLowerCase().replace(/\s+/g,'');}
+function searchPW(q){const nq=normA(q);return PW.filter(p=>normA(p.company).includes(nq)||normA(p.username).includes(nq)||(p.note&&normA(p.note).includes(nq))||(p.alias&&p.alias.some(a=>normA(a).includes(nq)||nq.includes(normA(a)))));}
+function openPW(){document.getElementById('pwOverlay').classList.add('open');showPassIds.clear();renderPWList();}
+function renderPWList(){
+  const q=(document.getElementById('pwSearch').value||'').trim();const list=q?searchPW(q):PW;
+  document.getElementById('pw-total').textContent=`${PW.length} รายการ`;
+  if(!list.length){document.getElementById('pwList').innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';return;}
+  document.getElementById('pwList').innerHTML=list.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div></div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
+}
+function togglePass(id){showPassIds.has(id)?showPassIds.delete(id):showPassIds.add(id);renderPWList();}
+function deletePW(id){const p=PW.find(x=>x.id===id);if(!confirm(`ลบ "${p?.company}"?`))return;PW=PW.filter(x=>x.id!==id);saveData(PW_KEY,PW);renderPWList();}
+function openPWForm(id=null){editingPWId=id;const p=id?PW.find(x=>x.id===id):null;document.getElementById('pwFormTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่มรหัสผ่าน';document.getElementById('pw-f-company').value=p?.company||'';document.getElementById('pw-f-alias').value=p?.alias?.join(', ')||'';document.getElementById('pw-f-url').value=p?.url||'';document.getElementById('pw-f-user').value=p?.username||'';document.getElementById('pw-f-pass').value=p?.password||'';document.getElementById('pw-f-note').value=p?.note||'';document.getElementById('pwFormModal').classList.add('open');}
+function genPass(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];document.getElementById('pw-f-pass').value=p;}
+function savePWForm(){const company=document.getElementById('pw-f-company').value.trim(),username=document.getElementById('pw-f-user').value.trim(),password=document.getElementById('pw-f-pass').value.trim();if(!company||!username||!password){alert('กรุณากรอกข้อมูลให้ครบ');return;}const aliasRaw=document.getElementById('pw-f-alias').value.trim();const item={id:editingPWId||nxtPWId(),company,alias:aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[],url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined};if(editingPWId)PW=PW.map(p=>p.id===editingPWId?item:p);else PW.push(item);saveData(PW_KEY,PW);closeModal('pwFormModal');renderPWList();showToast(editingPWId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');}
+function exportPWxlsx(){const rows=[['id','company','alias','url','username','password','note']];PW.forEach(p=>rows.push([p.id,p.company,(p.alias||[]).join(', '),p.url||'',p.username,p.password,p.note||'']));const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:5},{wch:25},{wch:20},{wch:40},{wch:25},{wch:20},{wch:25}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Passwords');XLSX.writeFile(wb,'passwords.xlsx');}
+function importPWxlsx(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'binary'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[1]&&r[4]&&r[5]);const data=rows.map((r,i)=>({id:parseInt(r[0])||i+1,company:r[1],alias:(r[2]||'').split(',').map(a=>a.trim().toLowerCase()).filter(Boolean),url:r[3]||undefined,username:r[4],password:String(r[5]),note:r[6]||undefined}));if(confirm(`Import ${data.length} รายการ?`)){PW=data;saveData(PW_KEY,PW);renderPWList();showToast('✅ Import สำเร็จ!');}}catch(err){alert('❌ '+err.message);}};r.readAsBinaryString(f);e.target.value='';}
+
+/* ===== CHAT ===== */
+let teachState=null;
+function addMsg(role,html){const m=document.getElementById('messages');const d=document.createElement('div');d.className=`msg ${role}`;const av=SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(SETTINGS.logoEmoji||'🤖');d.innerHTML=role==='bot'?`<div class="av bot">${av}</div><div class="bubble">${html}</div>`:`<div class="av usr">👤</div><div class="bubble">${html}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;}
+function showTyping(){const m=document.getElementById('messages');const d=document.createElement('div');d.className='msg bot';d.id='typing';const av=SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(SETTINGS.logoEmoji||'🤖');d.innerHTML=`<div class="av bot">${av}</div><div class="typing"><div class="dot2"></div><div class="dot2"></div><div class="dot2"></div></div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;}
+function removeTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+
+function startTeach(){teachState={step:'title',data:{}};addMsg('bot','📝 <b>สอน chatbot</b> — กรอกชื่อหัวข้อ<br><span style="font-size:11px;color:var(--muted)">(พิมพ์ /ยกเลิก เพื่อหยุด)</span>');}
+function handleTeachInput(input){
+  if(!teachState)return false;
+  if(input.startsWith('/ยกเลิก')||input.startsWith('/cancel')){teachState=null;addMsg('bot','❌ ยกเลิกแล้ว');return true;}
+  const{step,data}=teachState;
+  if(step==='title'){data.title=input;teachState.step='keywords';addMsg('bot',`✅ ชื่อ: <b>${input}</b><br>🔑 Keywords (comma) เช่น: mdvr, กล้องวีดีโอ`);return true;}
+  if(step==='keywords'){data.keywords=input.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);teachState.step='answer';addMsg('bot',`✅ Keywords: ${data.keywords.join(', ')}<br>💬 คำตอบหลัก (- เพื่อข้าม)`);return true;}
+  if(step==='answer'){if(input!=='-')data.answer=input;teachState.step='steps';addMsg('bot','📋 ขั้นตอน (ทีละบรรทัด) - เพื่อข้าม');return true;}
+  if(step==='steps'){if(input!=='-')data.steps=input.includes('\n')?input.split('\n').map(s=>s.trim()).filter(Boolean):input.split(',').map(s=>s.trim()).filter(Boolean);teachState.step='link';addMsg('bot','🔗 ลิงก์ (ชื่อ|URL) - เพื่อข้าม');return true;}
+  if(step==='link'){
+    if(input!=='-'){data.links=[];input.split('\n').forEach(line=>{const p=line.split('|');if(p.length>=2)data.links.push({icon:'🔗',title:p[0].trim(),url:p[1].trim()});else if(line.startsWith('http'))data.links.push({icon:'🔗',title:line,url:line});});}
+    const ni={id:nxtId(),title:data.title,keywords:data.keywords,answer:data.answer||undefined,steps:data.steps?.length?data.steps:undefined,links:data.links?.length?data.links:undefined};
+    KB.push(ni);saveData(KB_KEY,KB);teachState=null;
+    addMsg('bot',`<h3>✅ สอนสำเร็จ!</h3>${renderResult(ni)}`);return true;
+  }
+  return false;
 }
 
-function deleteItem(id){
-  if(!confirm('ลบ topic นี้?')) return;
-  KB=KB.filter(k=>k.id!==id); saveKB(); renderKBList();
+function handleCommand(input){
+  const q=input.trim(),cmd=q.split(' ')[0].toLowerCase(),arg=q.slice(cmd.length).trim();
+  if(cmd==='/pw'){
+    if(!arg){openPW();return true;}
+    const r=searchPW(arg);if(!r.length){addMsg('bot',`🔑 ไม่พบ "${arg}"<br><span style="font-size:12px">กด 🔑 Password เพื่อเพิ่ม</span>`);return true;}
+    addMsg('bot',`<h3>🔑 พบ ${r.length} รายการ</h3>${r.map(p=>`<div style="background:#fffbeb;border:1px solid #fde047;border-radius:10px;padding:10px 12px;margin-bottom:6px"><div style="font-weight:700;color:#78350f">🔑 ${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:11px;color:var(--primary)">${p.url}</a>`:''}<div style="margin-top:6px;font-size:13px">👤 <span style="font-family:monospace">${p.username}</span> <button onclick="copyText('${p.username}')" style="background:#d1fae5;border:none;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer">📋</button></div><div style="font-size:13px">🔒 <span style="font-family:monospace">${p.password}</span> <button onclick="copyText('${p.password}')" style="background:#d1fae5;border:none;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer">📋</button></div>${p.note?`<div style="font-size:11px;color:var(--muted);margin-top:4px">📝 ${p.note}</div>`:''}</div>`).join('')}`);return true;
+  }
+  if(['/เพิ่ม','/สอน','/teach','/add'].includes(cmd)){startTeach();return true;}
+  if(['/ดู','/list','/kb'].includes(cmd)){addMsg('bot',`<h3>📚 KB — ${KB.length} topics</h3><p>${KB.map((k,i)=>`<span class="tag">${i+1}. ${k.title}</span>`).join(' ')}</p>`);return true;}
+  if(['/ลบ','/delete'].includes(cmd)){if(!arg){addMsg('bot','เช่น /ลบ tracksolid');return true;}const f=searchKB(arg);if(!f){addMsg('bot',`❌ ไม่พบ "${arg}"`);return true;}if(confirm(`ลบ "${f.title}"?`)){KB=KB.filter(k=>k.id!==f.id);saveData(KB_KEY,KB);addMsg('bot',`🗑️ ลบ <b>"${f.title}"</b> แล้ว`);}return true;}
+  if(['/แก้ไข','/edit'].includes(cmd)){if(!arg){addMsg('bot','เช่น /แก้ไข dlt');return true;}const f=searchKB(arg);if(!f){addMsg('bot',`❌ ไม่พบ "${arg}"`);return true;}openAdmin();setTimeout(()=>openForm(f.id),100);return true;}
+  if(['/export','/backup'].includes(cmd)){exportKBxlsx();addMsg('bot','📥 Export KB เป็น .xlsx แล้ว');return true;}
+  if(['/งาน','/task'].includes(cmd)){openTaskPanel();return true;}
+  if(['/help','/?','/ช่วยเหลือ'].includes(cmd)){addMsg('bot',`<h3>📖 คำสั่ง</h3><div class="cmd-hint"><b>/เพิ่ม</b> — สอน chatbot | <b>/แก้ไข</b> — แก้ | <b>/ลบ</b> — ลบ<br><b>/ดู</b> — ดู KB | <b>/export</b> — xlsx | <b>/งาน</b> — เปิดติดตามงาน<br><b>/pw [บริษัท]</b> — password | <b>/ยกเลิก</b> — ยกเลิกสอน</div>`);return true;}
+  return false;
 }
 
-function openForm(id=null){
-  editingId=id;
-  const item=id?KB.find(k=>k.id===id):null;
-  document.getElementById('formTitle').textContent=id?'✏️ แก้ไข Topic':'➕ เพิ่ม Topic ใหม่';
-  document.getElementById('f-title').value=item?.title||'';
-  document.getElementById('f-keywords').value=item?.keywords?.join(', ')||'';
-  document.getElementById('f-answer').value=item?.answer||'';
-  document.getElementById('f-steps').value=item?.steps?.join('\n')||'';
-  document.getElementById('f-extra').value=item?.extra||'';
-  const rows=document.getElementById('linkRows'); rows.innerHTML='';
-  (item?.links||[]).forEach(l=>addLinkRow(l));
-  document.getElementById('formModal').classList.add('open');
+function sendMessage(){
+  const inp=document.getElementById('userInput');const q=inp.value.trim();if(!q)return;
+  document.getElementById('suggs').style.display='none';
+  addMsg('user',q);inp.value='';inp.style.height='auto';
+  if(teachState){handleTeachInput(q);return;}
+  if(q.startsWith('/')){if(!handleCommand(q))addMsg('bot',`ไม่รู้จักคำสั่ง <b>${q}</b> ลอง <b>/help</b>`);return;}
+  showTyping();
+  setTimeout(()=>{removeTyping();const r=searchKB(q);r?addMsg('bot',renderResult(r)):addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p>ลองถามด้วยคำอื่น หรือพิมพ์ <b>/เพิ่ม</b> เพื่อสอน chatbot</p>`);},400);
 }
-function closeForm(){ document.getElementById('formModal').classList.remove('open'); }
+function handleSugg(t){document.getElementById('userInput').value=t;sendMessage();}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
 
-function addLinkRow(l=null){
-  const rows=document.getElementById('linkRows');
-  const div=document.createElement('div'); div.className='link-row';
-  div.innerHTML=`<input type="text" value="${l?.icon||'🔗'}" placeholder="🔗" maxlength="4" style="text-align:center">
-    <input type="text" value="${l?.title||''}" placeholder="ชื่อลิงก์">
-    <input type="text" value="${l?.url||''}" placeholder="https://...">
-    <button class="del-link" onclick="this.parentElement.remove()">✕</button>`;
-  rows.appendChild(div);
-}
+/* ===== SUGGESTIONS ===== */
+const SUGGS=['📋 งานช่าง daily','⚡ Event/PTO','🏛️ DLT masterfile','📡 Device Code','📷 กล้อง ESP เสีย','🛰️ เช็คแบตสำรอง'];
+function buildSuggs(){document.getElementById('suggs').innerHTML=SUGGS.map(t=>`<button class="sbtn" onclick="handleSugg('${t}')">${t}</button>`).join('');}
 
-function saveForm(){
-  const title=document.getElementById('f-title').value.trim();
-  const kwRaw=document.getElementById('f-keywords').value.trim();
-  if(!title||!kwRaw){ alert('กรุณากรอก ชื่อ Topic และ Keywords'); return; }
-  const keywords=kwRaw.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);
-  const answer=document.getElementById('f-answer').value.trim()||undefined;
-  const stepsRaw=document.getElementById('f-steps').value.trim();
-  const steps=stepsRaw?stepsRaw.split('\n').map(s=>s.trim()).filter(Boolean):undefined;
-  const extra=document.getElementById('f-extra').value.trim()||undefined;
-  const linkEls=document.getElementById('linkRows').querySelectorAll('.link-row');
-  const links=[];
-  linkEls.forEach(row=>{ const inp=row.querySelectorAll('input'); const icon=inp[0].value.trim(),ttl=inp[1].value.trim(),url=inp[2].value.trim(); if(ttl&&url) links.push({icon:icon||'🔗',title:ttl,url}); });
-  const item={id:editingId||nextId(),title,keywords,answer,steps:steps?.length?steps:undefined,extra,links:links.length?links:undefined};
-  if(editingId) KB=KB.map(k=>k.id===editingId?item:k); else KB.push(item);
-  saveKB(); closeForm(); renderKBList();
-  alert(editingId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');
-}
-
-function exportKB(){
-  const blob=new Blob([JSON.stringify(KB,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-  a.download='knowledge_base.json'; a.click();
-}
-function importKB(event){
-  const file=event.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const data=JSON.parse(e.target.result);
-      if(!Array.isArray(data)) throw new Error('ต้องเป็น array');
-      if(confirm(`นำเข้า ${data.length} topics? (จะแทนที่ KB ปัจจุบัน)`)){
-        KB=data; saveKB(); renderKBList(); alert('✅ Import สำเร็จ!');
-      }
-    }catch(err){ alert('❌ ไฟล์ไม่ถูกต้อง: '+err.message); }
-  };
-  reader.readAsText(file); event.target.value='';
-}
-
-// ==================== INIT ====================
+/* ===== INIT ===== */
+applySettings();
 buildSidebar();
 buildSuggs();
+updateTaskBadge();
+// update PIC filter on load
+// PIC filter populated on open
 </script>
 </body>
 </html>
