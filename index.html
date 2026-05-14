@@ -5,1068 +5,649 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeWill FX — Support Chatbot</title>
 <style>
-  :root {
-    --primary: #1a56db;
-    --primary-dark: #1e429f;
-    --primary-light: #e8f0fe;
-    --bg: #f0f4f8;
-    --card: #ffffff;
-    --text: #1a202c;
-    --text-muted: #6b7280;
-    --border: #e2e8f0;
-    --bot-bubble: #ffffff;
-    --user-bubble: #1a56db;
-    --success: #059669;
-    --warning: #d97706;
-    --tag-bg: #eff6ff;
-    --tag-text: #1d4ed8;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', 'Noto Sans Thai', sans-serif;
-    background: var(--bg);
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+:root{--primary:#1a56db;--primary-dark:#1e429f;--primary-light:#e8f0fe;--bg:#f0f4f8;--card:#fff;--text:#1a202c;--muted:#6b7280;--border:#e2e8f0;--success:#059669;--danger:#dc2626}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);height:100vh;display:flex;flex-direction:column}
+.header{background:linear-gradient(135deg,#1a56db,#1e429f);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,.15);flex-shrink:0}
+.logo{width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.header-info h1{font-size:15px;font-weight:700}
+.header-info p{font-size:11px;opacity:.8;margin-top:1px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.status{display:flex;align-items:center;gap:5px;font-size:12px;opacity:.9}
+.dot{width:7px;height:7px;background:#34d399;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.admin-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s}
+.admin-btn:hover{background:rgba(255,255,255,.25)}
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:255px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar-title{padding:12px 14px 8px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.quick-links{overflow-y:auto;flex:1;padding:6px}
+.ls-title{font-size:10px;font-weight:600;color:var(--muted);padding:4px 8px;margin:4px 0 2px}
+.li{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:7px;cursor:pointer;font-size:12px;color:var(--text);text-decoration:none;transition:background .12s;border:none;background:none;width:100%;text-align:left}
+.li:hover{background:var(--primary-light);color:var(--primary)}
+.li-badge{font-size:9px;background:#fef3c7;color:#92400e;padding:1px 5px;border-radius:3px;font-weight:600;margin-left:auto}
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.msg{display:flex;gap:8px;max-width:90%;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{align-self:flex-end;flex-direction:row-reverse}
+.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:2px}
+.av.bot{background:var(--primary-light)}
+.av.usr{background:var(--primary);color:#fff}
+.bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;max-width:100%}
+.bot .bubble{background:var(--card);border:1px solid var(--border);border-top-left-radius:3px;box-shadow:0 1px 3px rgba(0,0,0,.05);color:var(--text)}
+.user .bubble{background:var(--primary);color:#fff;border-top-right-radius:3px}
+.bubble h3{font-size:13px;font-weight:700;margin-bottom:6px;color:var(--primary)}
+.user .bubble h3{color:#fff}
+.bubble p{margin-bottom:5px}
+.bubble p:last-child{margin-bottom:0}
+.step{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
+.snum{width:20px;height:20px;background:var(--primary);color:#fff;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.lcard{display:flex;align-items:center;gap:8px;background:var(--primary-light);border:1px solid #bfdbfe;border-radius:8px;padding:8px 10px;margin-top:6px;text-decoration:none;color:var(--primary-dark);font-size:12px;font-weight:600;transition:background .12s}
+.lcard:hover{background:#dbeafe}
+.lcard .lc-u{font-size:10px;color:var(--muted);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:600;padding:2px 7px;border-radius:15px;margin:2px}
+.tag.green{background:#d1fae5;color:#065f46}
+.tag.orange{background:#fef3c7;color:#92400e}
+.codeblock{background:#1e293b;color:#e2e8f0;border-radius:7px;padding:10px;font-family:'Courier New',monospace;font-size:11px;margin-top:6px;white-space:pre-wrap;word-break:break-all}
 
-  /* Header */
-  .header {
-    background: linear-gradient(135deg, #1a56db 0%, #1e429f 100%);
-    color: white;
-    padding: 14px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    flex-shrink: 0;
-  }
-  .header-logo {
-    width: 40px; height: 40px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-  .header-info h1 { font-size: 16px; font-weight: 700; }
-  .header-info p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
-  .header-status {
-    margin-left: auto;
-    display: flex; align-items: center; gap: 6px;
-    font-size: 12px; opacity: 0.9;
-  }
-  .status-dot {
-    width: 8px; height: 8px;
-    background: #34d399; border-radius: 50%;
-    animation: pulse 2s infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+/* teach bubble */
+.teach-bubble{background:#fefce8;border:1px solid #fde047;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6}
+.teach-bubble h3{color:#854d0e;margin-bottom:6px}
+.teach-form{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.teach-form input,.teach-form textarea{padding:7px 10px;border:1px solid #fde047;border-radius:7px;font-size:12px;font-family:inherit;outline:none;background:#fffbeb}
+.teach-form input:focus,.teach-form textarea:focus{border-color:#f59e0b}
+.teach-form textarea{resize:vertical;min-height:60px}
+.teach-form label{font-size:11px;font-weight:600;color:#78350f;margin-bottom:2px}
+.teach-btns{display:flex;gap:6px}
+.tbtn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.tbtn-ok{background:#f59e0b;color:#fff}
+.tbtn-ok:hover{background:#d97706}
+.tbtn-cancel{background:#f3f4f6;color:var(--text)}
+.tbtn-cancel:hover{background:#e5e7eb}
 
-  /* Layout */
-  .main {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
+/* cmd hint */
+.cmd-hint{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 12px;font-size:12px;color:#166534;margin-top:4px}
+.cmd-hint b{color:#15803d}
 
-  /* Sidebar */
-  .sidebar {
-    width: 260px;
-    background: var(--card);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .sidebar-title {
-    padding: 14px 16px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    border-bottom: 1px solid var(--border);
-  }
-  .quick-links {
-    overflow-y: auto;
-    flex: 1;
-    padding: 8px;
-  }
-  .link-section { margin-bottom: 12px; }
-  .link-section-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 4px 8px;
-    margin-bottom: 4px;
-  }
-  .link-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    color: var(--text);
-    text-decoration: none;
-    transition: background 0.15s;
-    border: none;
-    background: none;
-    width: 100%;
-    text-align: left;
-  }
-  .link-item:hover { background: var(--primary-light); color: var(--primary); }
-  .link-icon { font-size: 15px; flex-shrink: 0; }
-  .link-label { flex: 1; line-height: 1.3; }
-  .link-badge {
-    font-size: 10px;
-    background: #fef3c7;
-    color: #92400e;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-weight: 600;
-  }
+.suggs{padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px}
+.sbtn{background:var(--card);border:1px solid var(--primary);color:var(--primary);padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;transition:all .12s;font-family:inherit}
+.sbtn:hover{background:var(--primary);color:#fff}
+.input-area{padding:10px 16px 14px;background:var(--card);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end}
+.iw{flex:1;background:var(--bg);border:2px solid var(--border);border-radius:10px;display:flex;align-items:center;padding:7px 12px;transition:border-color .12s}
+.iw:focus-within{border-color:var(--primary)}
+#userInput{flex:1;border:none;background:none;font-size:13px;font-family:inherit;color:var(--text);outline:none;resize:none;max-height:90px;line-height:1.5}
+#userInput::placeholder{color:var(--muted)}
+.send-btn{width:38px;height:38px;background:var(--primary);border:none;border-radius:10px;cursor:pointer;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:hover{background:var(--primary-dark)}
+.typing{display:flex;gap:4px;padding:10px 14px;background:var(--card);border:1px solid var(--border);border-radius:14px;border-top-left-radius:3px;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.dot2{width:6px;height:6px;background:var(--primary);border-radius:50%;animation:bounce 1.2s infinite}
+.dot2:nth-child(2){animation-delay:.2s}.dot2:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@media(max-width:600px){.sidebar{display:none}}
 
-  /* Chat area */
-  .chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .message {
-    display: flex;
-    gap: 10px;
-    max-width: 85%;
-    animation: fadeIn 0.2s ease;
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .message.user {
-    align-self: flex-end;
-    flex-direction: row-reverse;
-  }
-  .avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 16px;
-    flex-shrink: 0;
-    margin-top: 2px;
-  }
-  .bot-avatar { background: var(--primary-light); }
-  .user-avatar { background: var(--user-bubble); color: white; }
-  .bubble {
-    padding: 12px 16px;
-    border-radius: 16px;
-    font-size: 14px;
-    line-height: 1.6;
-    max-width: 100%;
-  }
-  .bot .bubble {
-    background: var(--bot-bubble);
-    border: 1px solid var(--border);
-    border-top-left-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    color: var(--text);
-  }
-  .user .bubble {
-    background: var(--user-bubble);
-    color: white;
-    border-top-right-radius: 4px;
-  }
-  .bubble h3 {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: var(--primary);
-  }
-  .user .bubble h3 { color: white; }
-  .bubble p { margin-bottom: 6px; }
-  .bubble p:last-child { margin-bottom: 0; }
-  .bubble ul { padding-left: 18px; margin: 6px 0; }
-  .bubble li { margin-bottom: 4px; }
-
-  /* Link card inside bubble */
-  .link-card {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--primary-light);
-    border: 1px solid #bfdbfe;
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-top: 8px;
-    text-decoration: none;
-    color: var(--primary-dark);
-    font-size: 13px;
-    font-weight: 600;
-    transition: background 0.15s;
-  }
-  .link-card:hover { background: #dbeafe; }
-  .link-card .lc-icon { font-size: 18px; flex-shrink: 0; }
-  .link-card .lc-text { flex: 1; overflow: hidden; }
-  .link-card .lc-title { font-weight: 700; font-size: 13px; }
-  .link-card .lc-url { font-size: 11px; color: var(--text-muted); font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .link-card .lc-arrow { font-size: 14px; flex-shrink: 0; }
-
-  /* Tags */
-  .tag {
-    display: inline-block;
-    background: var(--tag-bg);
-    color: var(--tag-text);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 20px;
-    margin: 2px;
-  }
-  .tag.green { background: #d1fae5; color: #065f46; }
-  .tag.orange { background: #fef3c7; color: #92400e; }
-  .tag.red { background: #fee2e2; color: #991b1b; }
-
-  /* Steps */
-  .steps { margin-top: 8px; }
-  .step {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 8px;
-    align-items: flex-start;
-  }
-  .step-num {
-    width: 22px; height: 22px;
-    background: var(--primary);
-    color: white;
-    border-radius: 50%;
-    font-size: 11px;
-    font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-  .step-text { font-size: 13px; line-height: 1.5; }
-
-  /* Code block */
-  .code-block {
-    background: #1e293b;
-    color: #e2e8f0;
-    border-radius: 8px;
-    padding: 12px;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    margin-top: 8px;
-    white-space: pre-wrap;
-    word-break: break-all;
-  }
-
-  /* Suggestions */
-  .suggestions {
-    padding: 0 20px 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .suggestion-btn {
-    background: var(--card);
-    border: 1px solid var(--primary);
-    color: var(--primary);
-    padding: 7px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s;
-    font-family: inherit;
-  }
-  .suggestion-btn:hover {
-    background: var(--primary);
-    color: white;
-  }
-
-  /* Input area */
-  .input-area {
-    padding: 12px 20px 16px;
-    background: var(--card);
-    border-top: 1px solid var(--border);
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-  .input-wrap {
-    flex: 1;
-    background: var(--bg);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    padding: 8px 14px;
-    transition: border-color 0.15s;
-  }
-  .input-wrap:focus-within { border-color: var(--primary); }
-  #userInput {
-    flex: 1;
-    border: none;
-    background: none;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--text);
-    outline: none;
-    resize: none;
-    max-height: 100px;
-    line-height: 1.5;
-  }
-  #userInput::placeholder { color: var(--text-muted); }
-  .send-btn {
-    width: 42px; height: 42px;
-    background: var(--primary);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    color: white;
-    font-size: 18px;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
-    flex-shrink: 0;
-  }
-  .send-btn:hover { background: var(--primary-dark); }
-
-  /* Typing indicator */
-  .typing {
-    display: flex;
-    gap: 5px;
-    padding: 12px 16px;
-    background: var(--bot-bubble);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    border-top-left-radius: 4px;
-    width: fit-content;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  }
-  .dot {
-    width: 7px; height: 7px;
-    background: var(--primary);
-    border-radius: 50%;
-    animation: bounce 1.2s infinite;
-  }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-  }
-
-  /* Divider */
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--text-muted);
-    font-size: 11px;
-    margin: 4px 0;
-  }
-  .divider::before, .divider::after {
-    content: ''; flex: 1;
-    border-top: 1px solid var(--border);
-  }
-
-  @media (max-width: 600px) {
-    .sidebar { display: none; }
-  }
+/* ADMIN */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto}
+.overlay.open{display:flex}
+.admin-panel{background:var(--card);border-radius:14px;width:100%;max-width:860px;margin:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);display:flex;flex-direction:column;max-height:90vh}
+.ap-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ap-header h2{font-size:16px;font-weight:700;flex:1}
+.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1}
+.close-btn:hover{color:var(--text)}
+.ap-toolbar{padding:12px 20px;border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex-shrink:0}
+.ap-toolbar input{flex:1;min-width:180px;padding:7px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+.ap-toolbar input:focus{border-color:var(--primary)}
+.btn{padding:7px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .12s;display:flex;align-items:center;gap:5px}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-dark)}
+.btn-success{background:#059669;color:#fff}.btn-success:hover{background:#047857}
+.btn-ghost{background:var(--bg);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:var(--border)}
+.kb-list{overflow-y:auto;flex:1;padding:12px 20px}
+.kb-count{font-size:12px;color:var(--muted);margin-bottom:10px}
+.kb-item{border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.kb-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kb-item-header{padding:10px 14px;display:flex;align-items:center;gap:10px;background:var(--bg)}
+.kb-item-header:hover{background:#e8eef5}
+.kb-title{font-size:13px;font-weight:600;flex:1}
+.kb-kw{font-size:11px;color:var(--muted);margin-top:1px}
+.kb-actions{display:flex;gap:5px;flex-shrink:0}
+.kb-actions button{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.btn-edit{background:#eff6ff;color:var(--primary)}.btn-edit:hover{background:var(--primary-light)}
+.btn-del{background:#fee2e2;color:var(--danger)}.btn-del:hover{background:#fca5a5}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border-radius:12px;width:100%;max-width:620px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;position:sticky;top:0;background:var(--card);z-index:1}
+.modal-header h3{font-size:14px;font-weight:700;flex:1}
+.modal-body{padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.field label{display:block;font-size:12px;font-weight:600;margin-bottom:4px}
+.field input,.field textarea{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+.field input:focus,.field textarea:focus{border-color:var(--primary)}
+.field textarea{resize:vertical;min-height:70px}
+.field .hint{font-size:11px;color:var(--muted);margin-top:3px}
+.link-rows{display:flex;flex-direction:column;gap:6px}
+.link-row{display:grid;grid-template-columns:42px 1fr 1fr auto;gap:6px;align-items:center}
+.link-row input{padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none}
+.link-row input:focus{border-color:var(--primary)}
+.del-link{background:#fee2e2;color:var(--danger);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px}
+.add-link-btn{background:var(--bg);border:1px dashed var(--border);color:var(--muted);padding:6px;border-radius:7px;font-size:12px;cursor:pointer;font-family:inherit;text-align:center}
+.add-link-btn:hover{border-color:var(--primary);color:var(--primary)}
+.modal-footer{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;position:sticky;bottom:0;background:var(--card)}
+.ap-footer{padding:10px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;align-items:center}
 </style>
 </head>
 <body>
 
-<!-- Header -->
 <div class="header">
-  <div class="header-logo">🛰️</div>
+  <div class="logo">🛰️</div>
   <div class="header-info">
     <h1>FreeWill FX — Support Assistant</h1>
-    <p>ระบบ Terminus Fleet Management | GPS Support Bot</p>
+    <p>Terminus Fleet Management | GPS Support Bot</p>
   </div>
-  <div class="header-status">
-    <div class="status-dot"></div>
-    Online
+  <div class="header-right">
+    <div class="status"><div class="dot"></div>Online</div>
+    <button class="admin-btn" onclick="openAdmin()">⚙️ จัดการ KB</button>
   </div>
 </div>
 
 <div class="main">
-  <!-- Sidebar -->
   <div class="sidebar">
     <div class="sidebar-title">🔗 Quick Links</div>
-    <div class="quick-links">
-
-      <div class="link-section">
-        <div class="link-section-title">📋 งานช่าง Daily</div>
-        <a class="link-item" href="https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician" target="_blank">
-          <span class="link-icon">🔧</span>
-          <span class="link-label">งานติดตั้ง Daily</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2" target="_blank">
-          <span class="link-icon">🔄</span>
-          <span class="link-label">งานซ่อมเปลี่ยนกล่อง</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com/receiver/installation/create_device.php" target="_blank">
-          <span class="link-icon">➕</span>
-          <span class="link-label">สร้างอุปกรณ์ SCCO</span>
-        </a>
-      </div>
-
-      <div class="link-section">
-        <div class="link-section-title">🏛️ DLT / กรมขนส่ง</div>
-        <a class="link-item" href="https://gpstmc.dlt.go.th/dltgps/web/finish_page/" target="_blank">
-          <span class="link-icon">📑</span>
-          <span class="link-label">DLT Finish Page</span>
-          <span class="link-badge">Daily</span>
-        </a>
-        <a class="link-item" href="https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php" target="_blank">
-          <span class="link-icon">📂</span>
-          <span class="link-label">DLT Masterfile</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com/report/report/dltreport" target="_blank">
-          <span class="link-icon">📊</span>
-          <span class="link-label">DLT Report</span>
-        </a>
-      </div>
-
-      <div class="link-section">
-        <div class="link-section-title">🖥️ Terminus System</div>
-        <a class="link-item" href="https://app-v2.terminusfleet.com" target="_blank">
-          <span class="link-icon">🌐</span>
-          <span class="link-label">Terminus Fleet V2</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com" target="_blank">
-          <span class="link-icon">🔑</span>
-          <span class="link-label">Terminus V1</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com/rmc/feed" target="_blank">
-          <span class="link-icon">📡</span>
-          <span class="link-label">RMC Feed (ORC)</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php" target="_blank">
-          <span class="link-icon">⚡</span>
-          <span class="link-label">Event Data</span>
-        </a>
-      </div>
-
-      <div class="link-section">
-        <div class="link-section-title">🔩 FleetLink / CPAC</div>
-        <a class="link-item" href="https://fleetlink.cipcloud.net/" target="_blank">
-          <span class="link-icon">🚛</span>
-          <span class="link-label">FleetLink CPAC</span>
-        </a>
-        <a class="link-item" href="https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip" target="_blank">
-          <span class="link-icon">📉</span>
-          <span class="link-label">GPS Disconnect Report</span>
-        </a>
-        <a class="link-item" href="https://fleetlink.cipcloud.net/maintenancedevice" target="_blank">
-          <span class="link-icon">🛠️</span>
-          <span class="link-label">Maintenance Device</span>
-        </a>
-      </div>
-
-      <div class="link-section">
-        <div class="link-section-title">📹 Camera / Tracksolid</div>
-        <a class="link-item" href="https://tracksolid.com/mainFrame" target="_blank">
-          <span class="link-icon">📷</span>
-          <span class="link-label">Tracksolid (JC200/HNT)</span>
-        </a>
-        <a class="link-item" href="https://hk.tracksolidpro.com/resource/dev/index.html#/login" target="_blank">
-          <span class="link-icon">🎥</span>
-          <span class="link-label">Tracksolid Pro (J40/JC400)</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com/receiver/test/video_monitoring.php" target="_blank">
-          <span class="link-icon">🖥️</span>
-          <span class="link-label">Video Monitoring</span>
-        </a>
-      </div>
-
-      <div class="link-section">
-        <div class="link-section-title">📱 แท็บเล็ตช่าง</div>
-        <a class="link-item" href="https://login.terminusfleet.com/mobile/authenticatetech/login/msg/please_login/?redir=/mobile/worktechnician" target="_blank">
-          <span class="link-icon">📲</span>
-          <span class="link-label">หน้า Tablet ช่าง</span>
-        </a>
-        <a class="link-item" href="https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php" target="_blank">
-          <span class="link-icon">🥁</span>
-          <span class="link-label">เซ็นเซอร์โม่</span>
-        </a>
-      </div>
-
-    </div>
+    <div class="quick-links" id="sidebarLinks"></div>
   </div>
-
-  <!-- Chat -->
   <div class="chat-area">
     <div class="messages" id="messages">
-      <!-- Welcome message -->
-      <div class="message bot">
-        <div class="avatar bot-avatar">🤖</div>
+      <div class="msg bot">
+        <div class="av bot">🤖</div>
         <div class="bubble">
           <h3>สวัสดีครับ! 👋 ยินดีต้อนรับสู่ FreeWill FX Support Bot</h3>
-          <p>ผมช่วยค้นหาข้อมูลจาก Knowledge Base ของทีมได้เลยครับ เช่น:</p>
-          <p>
-            <span class="tag">🔗 ลิงก์ระบบต่างๆ</span>
-            <span class="tag">📋 SOP ขั้นตอน</span>
-            <span class="tag">🔧 วิธีแก้ปัญหา</span>
-            <span class="tag">📡 Device Code</span>
-            <span class="tag">🏛️ งาน DLT</span>
-          </p>
-          <p style="margin-top:8px; color: var(--text-muted); font-size:13px;">พิมพ์คำถามหรือเลือกหัวข้อด้านล่างได้เลยครับ</p>
+          <p>ผมช่วยค้นหาข้อมูลจาก Knowledge Base ของทีมได้เลยครับ</p>
+          <div class="cmd-hint">
+            <b>💡 สอน chatbot ได้ผ่านแชทเลย:</b><br>
+            <b>/เพิ่ม</b> หรือ <b>/สอน</b> — เพิ่ม topic ใหม่<br>
+            <b>/แก้ไข [คำค้น]</b> — แก้ไข topic ที่มีอยู่<br>
+            <b>/ลบ [คำค้น]</b> — ลบ topic<br>
+            <b>/ดู</b> — ดูรายการ topic ทั้งหมด<br>
+            <b>/export</b> — บันทึก KB เป็นไฟล์
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- Suggestions -->
-    <div class="suggestions" id="suggestions">
-      <button class="suggestion-btn" onclick="handleSuggestion('ลิงก์งานช่าง daily')">📋 งานช่าง Daily</button>
-      <button class="suggestion-btn" onclick="handleSuggestion('วิธีเปิดใบงานช่าง V1')">📄 เปิดใบงานช่าง</button>
-      <button class="suggestion-btn" onclick="handleSuggestion('เช็ค Event PTO Boom')">⚡ Event/PTO/Boom</button>
-      <button class="suggestion-btn" onclick="handleSuggestion('ลิงก์ DLT masterfile')">🏛️ DLT Masterfile</button>
-      <button class="suggestion-btn" onclick="handleSuggestion('วิธีดึงวิดีโอ FTP')">📹 ดึงวิดีโอ FTP</button>
-      <button class="suggestion-btn" onclick="handleSuggestion('device code ของแต่ละรุ่น')">📡 Device Code</button>
-      <button class="suggestion-btn" onclick="handleSuggestion('กล้อง ESP เสีย')">📷 กล้อง ESP เสีย</button>
-      <button class="suggestion-btn" onclick="handleSuggestion('เช็คแบตสำรอง')">🔋 เช็คแบตสำรอง</button>
-    </div>
-
-    <!-- Input -->
+    <div class="suggs" id="suggs"></div>
     <div class="input-area">
-      <div class="input-wrap">
-        <textarea id="userInput" rows="1" placeholder="พิมพ์คำถาม เช่น ลิงก์ DLT, วิธีเช็ค PTO, กล้อง ESP เสีย..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      </div>
+      <div class="iw"><textarea id="userInput" rows="1" placeholder="พิมพ์คำถาม หรือ /เพิ่ม /สอน /แก้ไข /ลบ /ดู /export ..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea></div>
       <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
   </div>
 </div>
 
+<!-- Admin Overlay -->
+<div class="overlay" id="adminOverlay" onclick="closeAdminIfBg(event)">
+  <div class="admin-panel">
+    <div class="ap-header">
+      <span style="font-size:20px">⚙️</span>
+      <h2>จัดการ Knowledge Base</h2>
+      <span id="kb-total" style="font-size:12px;color:var(--muted)"></span>
+      <button class="close-btn" onclick="closeAdmin()">×</button>
+    </div>
+    <div class="ap-toolbar">
+      <input type="text" id="kbSearch" placeholder="🔍 ค้นหา topic..." oninput="renderKBList()">
+      <button class="btn btn-primary" onclick="openForm()">➕ เพิ่ม Topic</button>
+      <button class="btn btn-ghost" onclick="exportKB()">📥 Export JSON</button>
+      <label class="btn btn-ghost" style="cursor:pointer">📤 Import JSON<input type="file" accept=".json" style="display:none" onchange="importKB(event)"></label>
+    </div>
+    <div class="kb-list" id="kbList"></div>
+    <div class="ap-footer">
+      <span style="font-size:12px;color:var(--muted);flex:1">💡 แก้ไขมีผลทันที | Export JSON เพื่อ backup แล้ว upload ขึ้น GitHub</span>
+    </div>
+  </div>
+</div>
+
+<!-- Form Modal -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="formTitle">➕ เพิ่ม Topic ใหม่</h3>
+      <button class="close-btn" onclick="closeForm()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>ชื่อ Topic *</label><input type="text" id="f-title" placeholder="เช่น 📋 งานติดตั้ง Daily"></div>
+      <div class="field">
+        <label>Keywords (คั่นด้วย comma) *</label>
+        <input type="text" id="f-keywords" placeholder="เช่น daily, งานช่าง, ติดตั้ง">
+        <div class="hint">คำที่ใช้จับคู่กับคำถาม — ยิ่งมาก ยิ่งหาเจอง่าย</div>
+      </div>
+      <div class="field"><label>คำตอบ / ข้อมูลหลัก</label><textarea id="f-answer" placeholder="คำตอบสั้นๆ"></textarea></div>
+      <div class="field">
+        <label>ขั้นตอน (Steps) — ใส่ทีละบรรทัด</label>
+        <textarea id="f-steps" placeholder="ขั้นตอนที่ 1&#10;ขั้นตอนที่ 2" style="min-height:80px"></textarea>
+      </div>
+      <div class="field">
+        <label>ข้อมูลเพิ่มเติม (รองรับ HTML)</label>
+        <textarea id="f-extra" placeholder='<div class="codeblock">code หรือข้อมูล technical</div>'></textarea>
+      </div>
+      <div class="field">
+        <label>ลิงก์ที่เกี่ยวข้อง</label>
+        <div class="link-rows" id="linkRows"></div>
+        <button class="add-link-btn" onclick="addLinkRow()">+ เพิ่มลิงก์</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeForm()">ยกเลิก</button>
+      <button class="btn btn-success" onclick="saveForm()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ==================== KNOWLEDGE BASE ====================
-const KB = [
-  // ---- งานช่าง Daily ----
-  {
-    keywords: ['daily', 'งานช่าง', 'ติดตั้ง', 'งานติดตั้ง', 'ผูกกล่อง', 'billing', 'ประจำวัน'],
-    title: '📋 งานติดตั้ง / ผูกกล่อง (Daily)',
-    answer: `งาน Daily ที่ต้องทำทุกวันครับ:`,
-    steps: [
-      'งานติดตั้งใหม่ — ต้องเช็คทุกคันว่า ผูกกล่องรถ และ Billing หรือยัง',
-      'งานซ่อมเปลี่ยนกล่องรถโม่ — ต้องเช็คว่าแชร์เข้า SCCO หรือยัง',
-      'ตรวจให้เสร็จก่อน 14:00 ของทุกวัน',
-      'งานตามโซนสามารถจ่ายช่างได้เลย'
-    ],
-    links: [
-      { icon: '🔧', title: 'งานติดตั้ง Daily', url: 'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician', desc: 'show_daily_maintenance_technician' },
-      { icon: '🔄', title: 'งานซ่อมเปลี่ยนกล่อง Daily', url: 'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2', desc: 'show_daily_maintenance_technician2' },
-    ]
-  },
-
-  // ---- Monitoring SCCO ----
-  {
-    keywords: ['scco', 'monitoring', 'ผูกกล่องงานซ่อม', 'รถโม่', 'สร้างอุปกรณ์'],
-    title: '🖥️ Monitoring — ผูกกล่องงานซ่อมรถ SCCO',
-    answer: `ขั้นตอนผูกกล่องงานซ่อม SCCO:`,
-    steps: [
-      'เช็คงานซ่อมเปลี่ยนกล่อง ดูเฉพาะรถ SCCO',
-      'สร้างอุปกรณ์ (เลือก server SCCO)',
-      'ผูกกล่องใหม่ ติ๊กเลือก server SCCO'
-    ],
-    links: [
-      { icon: '🔄', title: 'งานซ่อมเปลี่ยนกล่อง', url: 'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2', desc: 'Daily Maintenance 2' },
-      { icon: '➕', title: 'สร้างอุปกรณ์', url: 'https://login.terminusfleet.com/receiver/installation/create_device.php', desc: 'Create Device' },
-    ]
-  },
-
-  // ---- DLT Masterfile ----
-  {
-    keywords: ['dlt', 'masterfile', 'master file', 'กรมขนส่ง', 'ส่งรายงาน', 'finish page', 'อัพเดท master', 'ลบ master'],
-    title: '🏛️ DLT / กรมขนส่งทางบก',
-    answer: `ข้อมูลงาน DLT ครับ:`,
-    extra: `งานที่ต้องทำ: รันบอทอัพเดท master ทุกวัน | ลบ master รถยกเลิกสัญญา`,
-    links: [
-      { icon: '📑', title: 'DLT Finish Page (อัพเดท Master)', url: 'https://gpstmc.dlt.go.th/dltgps/web/finish_page/', desc: 'gpstmc.dlt.go.th' },
-      { icon: '📂', title: 'DLT Masterfile (p34)', url: 'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php', desc: 'p34_masterfile' },
-      { icon: '📊', title: 'DLT Report (ติดตั้ง/เปลี่ยน/ถอด)', url: 'https://login.terminusfleet.com/report/report/dltreport', desc: 'DLT Monthly Report' },
-      { icon: '🗺️', title: 'DLT Map Report', url: 'http://login.terminusfleet.com/map/dltreport', desc: 'Map DLT Report' },
-    ]
-  },
-
-  // ---- ORC ----
-  {
-    keywords: ['orc', 'แจ้งซ่อม orc', 'rmc feed', 'หัวหน้าโซน'],
-    title: '📡 ORC — การแจ้งซ่อม',
-    answer: `ขั้นตอน ORC:`,
-    steps: [
-      'Login: user@orc / password',
-      'แจ้งซ่อม — ติดต่อเบอร์หัวหน้าโซน'
-    ],
-    links: [
-      { icon: '📡', title: 'RMC Feed (ORC)', url: 'https://login.terminusfleet.com/rmc/feed', desc: 'terminusfleet.com/rmc/feed' },
-    ]
-  },
-
-  // ---- FleetLink / CPAC ----
-  {
-    keywords: ['fleetlink', 'cpac', 'fleet link', 'รถโม่', 'gps ขาดการติดต่อ', 'disconnect', 'แจ้งซ่อม cpac'],
-    title: '🚛 FleetLink / CPAC',
-    answer: `ระบบ FleetLink สำหรับ CPAC ครับ:`,
-    links: [
-      { icon: '🚛', title: 'FleetLink หลัก', url: 'https://fleetlink.cipcloud.net/', desc: 'fleetlink.cipcloud.net' },
-      { icon: '📉', title: 'GPS Disconnect on Trip', url: 'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip', desc: 'ดึงรายงาน GPS ขาดการติดต่อขณะวิ่งงาน' },
-      { icon: '🛠️', title: 'Maintenance Device', url: 'https://fleetlink.cipcloud.net/maintenancedevice', desc: 'ปรับสถานะใบแจ้งซ่อม' },
-    ]
-  },
-
-  // ---- เปิดใบงานช่าง V1 ----
-  {
-    keywords: ['ใบงานช่าง', 'เปิดใบงาน', 'v1', 'บันทึกการซ่อม', 'เปิดงาน'],
-    title: '📄 วิธีเปิดใบงานช่าง (V1)',
-    answer: `ขั้นตอนเปิดใบงานช่าง V1:`,
-    steps: [
-      'การจัดการอุปกรณ์',
-      'บันทึกการซ่อมแซม',
-      'สร้าง',
-      'เลือกบริษัท ใส่ข้อมูล'
-    ],
-    extra: `หน้า Tablet ช่าง: Login tech14@test | สมศักดิ์ อาจอุดม`,
-    links: [
-      { icon: '📲', title: 'หน้า Tablet ช่าง', url: 'https://login.terminusfleet.com/mobile/authenticatetech/login/msg/please_login/?redir=/mobile/worktechnician', desc: 'Mobile Work Technician' },
-    ]
-  },
-
-  // ---- ตรวจสอบสถานะรูดบัตร ----
-  {
-    keywords: ['รูดบัตร', 'ใบขับขี่', 'device code', 'iccid', 'สถานะรูด'],
-    title: '💳 ตรวจสอบสถานะรูดบัตรใบขับขี่',
-    answer: `วิธีตรวจสอบรูดบัตรใบขับขี่:`,
-    steps: [
-      'V1 → การติดตั้งอุปกรณ์',
-      'รายการติดตั้ง → Search ทะเบียน',
-      'ดู Device code (หากมีตัวเลขในวงเล็บ = รูดบัตรได้ปกติ)',
-      'เช็คเพิ่มเติมจากเว็บขนส่ง gpstmc.dlt.go.th'
-    ],
-    links: [
-      { icon: '🏛️', title: 'เว็บขนส่ง (ตรวจสอบ)', url: 'http://gpstmc.dlt.go.th/dltgps/web/finish_page/', desc: 'DLT Finish Page' },
-    ]
-  },
-
-  // ---- แก้ไขข้อมูลรถ ----
-  {
-    keywords: ['แก้ไขข้อมูลรถ', 'edit รถ', 'แก้ข้อมูล', 'แก้ทะเบียน'],
-    title: '✏️ แก้ไขข้อมูลรถ',
-    answer: `ขั้นตอนแก้ไขข้อมูลรถ:`,
-    steps: [
-      'V1 → การติดตั้งอุปกรณ์ / รายการติดตั้ง',
-      'Search ทะเบียน',
-      'กด Edit / บันทึก'
-    ],
-  },
-
-  // ---- Event / PTO / Boom ----
-  {
-    keywords: ['event', 'pto', 'boom', 'ความเร็ว', 'เตือนความเร็ว', 'velalarm', 'accalarm', 'brkalarm', 'stoppoint', 'valvesensor'],
-    title: '⚡ เช็ค Event / PTO / Boom / ความเร็ว',
-    answer: `ข้อมูล Event Data และความหมาย:`,
-    extra: `<div class="code-block">ValveSensorToggle = PTO / Boom / ประตู
-VelAlarm = ความเร็วเกิน
-StopPoint = จุดจอด
-AccAlarm = ออกตัวกระชาก
-BrkAlarm = เบรคกระทันหัน
-
-ESP: d":[0,1,1]  (หลักที่ 2,3)
-FOX: d":[0,0,1,1,1,1,0,0]
-ISU: "Extra":[1,1,1,0,1,1,1,1]</div>`,
-    links: [
-      { icon: '⚡', title: 'Event Data V2', url: 'https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php', desc: 'show_simple_event_data_v2.php' },
-    ]
-  },
-
-  // ---- สัญญาณ EXTRA / CPF / Dynamic ----
-  {
-    keywords: ['extra', 'cpf', 'dynamic', 'สัญญาณ', 'เลี้ยวซ้าย', 'ไฟต่ำ', 'ไฟสูง', 'ปัดน้ำฝน'],
-    title: '🔌 สัญญาณ EXTRA (CPF / Dynamic)',
-    answer: `ตำแหน่งสัญญาณ I/O >> Engine – PTO – BOOM:`,
-    extra: `<div class="code-block">CPF:
-1. เลี้ยวซ้าย  2. เลี้ยวขวา  3. แตร
-4. ไฟต่ำ      5. ไฟสูง     6. ที่ปัดน้ำฝน
-7. ไฟถอย     8. ไฟเบรค
-
-Dynamic:
-1. เลี้ยวซ้าย  2. เลี้ยวขวา  3. แตร
-4. ไฟต่ำ      5. ปุ่มฉุกเฉิน 6. ที่ปัดน้ำฝน
-7. (ว่าง)     8. ไฟเบรค</div>`,
-  },
-
-  // ---- FTP วิดีโอ ----
-  {
-    keywords: ['ftp', 'filezilla', 'ดึงวิดีโอ', 'video', 'mp4', 'ดาวน์โหลดวิดีโอ'],
-    title: '📹 FTP ดึงวิดีโอ (FileZilla)',
-    answer: `วิธีดึงวิดีโอผ่าน FTP:`,
-    steps: [
-      'เปิด FileZilla',
-      'Host: sftp://login.terminusfleet.com',
-      'User: terminus-app | Password: 9uJgx]ujpo.0',
-      'Path: /home/terminus-app/fleet1.1/public/upload/websocket',
-      'Shell → cd /mnt/m_external_sd/capture → ls *',
-      'cp [ชื่อไฟล์].mp4 /sdcard/[ชื่อไฟล์].mp4',
-      'Browsefile Sdcard → เลือกไฟล์ → ดาวน์โหลด'
-    ],
-    extra: `<div class="code-block">รูปแบบชื่อไฟล์: 2023_09_20_07_08_22.mp4
-Shell log ESP: cat /sdcard/terminus/terminus/exception/YYYYMMDD.log</div>`,
-  },
-
-  // ---- กล้อง ESP เสีย ----
-  {
-    keywords: ['กล้องเสีย', 'กล้อง esp', 'esp camera', 'กล้องไม่ทำงาน', 'camera error', 'setparameters'],
-    title: '📷 กล้อง ESP เช็คกล้องเสีย',
-    answer: `วิธีเช็คกล้อง ESP เสีย:`,
-    steps: [
-      'V1 → การติดตั้งอุปกรณ์ → shell → Screencap',
-      'Browsefile /sdcard → เลือกไฟล์ล่างสุด → ดาวน์โหลด',
-      'ดู log: cat /sdcard/terminus/terminus/exception/YYYYMMDD.log'
-    ],
-    extra: `<div class="code-block">Error ที่พบบ่อย:
-CAMERA 2024-05-07 11:26:28 try to take pict
-EXCEPTION: Take Pict : java.lang.RuntimeException: setParameters failed
-→ กล้องเสีย ต้องเปลี่ยน</div>`,
-  },
-
-  // ---- ปิดเสียงกล้อง ----
-  {
-    keywords: ['ปิดเสียง', 'mute', 'เสียงกล้อง', 'แจ้งเตือนกล้อง'],
-    title: '🔇 ปิดเสียงแจ้งเตือนกล้อง',
-    answer: `วิธีปิดเสียงแจ้งเตือนกล้อง:`,
-    steps: [
-      'V1 → รายการติดตั้ง',
-      'iv code / เลขกล้อง → Edit',
-      'จัดเก็บ → ตั้งค่าอุปกรณ์',
-      'เลือก mute Sound → จัดเก็บ'
-    ],
-  },
-
-  // ---- ติกกล้อง EZwiz ----
-  {
-    keywords: ['ติกกล้อง', 'ezviz', 'ezwiz', 'กล้องใน', 'starcam', 'กล้องด้านใน'],
-    title: '📸 ติกกล้อง EZwiz กล้องใน',
-    answer: `วิธีติกกล้อง EZwiz:`,
-    steps: [
-      'V1 → รายการติดตั้ง → Device code เลขกล้อง → Edit',
-      'จัดเก็บ → ตั้งค่าอุปกรณ์',
-      'Extend camera setting → EZVIZ → จัดเก็บ',
-      'เลือก v starcam'
-    ],
-  },
-
-  // ---- Tracksolid ----
-  {
-    keywords: ['tracksolid', 'jc400', 'jc200', 'j40', 'imei', 'device command', 'tracksolid pro'],
-    title: '📡 Tracksolid / Tracksolid Pro',
-    answer: `วิธีใช้ Tracksolid:`,
-    steps: [
-      'Monitor → ค้นหา IMEI',
-      '3 จุด → Device Command → เลือก type'
-    ],
-    extra: `<div class="code-block">Command JC400:
-User define → พิมพ์คำสั่ง
-เช่น ความดังเสียง: VOLUME,&lt;A&gt;
-A=0/1/2/3 (0=เงียบ, 3=ดังสุด)</div>`,
-    links: [
-      { icon: '📷', title: 'Tracksolid (JC200/HNT)', url: 'https://tracksolid.com/mainFrame', desc: 'tracksolid.com' },
-      { icon: '🎥', title: 'Tracksolid Pro (J40/JC400)', url: 'https://hk.tracksolidpro.com/resource/dev/index.html#/login', desc: 'hk.tracksolidpro.com | anak.jir@freewillfx.com' },
-    ]
-  },
-
-  // ---- ตรวจสอบซิม ----
-  {
-    keywords: ['ซิม', 'sim', 'iccid', 'ตรวจซิม', 'datasim', 'jusper', 'tdg freewill'],
-    title: '📶 การตรวจสอบซิม',
-    answer: `วิธีตรวจสอบซิม:`,
-    steps: [
-      'เช็คเลขทะเบียนผ่าน V1',
-      'เอาเลข ICCID กับทะเบียนรถ',
-      'ส่งลงไลน์: TDG FREEwill AFS',
-    ],
-    extra: `DataSim login: support / 9uJ:yrrvm`,
-  },
-
-  // ---- เช็คดาวเทียม / แบตสำรอง ----
-  {
-    keywords: ['ดาวเทียม', 'satellite', 'gpgga', 'numberofsat', 'แบตสำรอง', 'battery', 'voltage', 'backup battery'],
-    title: '🛰️ เช็คดาวเทียม + แบตสำรอง',
-    answer: `เกณฑ์การตรวจสอบ:`,
-    extra: `<div class="code-block">เช็คดาวเทียม:
-HNT/J40: GPGGA >20 (numberOfSat)
-FOX: numberOfSat >20
-
-เช็คแบตสำรอง:
-J40: voltage:[27920,28018,4036] → ดูค่าที่ 3 ≥ 4000
-HNT: vol:[4.632,25.38] → ดูค่าแรก ≥ 4.0</div>`,
-  },
-
-  // ---- เซ็นเซอร์โม่ ----
-  {
-    keywords: ['เซ็นเซอร์โม่', 'โม่', 'drum', 'sensor drum', 'dp', 'เซ็นเซอร์'],
-    title: '🥁 เช็คเซ็นเซอร์โม่',
-    answer: `วิธีเช็คเซ็นเซอร์โม่:`,
-    steps: [
-      'เช็คเปอร์เซ็น DP ที่เสีย',
-      'ดึงรายงานขาดการติดต่อขณะวิ่งงาน',
-      'ดู GPS Disconnect on Trip สำหรับรถที่มี DP แต่ขาดการติดต่อ'
-    ],
-    links: [
-      { icon: '🥁', title: 'เช็คเซ็นเซอร์โม่', url: 'https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php', desc: 'show_filter_drum_event_v2.php' },
-      { icon: '📉', title: 'GPS Disconnect on Trip', url: 'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip', desc: 'FleetLink CPAC' },
-    ]
-  },
-
-  // ---- เซ็นเซอร์น้ำมัน ----
-  {
-    keywords: ['น้ำมัน', 'เซ็นเซอร์น้ำมัน', 'fuel', 'ลูกลอย', 'flow meter', 'กราฟน้ำมัน'],
-    title: '⛽ ข้อมูลเซ็นเซอร์น้ำมัน',
-    answer: `เซ็นเซอร์น้ำมันอ่านค่าโดยการแท็บสายไฟจากลูกลอย:`,
-    extra: `ปัจจัยที่ทำให้กราฟคลาดเคลื่อน:
-• ความสมบูรณ์ของเกจ์น้ำมันและลูกลอยของรถ
-• แรงดันไฟของรถในแต่ละรุ่นแตกต่างกัน
-• สัญญาณไฟฟ้าของรถแต่ละรุ่นแตกต่างกัน (บางรุ่นเป็นสัญญาณพัลส์)
-
-กราฟที่ได้เป็นเพียงแนวโน้ม — ถ้าต้องการความแม่นยำสูงใช้ Flow meter sensor (>95%)`,
-  },
-
-  // ---- SQL Query / DLT Masterfile Queue ----
-  {
-    keywords: ['sql', 'query', 'คิวรี', 'dlt_master_file_queue', 'select', 'model code'],
-    title: '💾 SQL Query — DLT Masterfile',
-    answer: `Device Code → Model Mapping:`,
-    extra: `<div class="code-block">ESP → 0300004
-FOX / EZY → 0300006
-HNT → 0300007
-J4P → 0300012
-J40 → 0300010
-J4D → 0300011
-ISU → 0300013
-อื่นๆ → 0300001</div>`,
-  },
-
-  // ---- แชร์พาหนะ ----
-  {
-    keywords: ['แชร์พาหนะ', 'share vehicle', 'แชร์รถ'],
-    title: '🔗 การแชร์พาหนะ',
-    answer: `วิธีแชร์พาหนะ:`,
-    steps: [
-      'การจัดการ',
-      'อื่นๆ',
-      'สร้าง',
-      'แชร์พาหนะ'
-    ],
-  },
-
-  // ---- ลบ Cache ----
-  {
-    keywords: ['cache', 'แคช', 'ลบ cache', 'clear cache', 'android', 'มือถือ'],
-    title: '🗑️ วิธีลบ Cache มือถือ Android',
-    answer: `ขั้นตอนลบ Cache บน Android:`,
-    steps: [
-      'เมนู การตั้งค่า (Settings)',
-      'แอป (Apps)',
-      'เลือกแอปที่ต้องการลบแคช',
-      'ที่จัดเก็บข้อมูล',
-      'ล้างแคช / ลบแคช'
-    ],
-  },
-
-  // ---- JD for DLT ----
-  {
-    keywords: ['jd', 'หนังสือรับรอง', 'มอบอำนาจ', 'ต่อภาษี', 'ใบสั่ง', 'ชี้แจง', 'stock', 'ecount', 'boom'],
-    title: '📚 JD for DLT and Stock (Topics)',
-    answer: `รายการ Topic สำคัญ:`,
-    steps: [
-      'Topic 1: ออกหนังสือรับรองการติดตั้ง/แก้ไขข้อมูล',
-      'Topic 2: ตรวจสอบการเชื่อมต่อ DLT กรณีลูกค้าต่อภาษี',
-      'Topic 3: หนังสือชี้แจงกรณีได้รับใบสั่งจากกรมขนส่ง',
-      'Topic 4: แก้ไขข้อมูล Masterfile + ส่งรายงาน',
-      'Topic 5: รายงานประจำเดือน (ติดตั้ง/เปลี่ยน/ถอด)',
-      'Topic 6: หนังสือมอบอำนาจ กรณีไปชี้แจงที่ขนส่ง',
-      'Topic 7: Update FleetLink + Query สถานะ Now',
-      'Topic 8: ทำ Decare ของ CPAC',
-      'Topic 9: ลูกค้าขอหนังสือรับรองผ่าน Line OA',
-      'Topic 10: เพิ่มสิทธิ/บรอดแคส/ขอใบเสร็จ Line OA',
-      'Topic 11: รับสินค้าเข้า Stock Ecount/เลข Boom',
-      'Topic 12: วิธีใช้ Ecount + ตรวจสอบซิม Jusper'
-    ],
-  },
-
-  // ---- Video Monitoring ----
-  {
-    keywords: ['mdvr', 'video monitoring', 'กล้องวีดีโอ', 'cpf', 'atp', 'เครื่องเสีย'],
-    title: '🎥 MDVR Video Monitoring',
-    answer: `วิธีตรวจสอบ MDVR:`,
-    steps: [
-      'ตรวจเครื่องเสีย CPF, ATP',
-      'Login: freewill@gpsvendor / password'
-    ],
-    links: [
-      { icon: '🎥', title: 'Video Monitoring', url: 'https://login.terminusfleet.com/receiver/test/video_monitoring.php', desc: 'video_monitoring.php' },
-    ]
-  },
-
-  // ---- กล้อง Tapo ----
-  {
-    keywords: ['tapo', 'กล้อง tapo', 'กล้องtapo'],
-    title: '📹 ตรวจสอบกล้อง Tapo',
-    answer: `ตรวจสอบกล้อง Tapo — ดูไฟล์คู่มือ:`,
-    extra: `ไฟล์: กล้องTapo camera-20240307T040714Z-001.zip`,
-  },
+// ==================== DEFAULT KB ====================
+const DEFAULT_KB = [
+  {id:1,keywords:['daily','งานช่าง','ติดตั้ง','งานติดตั้ง','ผูกกล่อง','billing','ประจำวัน'],title:'📋 งานติดตั้ง / ผูกกล่อง (Daily)',answer:'งาน Daily ที่ต้องทำทุกวันครับ:',steps:['งานติดตั้งใหม่ — ต้องเช็คทุกคันว่า ผูกกล่องรถ และ Billing หรือยัง','งานซ่อมเปลี่ยนกล่องรถโม่ — ต้องเช็คว่าแชร์เข้า SCCO หรือยัง','ตรวจให้เสร็จก่อน 14:00 ของทุกวัน','งานตามโซนสามารถจ่ายช่างได้เลย'],links:[{icon:'🔧',title:'งานติดตั้ง Daily',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician'},{icon:'🔄',title:'งานซ่อมเปลี่ยนกล่อง Daily',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'}]},
+  {id:2,keywords:['scco','monitoring','ผูกกล่องงานซ่อม','รถโม่','สร้างอุปกรณ์'],title:'🖥️ Monitoring — ผูกกล่องงานซ่อมรถ SCCO',answer:'ขั้นตอนผูกกล่องงานซ่อม SCCO:',steps:['เช็คงานซ่อมเปลี่ยนกล่อง ดูเฉพาะรถ SCCO','สร้างอุปกรณ์ (เลือก server SCCO)','ผูกกล่องใหม่ ติ๊กเลือก server SCCO'],links:[{icon:'🔄',title:'งานซ่อมเปลี่ยนกล่อง',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'},{icon:'➕',title:'สร้างอุปกรณ์',url:'https://login.terminusfleet.com/receiver/installation/create_device.php'}]},
+  {id:3,keywords:['dlt','masterfile','master file','กรมขนส่ง','ส่งรายงาน','finish page','อัพเดท master','ลบ master'],title:'🏛️ DLT / กรมขนส่งทางบก',answer:'ข้อมูลงาน DLT ครับ:',extra:'งานที่ต้องทำ: รันบอทอัพเดท master ทุกวัน | ลบ master รถยกเลิกสัญญา',links:[{icon:'📑',title:'DLT Finish Page',url:'https://gpstmc.dlt.go.th/dltgps/web/finish_page/'},{icon:'📂',title:'DLT Masterfile (p34)',url:'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php'},{icon:'📊',title:'DLT Report',url:'https://login.terminusfleet.com/report/report/dltreport'}]},
+  {id:4,keywords:['orc','แจ้งซ่อม orc','rmc feed','หัวหน้าโซน'],title:'📡 ORC — การแจ้งซ่อม',answer:'ขั้นตอน ORC:',steps:['Login: user@orc / password','แจ้งซ่อม — ติดต่อเบอร์หัวหน้าโซน'],links:[{icon:'📡',title:'RMC Feed (ORC)',url:'https://login.terminusfleet.com/rmc/feed'}]},
+  {id:5,keywords:['fleetlink','cpac','fleet link','gps ขาดการติดต่อ','disconnect'],title:'🚛 FleetLink / CPAC',answer:'ระบบ FleetLink สำหรับ CPAC ครับ:',links:[{icon:'🚛',title:'FleetLink หลัก',url:'https://fleetlink.cipcloud.net/'},{icon:'📉',title:'GPS Disconnect on Trip',url:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'},{icon:'🛠️',title:'Maintenance Device',url:'https://fleetlink.cipcloud.net/maintenancedevice'}]},
+  {id:6,keywords:['ใบงานช่าง','เปิดใบงาน','v1','บันทึกการซ่อม','เปิดงาน'],title:'📄 วิธีเปิดใบงานช่าง (V1)',answer:'ขั้นตอนเปิดใบงานช่าง V1:',steps:['การจัดการอุปกรณ์','บันทึกการซ่อมแซม','สร้าง','เลือกบริษัท ใส่ข้อมูล'],extra:'หน้า Tablet ช่าง: Login tech14@test | สมศักดิ์ อาจอุดม',links:[{icon:'📲',title:'หน้า Tablet ช่าง',url:'https://login.terminusfleet.com/mobile/authenticatetech/login/msg/please_login/?redir=/mobile/worktechnician'}]},
+  {id:7,keywords:['รูดบัตร','ใบขับขี่','device code','iccid','สถานะรูด'],title:'💳 ตรวจสอบสถานะรูดบัตรใบขับขี่',answer:'วิธีตรวจสอบรูดบัตรใบขับขี่:',steps:['V1 → การติดตั้งอุปกรณ์','รายการติดตั้ง → Search ทะเบียน','ดู Device code (หากมีตัวเลขในวงเล็บ = รูดบัตรได้ปกติ)','เช็คเพิ่มเติมจากเว็บขนส่ง gpstmc.dlt.go.th'],links:[{icon:'🏛️',title:'เว็บขนส่ง',url:'http://gpstmc.dlt.go.th/dltgps/web/finish_page/'}]},
+  {id:8,keywords:['event','pto','boom','ความเร็ว','เตือนความเร็ว','velalarm','accalarm','brkalarm'],title:'⚡ เช็ค Event / PTO / Boom / ความเร็ว',answer:'ข้อมูล Event Data และความหมาย:',extra:'<div class="codeblock">ValveSensorToggle = PTO / Boom / ประตู\nVelAlarm = ความเร็วเกิน\nStopPoint = จุดจอด\nAccAlarm = ออกตัวกระชาก\nBrkAlarm = เบรคกระทันหัน\n\nESP: d":[0,1,1]\nFOX: d":[0,0,1,1,1,1,0,0]\nISU: "Extra":[1,1,1,0,1,1,1,1]</div>',links:[{icon:'⚡',title:'Event Data V2',url:'https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php'}]},
+  {id:9,keywords:['ftp','filezilla','ดึงวิดีโอ','video','mp4'],title:'📹 FTP ดึงวิดีโอ (FileZilla)',answer:'วิธีดึงวิดีโอผ่าน FTP:',steps:['Host: sftp://login.terminusfleet.com','User: terminus-app | Pass: 9uJgx]ujpo.0','Path: /home/terminus-app/fleet1.1/public/upload/websocket','Shell: cd /mnt/m_external_sd/capture → ls *','cp [ไฟล์].mp4 /sdcard/[ไฟล์].mp4','Browsefile Sdcard → ดาวน์โหลด']},
+  {id:10,keywords:['กล้องเสีย','กล้อง esp','esp camera','camera error'],title:'📷 กล้อง ESP เช็คกล้องเสีย',answer:'วิธีเช็คกล้อง ESP เสีย:',steps:['V1 → การติดตั้งอุปกรณ์ → shell → Screencap','Browsefile /sdcard → เลือกไฟล์ล่างสุด → ดาวน์โหลด','ดู log: cat /sdcard/terminus/terminus/exception/YYYYMMDD.log'],extra:'<div class="codeblock">Error ที่พบบ่อย:\nCAMERA: try to take pict\nEXCEPTION: setParameters failed\n→ กล้องเสีย ต้องเปลี่ยน</div>'},
+  {id:11,keywords:['tracksolid','jc400','jc200','j40','imei','device command'],title:'📡 Tracksolid / Tracksolid Pro',answer:'วิธีใช้ Tracksolid:',steps:['Monitor → ค้นหา IMEI','3 จุด → Device Command → เลือก type'],extra:'<div class="codeblock">Command JC400:\nVOLUME,&lt;A&gt; (A=0-3)</div>',links:[{icon:'📷',title:'Tracksolid',url:'https://tracksolid.com/mainFrame'},{icon:'🎥',title:'Tracksolid Pro',url:'https://hk.tracksolidpro.com/resource/dev/index.html#/login'}]},
+  {id:12,keywords:['ดาวเทียม','satellite','gpgga','แบตสำรอง','battery','voltage'],title:'🛰️ เช็คดาวเทียม + แบตสำรอง',extra:'<div class="codeblock">ดาวเทียม:\nHNT/J40: GPGGA >20\nFOX: numberOfSat >20\n\nแบตสำรอง:\nJ40: voltage[2] ≥ 4000\nHNT: vol[0] ≥ 4.0</div>'},
+  {id:13,keywords:['เซ็นเซอร์โม่','โม่','drum','dp'],title:'🥁 เช็คเซ็นเซอร์โม่',steps:['เช็คเปอร์เซ็น DP ที่เสีย','ดึงรายงานขาดการติดต่อขณะวิ่งงาน'],links:[{icon:'🥁',title:'เช็คเซ็นเซอร์โม่',url:'https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php'},{icon:'📉',title:'GPS Disconnect',url:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'}]},
+  {id:14,keywords:['ซิม','sim','iccid','ตรวจซิม'],title:'📶 การตรวจสอบซิม',steps:['เช็คเลขทะเบียนผ่าน V1','เอาเลข ICCID กับทะเบียนรถ','ส่งลงไลน์: TDG FREEwill AFS'],extra:'DataSim: support / 9uJ:yrrvm'},
+  {id:15,keywords:['sql','query','คิวรี','model code','0300'],title:'💾 SQL Query — DLT Device Model',extra:'<div class="codeblock">ESP→0300004 | FOX/EZY→0300006\nHNT→0300007 | J4P→0300012\nJ40→0300010 | J4D→0300011\nISU→0300013 | อื่นๆ→0300001</div>'},
+  {id:16,keywords:['cache','แคช','ลบ cache','android'],title:'🗑️ วิธีลบ Cache มือถือ Android',steps:['Settings → Apps','เลือกแอปที่ต้องการ','Storage → Clear Cache']},
+  {id:17,keywords:['น้ำมัน','เซ็นเซอร์น้ำมัน','fuel','ลูกลอย'],title:'⛽ เซ็นเซอร์น้ำมัน',extra:'กราฟเป็นแนวโน้มเท่านั้น ปัจจัยที่ทำให้คลาดเคลื่อน: เกจ์น้ำมัน, แรงดันไฟ, สัญญาณพัลส์\n\n** Flow meter sensor ความแม่นยำ >95%'},
+  {id:18,keywords:['ปิดเสียง','mute','เสียงกล้อง','แจ้งเตือนกล้อง'],title:'🔇 ปิดเสียงแจ้งเตือนกล้อง',steps:['V1 → รายการติดตั้ง → iv code / เลขกล้อง → Edit','จัดเก็บ → ตั้งค่าอุปกรณ์','Mute Sound → จัดเก็บ']},
+  {id:19,keywords:['แชร์พาหนะ','share vehicle'],title:'🔗 การแชร์พาหนะ',steps:['การจัดการ → อื่นๆ','สร้าง → แชร์พาหนะ']},
 ];
 
-// ==================== SEARCH ENGINE ====================
-function searchKB(query) {
-  const q = query.toLowerCase().replace(/\s+/g, ' ').trim();
-  const words = q.split(' ');
+// ==================== STATE ====================
+const STORAGE_KEY = 'freewill_kb_v3';
+let KB = loadKB();
+let editingId = null;
+let nextId = () => Math.max(...KB.map(k=>k.id||0), 0) + 1;
+// Teach state
+let teachState = null; // {step, data}
 
-  let bestMatch = null;
-  let bestScore = 0;
+function loadKB(){
+  try{ const s=localStorage.getItem(STORAGE_KEY); if(s) return JSON.parse(s); }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_KB));
+}
+function saveKB(){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(KB)); }catch(e){} }
 
-  for (const item of KB) {
-    let score = 0;
-    for (const kw of item.keywords) {
-      if (q.includes(kw)) score += 3;
-      else {
-        for (const w of words) {
-          if (w.length > 1 && kw.includes(w)) score += 1;
+// ==================== SEARCH (fuzzy + partial) ====================
+function normalize(s){ return s.toLowerCase().replace(/\s+/g,' ').trim(); }
+function tokenize(s){ return normalize(s).split(/[\s,/]+/).filter(w=>w.length>1); }
+
+function searchKB(query){
+  const q = normalize(query);
+  const qTokens = tokenize(query);
+  let best=null, bestScore=0;
+  for(const item of KB){
+    let score=0;
+    for(const kw of item.keywords){
+      const nkw = normalize(kw);
+      if(q===nkw) score+=10;
+      else if(q.includes(nkw)) score+=4;
+      else if(nkw.includes(q)) score+=3;
+      else{
+        for(const t of qTokens){
+          if(nkw.includes(t)) score+=2;
+          else if(t.includes(nkw)) score+=1;
+          // fuzzy: char overlap
+          else{
+            let overlap=0;
+            for(const c of t) if(nkw.includes(c)) overlap++;
+            if(overlap/t.length > 0.7) score+=1;
+          }
         }
       }
     }
-    if (score > bestScore) {
-      bestScore = score;
-      bestMatch = item;
+    // title match bonus
+    const ntitle=normalize(item.title);
+    if(ntitle.includes(q)) score+=3;
+    for(const t of qTokens) if(ntitle.includes(t)) score+=1;
+    if(score>bestScore){ bestScore=score; best=item; }
+  }
+  return bestScore>=2 ? best : null;
+}
+
+// ==================== SIDEBAR ====================
+const SIDEBAR_LINKS=[
+  {s:'📋 งานช่าง Daily',l:[
+    {i:'🔧',n:'งานติดตั้ง Daily',u:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician',b:'Daily'},
+    {i:'🔄',n:'งานซ่อมเปลี่ยนกล่อง',u:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'},
+    {i:'➕',n:'สร้างอุปกรณ์ SCCO',u:'https://login.terminusfleet.com/receiver/installation/create_device.php'},
+  ]},
+  {s:'🏛️ DLT',l:[
+    {i:'📑',n:'DLT Finish Page',u:'https://gpstmc.dlt.go.th/dltgps/web/finish_page/',b:'Daily'},
+    {i:'📂',n:'DLT Masterfile',u:'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php'},
+    {i:'📊',n:'DLT Report',u:'https://login.terminusfleet.com/report/report/dltreport'},
+  ]},
+  {s:'🖥️ Terminus',l:[
+    {i:'🌐',n:'Terminus V2',u:'https://app-v2.terminusfleet.com'},
+    {i:'🔑',n:'Terminus V1',u:'https://login.terminusfleet.com'},
+    {i:'📡',n:'RMC Feed (ORC)',u:'https://login.terminusfleet.com/rmc/feed'},
+    {i:'⚡',n:'Event Data',u:'https://login.terminusfleet.com/receiver/test/show_simple_event_data_v2.php'},
+  ]},
+  {s:'🚛 FleetLink / CPAC',l:[
+    {i:'🚛',n:'FleetLink',u:'https://fleetlink.cipcloud.net/'},
+    {i:'📉',n:'GPS Disconnect',u:'https://fleetlink.cipcloud.net/report/gps-disconnect-on-trip'},
+    {i:'🛠️',n:'Maintenance Device',u:'https://fleetlink.cipcloud.net/maintenancedevice'},
+  ]},
+  {s:'📹 Camera',l:[
+    {i:'📷',n:'Tracksolid',u:'https://tracksolid.com/mainFrame'},
+    {i:'🎥',n:'Tracksolid Pro',u:'https://hk.tracksolidpro.com/resource/dev/index.html#/login'},
+    {i:'🖥️',n:'Video Monitoring',u:'https://login.terminusfleet.com/receiver/test/video_monitoring.php'},
+  ]},
+  {s:'📱 อื่นๆ',l:[
+    {i:'📲',n:'Tablet ช่าง',u:'https://login.terminusfleet.com/mobile/authenticatetech/login/msg/please_login/?redir=/mobile/worktechnician'},
+    {i:'🥁',n:'เซ็นเซอร์โม่',u:'https://login.terminusfleet.com/receiver/test/show_filter_drum_event_v2.php'},
+  ]},
+];
+function buildSidebar(){
+  document.getElementById('sidebarLinks').innerHTML=SIDEBAR_LINKS.map(sec=>`
+    <div class="ls-title">${sec.s}</div>
+    ${sec.l.map(l=>`<a class="li" href="${l.u}" target="_blank"><span style="font-size:14px;flex-shrink:0">${l.i}</span><span style="flex:1;line-height:1.3">${l.n}</span>${l.b?`<span class="li-badge">${l.b}</span>`:''}</a>`).join('')}
+  `).join('');
+}
+
+// ==================== SUGGESTIONS ====================
+const SUGGS=['📋 งานช่าง daily','วิธีเปิดใบงานช่าง','⚡ Event/PTO','🏛️ DLT masterfile','📹 ดึงวิดีโอ FTP','📡 Device Code','📷 กล้อง ESP เสีย','🛰️ เช็คแบตสำรอง'];
+function buildSuggs(){
+  document.getElementById('suggs').innerHTML=SUGGS.map(t=>`<button class="sbtn" onclick="handleSugg('${t}')">${t}</button>`).join('');
+}
+
+// ==================== CHAT UTILS ====================
+function addMsg(role,html,cls=''){
+  const msgs=document.getElementById('messages');
+  const d=document.createElement('div');
+  d.className=`msg ${role}`;
+  d.innerHTML = role==='bot'
+    ? `<div class="av bot">🤖</div><div class="${cls||'bubble'}">${html}</div>`
+    : `<div class="av usr">👤</div><div class="bubble">${html}</div>`;
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
+}
+function showTyping(){ const msgs=document.getElementById('messages'); const d=document.createElement('div'); d.className='msg bot'; d.id='typing'; d.innerHTML=`<div class="av bot">🤖</div><div class="typing"><div class="dot2"></div><div class="dot2"></div><div class="dot2"></div></div>`; msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; }
+function removeTyping(){ const t=document.getElementById('typing'); if(t)t.remove(); }
+
+// ==================== RENDER KB RESULT ====================
+function renderResult(item){
+  let h=`<h3>${item.title}</h3>`;
+  if(item.answer) h+=`<p>${item.answer}</p>`;
+  if(item.steps?.length) h+=item.steps.map((s,i)=>`<div class="step"><div class="snum">${i+1}</div><div style="font-size:12px;line-height:1.5">${s}</div></div>`).join('');
+  if(item.extra) h+=`<p style="margin-top:6px">${item.extra}</p>`;
+  if(item.links?.length) h+=item.links.map(l=>`<a class="lcard" href="${l.url}" target="_blank"><span style="font-size:15px;flex-shrink:0">${l.icon}</span><span style="flex:1;overflow:hidden"><div style="font-weight:700;font-size:12px">${l.title}</div><div class="lc-u">${l.url}</div></span><span style="font-size:12px;margin-left:auto">↗</span></a>`).join('');
+  return h;
+}
+
+// ==================== TEACH FLOW ====================
+function startTeach(){
+  teachState = {step:'title', data:{}};
+  showTeachPrompt('📝 <b>โหมดสอน chatbot</b><br>กรอกชื่อหัวข้อที่ต้องการสอน เช่น "วิธีแจ้งซ่อม MDVR"\n<span style="font-size:11px;color:var(--muted)">(พิมพ์ /ยกเลิก เพื่อหยุด)</span>');
+}
+
+function showTeachPrompt(msg){
+  addMsg('bot', msg);
+}
+
+function handleTeachInput(input){
+  if(!teachState) return false;
+  if(input.startsWith('/ยกเลิก') || input.startsWith('/cancel')){
+    teachState=null;
+    addMsg('bot','<p>❌ ยกเลิกการสอนแล้วครับ</p>');
+    return true;
+  }
+  const {step, data} = teachState;
+
+  if(step==='title'){
+    data.title = input;
+    teachState.step = 'keywords';
+    addMsg('bot',`<p>✅ ชื่อหัวข้อ: <b>${input}</b></p><p>🔑 ใส่ <b>keywords</b> ที่ใช้ค้นหา (คั่นด้วย comma)<br><span style="font-size:11px;color:var(--muted)">เช่น: mdvr, กล้องวีดีโอ, แจ้งซ่อม mdvr</span></p>`);
+    return true;
+  }
+  if(step==='keywords'){
+    data.keywords = input.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);
+    teachState.step = 'answer';
+    addMsg('bot',`<p>✅ Keywords: <b>${data.keywords.join(', ')}</b></p><p>💬 ใส่ <b>คำตอบหลัก</b> หรือข้อมูลสั้นๆ<br><span style="font-size:11px;color:var(--muted)">(พิมพ์ - เพื่อข้ามขั้นตอนนี้)</span></p>`);
+    return true;
+  }
+  if(step==='answer'){
+    if(input!=='-') data.answer = input;
+    teachState.step = 'steps';
+    addMsg('bot',`<p>📋 ใส่ <b>ขั้นตอน</b> (ทีละบรรทัด หรือใช้ , คั่น)<br><span style="font-size:11px;color:var(--muted)">(พิมพ์ - เพื่อข้ามขั้นตอนนี้)</span></p>`);
+    return true;
+  }
+  if(step==='steps'){
+    if(input!=='-'){
+      data.steps = input.includes('\n')
+        ? input.split('\n').map(s=>s.trim()).filter(Boolean)
+        : input.split(',').map(s=>s.trim()).filter(Boolean);
     }
+    teachState.step = 'link';
+    addMsg('bot',`<p>🔗 มีลิงก์ที่เกี่ยวข้องไหมครับ?<br>พิมพ์: <b>ชื่อ|URL</b> เช่น <code>FleetLink|https://fleetlink.cipcloud.net</code><br><span style="font-size:11px;color:var(--muted)">(พิมพ์ - ถ้าไม่มีลิงก์)</span></p>`);
+    return true;
+  }
+  if(step==='link'){
+    if(input!=='-'){
+      data.links = [];
+      input.split('\n').forEach(line=>{
+        const parts=line.split('|');
+        if(parts.length>=2) data.links.push({icon:'🔗',title:parts[0].trim(),url:parts[1].trim()});
+        else if(line.startsWith('http')) data.links.push({icon:'🔗',title:line,url:line});
+      });
+    }
+    // SAVE
+    const newItem = {
+      id: nextId(),
+      title: data.title,
+      keywords: data.keywords,
+      answer: data.answer||undefined,
+      steps: data.steps?.length ? data.steps : undefined,
+      extra: undefined,
+      links: data.links?.length ? data.links : undefined
+    };
+    KB.push(newItem);
+    saveKB();
+    teachState=null;
+    const preview = renderResult(newItem);
+    addMsg('bot',`<h3>✅ สอนสำเร็จ! บันทึกแล้วครับ</h3><p>ตัวอย่างผลลัพธ์:</p>${preview}`);
+    addMsg('bot',`<p>💡 <b>ทดสอบ:</b> ลองพิมพ์ "${data.keywords[0]}" เพื่อทดสอบครับ</p><p>📥 อย่าลืม <b>/export</b> เพื่อ backup KB แล้ว upload ขึ้น GitHub ด้วยนะครับ</p>`);
+    return true;
+  }
+  return false;
+}
+
+// ==================== COMMAND HANDLER ====================
+function handleCommand(input){
+  const q = input.trim();
+  const cmd = q.split(' ')[0].toLowerCase();
+  const arg = q.slice(cmd.length).trim();
+
+  // /เพิ่ม /สอน /teach /add
+  if(['/เพิ่ม','/สอน','/teach','/add'].includes(cmd)){
+    startTeach(); return true;
+  }
+  // /ดู /list
+  if(['/ดู','/list','/kb'].includes(cmd)){
+    const list = KB.map((k,i)=>`<span class="tag">${i+1}. ${k.title}</span>`).join(' ');
+    addMsg('bot',`<h3>📚 Knowledge Base — ${KB.length} topics</h3><p>${list}</p><p style="margin-top:8px;font-size:12px;color:var(--muted)">ใช้ /แก้ไข [คำค้น] หรือ ⚙️ จัดการ KB เพื่อแก้ไขครับ</p>`);
+    return true;
+  }
+  // /ลบ /delete
+  if(['/ลบ','/delete','/del'].includes(cmd)){
+    if(!arg){ addMsg('bot','<p>กรุณาระบุคำค้น เช่น <b>/ลบ tracksolid</b></p>'); return true; }
+    const found = searchKB(arg);
+    if(!found){ addMsg('bot',`<p>❌ ไม่พบ topic ที่ตรงกับ "<b>${arg}</b>"</p>`); return true; }
+    if(confirm(`ลบ topic: "${found.title}" ?`)){
+      KB = KB.filter(k=>k.id!==found.id);
+      saveKB();
+      addMsg('bot',`<p>🗑️ ลบ <b>"${found.title}"</b> แล้วครับ</p>`);
+    }
+    return true;
+  }
+  // /แก้ไข /edit
+  if(['/แก้ไข','/edit'].includes(cmd)){
+    if(!arg){ addMsg('bot','<p>กรุณาระบุคำค้น เช่น <b>/แก้ไข dlt</b></p>'); return true; }
+    const found = searchKB(arg);
+    if(!found){ addMsg('bot',`<p>❌ ไม่พบ topic ที่ตรงกับ "<b>${arg}</b>"</p>`); return true; }
+    openAdmin(); setTimeout(()=>openForm(found.id), 100);
+    return true;
+  }
+  // /export
+  if(['/export','/backup'].includes(cmd)){
+    exportKB();
+    addMsg('bot','<p>📥 Export KB เรียบร้อยแล้วครับ! นำไฟล์ <b>knowledge_base.json</b> ไป upload ขึ้น GitHub ผ่าน uploader.html ได้เลยครับ</p>');
+    return true;
+  }
+  // /ช่วยเหลือ /help
+  if(['/ช่วยเหลือ','/help','/?'].includes(cmd)){
+    addMsg('bot',`<h3>📖 คำสั่งทั้งหมด</h3>
+      <div class="cmd-hint">
+        <b>/เพิ่ม</b> หรือ <b>/สอน</b> — เพิ่ม topic ใหม่ผ่านแชท<br>
+        <b>/แก้ไข [คำค้น]</b> — แก้ไข topic<br>
+        <b>/ลบ [คำค้น]</b> — ลบ topic<br>
+        <b>/ดู</b> — ดูรายการทั้งหมด<br>
+        <b>/export</b> — บันทึก KB เป็นไฟล์ JSON<br>
+        <b>/ยกเลิก</b> — ยกเลิกขณะกรอกข้อมูล<br>
+        <b>/help</b> — แสดงคำสั่งนี้
+      </div>
+      <p style="margin-top:8px;font-size:12px;color:var(--muted)">หรือกด ⚙️ จัดการ KB เพื่อจัดการผ่านหน้า UI</p>`);
+    return true;
+  }
+  return false;
+}
+
+// ==================== MAIN SEND ====================
+function sendMessage(){
+  const inp=document.getElementById('userInput');
+  const q=inp.value.trim(); if(!q) return;
+  document.getElementById('suggs').style.display='none';
+  addMsg('user',q); inp.value=''; inp.style.height='auto';
+
+  // teach flow
+  if(teachState){ handleTeachInput(q); return; }
+
+  // commands
+  if(q.startsWith('/')){
+    const handled=handleCommand(q);
+    if(!handled) addMsg('bot',`<p>ไม่รู้จักคำสั่ง <b>${q}</b> ครับ ลอง <b>/help</b> เพื่อดูคำสั่งทั้งหมด</p>`);
+    return;
   }
 
-  return bestScore > 0 ? bestMatch : null;
-}
-
-// ==================== RENDER ====================
-function renderResult(item) {
-  let html = `<h3>${item.title}</h3>`;
-  html += `<p>${item.answer || ''}</p>`;
-
-  if (item.steps && item.steps.length > 0) {
-    html += `<div class="steps">`;
-    item.steps.forEach((s, i) => {
-      html += `<div class="step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`;
-    });
-    html += `</div>`;
-  }
-
-  if (item.extra) {
-    html += `<p style="margin-top:8px;">${item.extra}</p>`;
-  }
-
-  if (item.links && item.links.length > 0) {
-    item.links.forEach(link => {
-      html += `
-        <a class="link-card" href="${link.url}" target="_blank">
-          <span class="lc-icon">${link.icon}</span>
-          <span class="lc-text">
-            <div class="lc-title">${link.title}</div>
-            <div class="lc-url">${link.url}</div>
-          </span>
-          <span class="lc-arrow">↗</span>
-        </a>`;
-    });
-  }
-
-  return html;
-}
-
-function renderNotFound(q) {
-  return `<h3>🔍 ไม่พบข้อมูลที่ตรงกับ "${q}"</h3>
-    <p>ลองถามด้วยคำอื่นนะครับ หรือเลือกหัวข้อจาก Quick Links ด้านซ้ายได้เลย</p>
-    <p>คำแนะนำ: <span class="tag">งานช่าง daily</span> <span class="tag">DLT masterfile</span> <span class="tag">กล้อง ESP</span> <span class="tag">FTP วิดีโอ</span> <span class="tag">Tracksolid</span></p>`;
-}
-
-// ==================== CHAT LOGIC ====================
-function addMessage(role, html) {
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = `message ${role}`;
-  if (role === 'bot') {
-    div.innerHTML = `<div class="avatar bot-avatar">🤖</div><div class="bubble">${html}</div>`;
-  } else {
-    div.innerHTML = `<div class="avatar user-avatar">👤</div><div class="bubble">${html}</div>`;
-  }
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-  return div;
-}
-
-function showTyping() {
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = 'message bot';
-  div.id = 'typing-indicator';
-  div.innerHTML = `<div class="avatar bot-avatar">🤖</div><div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function removeTyping() {
-  const t = document.getElementById('typing-indicator');
-  if (t) t.remove();
-}
-
-function sendMessage() {
-  const input = document.getElementById('userInput');
-  const q = input.value.trim();
-  if (!q) return;
-
-  // Hide suggestions after first message
-  document.getElementById('suggestions').style.display = 'none';
-
-  addMessage('user', q);
-  input.value = '';
-  input.style.height = 'auto';
-
+  // normal search
   showTyping();
-
-  setTimeout(() => {
+  setTimeout(()=>{
     removeTyping();
-    const result = searchKB(q);
-    if (result) {
-      addMessage('bot', renderResult(result));
-    } else {
-      addMessage('bot', renderNotFound(q));
-    }
-  }, 600);
+    const r=searchKB(q);
+    if(r) addMsg('bot',renderResult(r));
+    else addMsg('bot',`<h3>🔍 ไม่พบข้อมูล: "${q}"</h3>
+      <p>ลองถามด้วยคำอื่น หรือสอน chatbot ได้เลยครับ!</p>
+      <div class="cmd-hint">พิมพ์ <b>/เพิ่ม</b> เพื่อเพิ่มข้อมูลนี้เข้า Knowledge Base ได้เลยครับ 👆</div>`);
+  },400);
 }
 
-function handleSuggestion(text) {
-  document.getElementById('userInput').value = text;
-  sendMessage();
+function handleSugg(t){ document.getElementById('userInput').value=t; sendMessage(); }
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,90)+'px'; }
+
+// ==================== ADMIN ====================
+function openAdmin(){ document.getElementById('adminOverlay').classList.add('open'); renderKBList(); }
+function closeAdmin(){ document.getElementById('adminOverlay').classList.remove('open'); }
+function closeAdminIfBg(e){ if(e.target===document.getElementById('adminOverlay')) closeAdmin(); }
+
+function renderKBList(){
+  const q=(document.getElementById('kbSearch').value||'').toLowerCase();
+  const filtered=KB.filter(k=>!q||k.title.toLowerCase().includes(q)||k.keywords.some(kw=>kw.includes(q)));
+  document.getElementById('kb-total').textContent=`${KB.length} topics`;
+  document.getElementById('kbList').innerHTML=filtered.length
+    ? `<div class="kb-count">แสดง ${filtered.length} / ${KB.length} topics</div>
+      ${filtered.map(k=>`<div class="kb-item">
+        <div class="kb-item-header">
+          <div style="flex:1">
+            <div class="kb-title">${k.title}</div>
+            <div class="kb-kw">🔑 ${k.keywords.slice(0,6).join(', ')}${k.keywords.length>6?'...':''}</div>
+          </div>
+          <div class="kb-actions">
+            <button class="btn-edit" onclick="openForm(${k.id})">✏️ แก้ไข</button>
+            <button class="btn-del" onclick="deleteItem(${k.id})">🗑️ ลบ</button>
+          </div>
+        </div></div>`).join('')}`
+    : `<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ topic</div>`;
 }
 
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+function deleteItem(id){
+  if(!confirm('ลบ topic นี้?')) return;
+  KB=KB.filter(k=>k.id!==id); saveKB(); renderKBList();
 }
 
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+function openForm(id=null){
+  editingId=id;
+  const item=id?KB.find(k=>k.id===id):null;
+  document.getElementById('formTitle').textContent=id?'✏️ แก้ไข Topic':'➕ เพิ่ม Topic ใหม่';
+  document.getElementById('f-title').value=item?.title||'';
+  document.getElementById('f-keywords').value=item?.keywords?.join(', ')||'';
+  document.getElementById('f-answer').value=item?.answer||'';
+  document.getElementById('f-steps').value=item?.steps?.join('\n')||'';
+  document.getElementById('f-extra').value=item?.extra||'';
+  const rows=document.getElementById('linkRows'); rows.innerHTML='';
+  (item?.links||[]).forEach(l=>addLinkRow(l));
+  document.getElementById('formModal').classList.add('open');
 }
+function closeForm(){ document.getElementById('formModal').classList.remove('open'); }
+
+function addLinkRow(l=null){
+  const rows=document.getElementById('linkRows');
+  const div=document.createElement('div'); div.className='link-row';
+  div.innerHTML=`<input type="text" value="${l?.icon||'🔗'}" placeholder="🔗" maxlength="4" style="text-align:center">
+    <input type="text" value="${l?.title||''}" placeholder="ชื่อลิงก์">
+    <input type="text" value="${l?.url||''}" placeholder="https://...">
+    <button class="del-link" onclick="this.parentElement.remove()">✕</button>`;
+  rows.appendChild(div);
+}
+
+function saveForm(){
+  const title=document.getElementById('f-title').value.trim();
+  const kwRaw=document.getElementById('f-keywords').value.trim();
+  if(!title||!kwRaw){ alert('กรุณากรอก ชื่อ Topic และ Keywords'); return; }
+  const keywords=kwRaw.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);
+  const answer=document.getElementById('f-answer').value.trim()||undefined;
+  const stepsRaw=document.getElementById('f-steps').value.trim();
+  const steps=stepsRaw?stepsRaw.split('\n').map(s=>s.trim()).filter(Boolean):undefined;
+  const extra=document.getElementById('f-extra').value.trim()||undefined;
+  const linkEls=document.getElementById('linkRows').querySelectorAll('.link-row');
+  const links=[];
+  linkEls.forEach(row=>{ const inp=row.querySelectorAll('input'); const icon=inp[0].value.trim(),ttl=inp[1].value.trim(),url=inp[2].value.trim(); if(ttl&&url) links.push({icon:icon||'🔗',title:ttl,url}); });
+  const item={id:editingId||nextId(),title,keywords,answer,steps:steps?.length?steps:undefined,extra,links:links.length?links:undefined};
+  if(editingId) KB=KB.map(k=>k.id===editingId?item:k); else KB.push(item);
+  saveKB(); closeForm(); renderKBList();
+  alert(editingId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');
+}
+
+function exportKB(){
+  const blob=new Blob([JSON.stringify(KB,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='knowledge_base.json'; a.click();
+}
+function importKB(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!Array.isArray(data)) throw new Error('ต้องเป็น array');
+      if(confirm(`นำเข้า ${data.length} topics? (จะแทนที่ KB ปัจจุบัน)`)){
+        KB=data; saveKB(); renderKBList(); alert('✅ Import สำเร็จ!');
+      }
+    }catch(err){ alert('❌ ไฟล์ไม่ถูกต้อง: '+err.message); }
+  };
+  reader.readAsText(file); event.target.value='';
+}
+
+// ==================== INIT ====================
+buildSidebar();
+buildSuggs();
 </script>
 </body>
 </html>
