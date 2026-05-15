@@ -397,6 +397,73 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .ev-type-btn:hover{border-color:var(--primary);background:var(--primary-light)}
 .ev-type-btn.active{border-color:var(--primary);background:var(--primary);color:#fff}
 .ev-form-footer{padding:10px 18px;border-top:1px solid #f1f5f9;display:flex;gap:8px;justify-content:flex-end}
+/* ===== NOTIFICATION ===== */
+.notif-btn{position:relative;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:6px 9px;cursor:pointer;color:#fff;font-size:18px;line-height:1;transition:background .15s}
+.notif-btn:hover{background:rgba(255,255,255,.2)}
+.notif-badge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;border-radius:50%;min-width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid white;padding:0 2px}
+.notif-badge.show{display:flex}
+.notif-popup{position:fixed;top:60px;right:20px;background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.2);width:320px;z-index:400;display:none;overflow:hidden}
+.notif-popup.open{display:block}
+.notif-hdr{padding:12px 16px;background:linear-gradient(135deg,#374151,#1f2937);color:#fff;display:flex;align-items:center;gap:8px}
+.notif-hdr h3{font-size:13px;font-weight:700;flex:1}
+.notif-clear{background:none;border:none;color:rgba(255,255,255,.7);font-size:11px;cursor:pointer;font-family:inherit}
+.notif-clear:hover{color:#fff}
+.notif-list{max-height:360px;overflow-y:auto}
+.notif-item{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background .1s}
+.notif-item:hover{background:#f8fafc}
+.notif-item.unread{background:#eff6ff}
+.notif-item:last-child{border-bottom:none}
+.notif-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.notif-body{flex:1;min-width:0}
+.notif-title{font-size:12px;font-weight:700;color:#1a202c;line-height:1.3}
+.notif-sub{font-size:11px;color:#6b7280;margin-top:2px;line-height:1.3}
+.notif-time{font-size:10px;color:#9ca3af;margin-top:3px}
+.notif-empty{text-align:center;padding:28px;color:#9ca3af;font-size:12px}
+/* Toast notification */
+.notif-toast{position:fixed;top:70px;right:20px;background:#1f2937;color:#fff;border-radius:12px;padding:10px 16px;font-size:13px;z-index:9999;display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translateX(120%);transition:transform .3s;max-width:300px}
+.notif-toast.show{transform:translateX(0)}
+.notif-toast-icon{font-size:20px;flex-shrink:0}
+.notif-toast-body{flex:1}
+.notif-toast-title{font-weight:700;line-height:1.3}
+.notif-toast-sub{font-size:11px;opacity:.8;margin-top:2px}
+.notif-toast-close{background:none;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:16px;padding:0;flex-shrink:0}
+/* ===== PIXEL ART AVATAR ===== */
+.pixel-grid{display:grid;gap:2px;background:#e2e8f0;padding:4px;border-radius:8px;cursor:crosshair}
+.pixel-cell{width:20px;height:20px;background:#fff;border-radius:2px;transition:background .05s}
+.pixel-cell:hover{opacity:.8}
+.pixel-palette{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.pixel-color{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;transition:all .12s}
+.pixel-color.active{border-color:#1a202c;transform:scale(1.2)}
+.pixel-tools{display:flex;gap:6px;margin:8px 0}
+.pixel-tool{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:#fff;font-size:11px;cursor:pointer;font-family:inherit}
+.pixel-tool.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.pixel-preview{width:48px;height:48px;border-radius:10px;border:2px solid var(--border);overflow:hidden}
+/* ===== TEAM CHAT ===== */
+.chat-popup{position:fixed;bottom:20px;right:20px;width:340px;height:500px;background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.22);z-index:400;display:none;flex-direction:column;overflow:hidden}
+.chat-popup.open{display:flex}
+.chat-popup-hdr{padding:12px 16px;background:linear-gradient(135deg,#1a56db,#1e429f);color:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.chat-popup-hdr h3{font-size:13px;font-weight:700;flex:1}
+.chat-close{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;padding:0;line-height:1}
+.chat-online-dot{width:8px;height:8px;border-radius:50%;background:#34d399;border:1.5px solid white}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:#f8fafc}
+.chat-msg-row{display:flex;gap:7px;align-items:flex-end}
+.chat-msg-row.mine{flex-direction:row-reverse}
+.chat-av{width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.chat-bubble{padding:8px 11px;border-radius:14px;font-size:12px;line-height:1.5;max-width:220px;word-break:break-word}
+.chat-msg-row:not(.mine) .chat-bubble{background:#fff;border:1px solid #e2e8f0;border-bottom-left-radius:4px}
+.chat-msg-row.mine .chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+.chat-msg-meta{font-size:10px;color:#9ca3af;margin-top:2px;text-align:right}
+.chat-msg-row:not(.mine) .chat-msg-meta{text-align:left}
+.chat-date-sep{text-align:center;font-size:10px;color:#9ca3af;padding:4px 0}
+.chat-input-area{padding:10px 12px;border-top:1px solid #e2e8f0;display:flex;gap:8px;align-items:flex-end;background:#fff;flex-shrink:0}
+.chat-input{flex:1;border:1px solid #e2e8f0;border-radius:20px;padding:8px 14px;font-size:12px;font-family:inherit;outline:none;resize:none;max-height:80px;line-height:1.4}
+.chat-input:focus{border-color:var(--primary)}
+.chat-send{width:34px;height:34px;border-radius:50%;background:var(--primary);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chat-send:hover{background:var(--primary-dark)}
+.chat-fab{position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#7c3aed);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 6px 20px rgba(26,86,219,.4);z-index:399;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.chat-fab:hover{transform:scale(1.08)}
+.chat-fab-badge{position:absolute;top:-3px;right:-3px;background:#ef4444;color:#fff;border-radius:50%;min-width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid white}
+.chat-fab-badge.show{display:flex}
 /* PIN change modal */
 .pin-change-wrap{display:flex;gap:10px;align-items:center}
 .pin-input-field{flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:20px;font-family:monospace;letter-spacing:6px;text-align:center;outline:none}
@@ -475,10 +542,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
         <span class="cal-day-name" id="calDayName">---</span>
       </div>
     </button>
+    <button class="notif-btn" id="notifBtn" onclick="toggleNotifPopup()" title="การแจ้งเตือน">
+      🔔<span class="notif-badge" id="notifBadge">0</span>
+    </button>
     <button class="hbtn purple" onclick="openTaskPanel()">📋 งาน<span class="task-badge" id="taskBadge">0</span></button>
-    <button class="hbtn yellow" onclick="openPW()">🔑 Password</button>
-    <button class="hbtn green" onclick="openSidebarEditor()">🔗 Quick Links</button>
-    <button class="hbtn blue" onclick="openAdmin()">⚙️ KB</button>
+    <button class="hbtn yellow" onclick="openPW()">🔑 Password Manager</button>
+    <button class="hbtn blue" onclick="openAdmin()">📚 Knowledge Base</button>
     <button class="hbtn" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)" onclick="openTokenSetup()" id="tokenBtn" title="ตั้งค่า GitHub Token">🔐 Token<span class="token-badge unset" id="tokenBadge">ยังไม่ตั้ง</span></button>
     <div class="user-chip" onclick="openUserMenu()" id="userChip" title="จัดการผู้ใช้ / ออกจากระบบ">
       <div class="uc-av" id="currentUserAv">?</div>
@@ -779,7 +848,13 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     <!-- current user info -->
     <div id="umCurrentUserBar" style="padding:10px 18px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;display:flex;align-items:center;gap:10px">
       <div class="uc-av" style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700" id="umCurAv">?</div>
-      <div><div style="font-size:13px;font-weight:700" id="umCurName">-</div><div style="font-size:11px;color:var(--muted)" id="umCurRole">-</div></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700" id="umCurName">-</div>
+        <div style="font-size:11px;color:var(--muted)" id="umCurRole">-</div>
+        <div id="umCurEmail" style="display:none;margin-top:2px">
+          <a id="umCurEmailLink" href="https://mail.google.com/" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none">📧 <span id="umCurEmailTxt"></span></a>
+        </div>
+      </div>
       <button class="btn btn-ghost" style="margin-left:auto;font-size:12px" onclick="doLogout()">🚪 ออกจากระบบ</button>
     </div>
     <div class="toolbar" id="umAdminTools" style="display:none">
@@ -799,7 +874,28 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     <div class="modal-hdr" style="background:#f0fdf4"><h3 id="addUserTitle" style="color:#065f46">➕ เพิ่มผู้ใช้</h3><button class="close-btn" onclick="closeModal('addUserModal')">×</button></div>
     <div class="modal-body">
       <div class="field"><label>ชื่อ *</label><input type="text" id="um-f-name" placeholder="ชื่อ หรือ Username"></div>
-      <div class="field"><label>Emoji / Avatar</label><input type="text" id="um-f-emoji" value="👤" maxlength="4" style="font-size:22px;text-align:center;width:60px"></div>
+      <div class="field">
+        <label>Avatar</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <canvas id="umAvatarPreview" width="48" height="48" style="border-radius:10px;border:2px solid var(--border);image-rendering:pixelated;cursor:pointer" onclick="openPixelModal()" title="คลิกเพื่อสร้าง Pixel Art"></canvas>
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">หรือใส่ Emoji แทน</div>
+            <input type="text" id="um-f-emoji" value="👤" maxlength="4" style="font-size:22px;text-align:center;width:60px">
+          </div>
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openPixelModal()">🎨 Pixel Art</button>
+        </div>
+      </div>
+      <div class="field"><label>📧 Email</label><input type="email" id="um-f-email" placeholder="name@freewillfx.com"></div>
+      <div class="field"><label>📱 เบอร์โทร</label><input type="tel" id="um-f-phone" placeholder="08x-xxx-xxxx"></div>
+      <div class="field">
+        <label>⏰ เวลาพัก (สำหรับแจ้งเตือน)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="time" id="um-f-break1" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none" title="พักช่วงที่ 1">
+          <span style="font-size:12px;color:var(--muted)">และ</span>
+          <input type="time" id="um-f-break2" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none" title="พักช่วงที่ 2">
+        </div>
+        <div class="hint">ระบบจะแจ้งเตือนเมื่อถึงเวลาพัก</div>
+      </div>
       <div class="field"><label>Role</label>
         <select id="um-f-role" style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none">
           <option value="user">User</option>
@@ -962,6 +1058,90 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   </div>
 </div>
 
+<!-- ===== NOTIFICATION POPUP ===== -->
+<div class="notif-popup" id="notifPopup">
+  <div class="notif-hdr">
+    <span style="font-size:16px">🔔</span>
+    <h3>การแจ้งเตือน</h3>
+    <button class="notif-clear" onclick="clearAllNotifs()">ล้างทั้งหมด</button>
+    <button class="close-btn" style="color:rgba(255,255,255,.7);font-size:18px" onclick="document.getElementById('notifPopup').classList.remove('open')">×</button>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div class="notif-empty">ไม่มีการแจ้งเตือน</div>
+  </div>
+</div>
+
+<!-- ===== NOTIFICATION TOAST ===== -->
+<div class="notif-toast" id="notifToast">
+  <div class="notif-toast-icon" id="notifToastIcon">🔔</div>
+  <div class="notif-toast-body">
+    <div class="notif-toast-title" id="notifToastTitle"></div>
+    <div class="notif-toast-sub" id="notifToastSub"></div>
+  </div>
+  <button class="notif-toast-close" onclick="hideNotifToast()">×</button>
+</div>
+
+<!-- ===== TEAM CHAT ===== -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()" title="Team Chat">
+  💬<span class="chat-fab-badge" id="chatFabBadge">0</span>
+</button>
+<div class="chat-popup" id="chatPopup">
+  <div class="chat-popup-hdr">
+    <div class="chat-online-dot"></div>
+    <h3>💬 Team Chat</h3>
+    <span id="chatOnlineCount" style="font-size:10px;opacity:.8"></span>
+    <button class="chat-close" onclick="toggleChat()">×</button>
+  </div>
+  <div class="chat-msgs" id="chatMsgs">
+    <div style="text-align:center;padding:20px;font-size:12px;color:#9ca3af">🎉 เริ่มสนทนากับทีม!</div>
+  </div>
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chatInput" placeholder="พิมพ์ข้อความ..." rows="1"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMsg();}"
+      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+    <button class="chat-send" onclick="sendChatMsg()">➤</button>
+  </div>
+</div>
+
+<!-- ===== PIXEL ART AVATAR MODAL ===== -->
+<div class="modal-overlay" id="pixelModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-hdr" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">
+      <h3 style="color:#fff">🎨 สร้าง Avatar ของคุณ</h3>
+      <button class="close-btn" style="color:rgba(255,255,255,.8)" onclick="closeModal('pixelModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <!-- Canvas -->
+        <div>
+          <div class="pixel-grid" id="pixelGrid" style="grid-template-columns:repeat(12,20px)"></div>
+        </div>
+        <!-- Controls -->
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">Preview</div>
+          <canvas id="pixelPreview" width="48" height="48" class="pixel-preview" style="image-rendering:pixelated"></canvas>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin:10px 0 6px">เครื่องมือ</div>
+          <div class="pixel-tools">
+            <button class="pixel-tool active" id="ptool-draw" onclick="setPixelTool('draw')">✏️ วาด</button>
+            <button class="pixel-tool" id="ptool-erase" onclick="setPixelTool('erase')">🧽 ลบ</button>
+            <button class="pixel-tool" id="ptool-fill" onclick="setPixelTool('fill')">🪣 เติม</button>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:6px">สี</div>
+          <div class="pixel-palette" id="pixelPalette"></div>
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button class="btn btn-ghost" style="font-size:11px;padding:5px 8px" onclick="clearPixelCanvas()">🗑️ ล้าง</button>
+            <button class="btn btn-ghost" style="font-size:11px;padding:5px 8px" onclick="fillPixelTemplate()">🧑 ตัวอย่าง</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('pixelModal')">ยกเลิก</button>
+      <button class="btn btn-primary" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)" onclick="savePixelAvatar()">💾 บันทึก Avatar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Token Setup Modal -->
 <div class="modal-overlay" id="tokenModal">
   <div class="modal" style="max-width:500px">
@@ -1072,6 +1252,7 @@ async function ghEnsureLabels(){
       {name:'task',      color:'7057ff', description:'Task'},
       {name:'quicklinks',color:'0e8a16', description:'Quick Links Master'},
       {name:'calendar',  color:'d93f0b', description:'Calendar Events'},
+      {name:'chat',      color:'0075ca', description:'Team Chat Messages'},
       {name:'meta',      color:'cccccc', description:'System'},
     ];
     for(const lb of needed){
@@ -2031,24 +2212,36 @@ function renderUMList() {
 }
 
 function openAddUserModal() {
-  editingUserId = null;
+  editingUserId = null; _savedPixelData = null;
   document.getElementById('addUserTitle').textContent = '➕ เพิ่มผู้ใช้';
   document.getElementById('um-f-name').value = '';
   document.getElementById('um-f-emoji').value = '👤';
   document.getElementById('um-f-role').value = 'user';
   document.getElementById('um-f-pin').value = '';
+  document.getElementById('um-f-email').value = '';
+  document.getElementById('um-f-phone').value = '';
+  document.getElementById('um-f-break1').value = '';
+  document.getElementById('um-f-break2').value = '';
+  const prev = document.getElementById('umAvatarPreview');
+  if(prev){ const ctx=prev.getContext('2d'); ctx.clearRect(0,0,48,48); ctx.fillStyle='#e2e8f0'; ctx.fillRect(0,0,48,48); }
   document.getElementById('addUserModal').classList.add('open');
 }
 
 function openEditUser(uid) {
   const u = USERS.find(x => x.id === uid);
   if (!u) return;
-  editingUserId = uid;
+  editingUserId = uid; _savedPixelData = u.pixelData||null;
   document.getElementById('addUserTitle').textContent = '✏️ แก้ไขผู้ใช้';
   document.getElementById('um-f-name').value = u.name;
   document.getElementById('um-f-emoji').value = u.emoji || '👤';
   document.getElementById('um-f-role').value = u.role || 'user';
   document.getElementById('um-f-pin').value = u.pin;
+  document.getElementById('um-f-email').value = u.email||'';
+  document.getElementById('um-f-phone').value = u.phone||'';
+  document.getElementById('um-f-break1').value = u.break1||'';
+  document.getElementById('um-f-break2').value = u.break2||'';
+  const prev = document.getElementById('umAvatarPreview');
+  if(u.pixelData && prev) renderPixelToCanvas(u.pixelData, prev);
   document.getElementById('addUserModal').classList.add('open');
 }
 
@@ -2057,24 +2250,33 @@ function saveUserForm() {
   const pin = document.getElementById('um-f-pin').value.trim();
   const emoji = document.getElementById('um-f-emoji').value.trim() || '👤';
   const role = document.getElementById('um-f-role').value;
+  const email = document.getElementById('um-f-email').value.trim();
+  const phone = document.getElementById('um-f-phone').value.trim();
+  const break1 = document.getElementById('um-f-break1').value;
+  const break2 = document.getElementById('um-f-break2').value;
   if (!name) { alert('กรุณากรอกชื่อ'); return; }
   if (pin && (pin.length !== 4 || !/^\d{4}$/.test(pin))) { alert('PIN ต้องเป็นตัวเลข 4 หลัก'); return; }
 
   if (editingUserId) {
     const u = USERS.find(x => x.id === editingUserId);
     if (!u) return;
-    u.name = name;
-    u.emoji = emoji;
-    u.role = role;
-    if (pin) u.pin = pin;
+    u.name=name; u.emoji=emoji; u.role=role;
+    u.email=email||undefined; u.phone=phone||undefined;
+    u.break1=break1||undefined; u.break2=break2||undefined;
+    if(_savedPixelData) u.pixelData=_savedPixelData;
+    if(pin) u.pin=pin;
+    if(currentUser?.id===editingUserId){ currentUser={...currentUser,...u}; updateUserChip(); }
   } else {
     if (!pin) { alert('กรุณากรอก PIN'); return; }
-    USERS.push({ id: nxtUserId(), name, emoji, role, pin });
+    USERS.push({ id:nxtUserId(), name, emoji, role, pin,
+      email:email||undefined, phone:phone||undefined,
+      break1:break1||undefined, break2:break2||undefined,
+      pixelData:_savedPixelData||undefined });
   }
+  _savedPixelData=null;
   saveData(USERS_KEY, USERS);
   closeModal('addUserModal');
-  renderUMList();
-  buildUserGrid();
+  renderUMList(); buildUserGrid();
   showToast(editingUserId ? '✅ แก้ไขแล้ว!' : '✅ เพิ่มผู้ใช้แล้ว!');
 }
 
@@ -2106,6 +2308,418 @@ function savePinChange() {
   saveData(USERS_KEY, USERS);
   closeModal('changePinModal');
   showToast('✅ เปลี่ยน PIN แล้ว!');
+}
+
+/* ===== NOTIFICATION SYSTEM ===== */
+let NOTIFICATIONS = [];
+let _notifToastTimer = null;
+const NOTIF_KEY = 'fw_notifications_v1';
+
+function loadNotifications(){ NOTIFICATIONS = loadData(NOTIF_KEY,[]); updateNotifBadge(); }
+function saveNotifications(){ saveData(NOTIF_KEY, NOTIFICATIONS); }
+
+function addNotification(icon, title, sub, type='info', action=null){
+  const n = { id: Date.now().toString(), icon, title, sub, type, action, time: Date.now(), read: false };
+  NOTIFICATIONS.unshift(n);
+  if(NOTIFICATIONS.length > 50) NOTIFICATIONS = NOTIFICATIONS.slice(0,50);
+  saveNotifications();
+  updateNotifBadge();
+  showNotifToast(icon, title, sub);
+}
+
+function updateNotifBadge(){
+  const unread = NOTIFICATIONS.filter(n=>!n.read).length;
+  const badge = document.getElementById('notifBadge');
+  if(!badge) return;
+  badge.textContent = unread > 9 ? '9+' : unread;
+  badge.classList.toggle('show', unread > 0);
+}
+
+function toggleNotifPopup(){
+  const popup = document.getElementById('notifPopup');
+  const isOpen = popup.classList.toggle('open');
+  if(isOpen){
+    const btn = document.getElementById('notifBtn');
+    const rect = btn.getBoundingClientRect();
+    popup.style.top = (rect.bottom+8)+'px';
+    popup.style.right = (window.innerWidth-rect.right)+'px';
+    renderNotifList();
+    // Mark all read
+    NOTIFICATIONS.forEach(n=>n.read=true);
+    saveNotifications();
+    updateNotifBadge();
+  }
+  // Close other popups
+  document.getElementById('weatherPopup').classList.remove('open');
+  document.getElementById('calPopup').classList.remove('open');
+}
+
+function renderNotifList(){
+  const list = document.getElementById('notifList');
+  if(!NOTIFICATIONS.length){ list.innerHTML='<div class="notif-empty">🎉 ไม่มีการแจ้งเตือน</div>'; return; }
+  list.innerHTML = NOTIFICATIONS.slice(0,20).map(n=>`
+    <div class="notif-item ${n.read?'':'unread'}" onclick="notifClick('${n.id}')">
+      <div class="notif-icon">${n.icon}</div>
+      <div class="notif-body">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-sub">${n.sub}</div>
+        <div class="notif-time">${fmtDate(n.time)}</div>
+      </div>
+    </div>`).join('');
+}
+
+function notifClick(id){
+  const n = NOTIFICATIONS.find(x=>x.id===id);
+  if(!n) return;
+  n.read=true; saveNotifications(); updateNotifBadge();
+  if(n.action==='tasks') openTaskPanel();
+  else if(n.action==='weather') document.getElementById('weatherPopup').classList.add('open');
+  else if(n.action==='calendar') toggleCalPopup();
+}
+
+function clearAllNotifs(){ NOTIFICATIONS=[]; saveNotifications(); updateNotifBadge(); renderNotifList(); }
+
+function showNotifToast(icon, title, sub){
+  const toast = document.getElementById('notifToast');
+  document.getElementById('notifToastIcon').textContent = icon;
+  document.getElementById('notifToastTitle').textContent = title;
+  document.getElementById('notifToastSub').textContent = sub;
+  toast.classList.add('show');
+  if(_notifToastTimer) clearTimeout(_notifToastTimer);
+  _notifToastTimer = setTimeout(hideNotifToast, 5000);
+}
+function hideNotifToast(){ document.getElementById('notifToast').classList.remove('show'); }
+
+// Close notification popup on outside click
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#notifPopup')&&!e.target.closest('#notifBtn')){
+    document.getElementById('notifPopup').classList.remove('open');
+  }
+});
+
+/* --- Notification Checks --- */
+let _notifBreakChecked = {};
+
+function checkAllNotifications(){
+  const now = new Date();
+  // 1. วันหยุด — แจ้งเตือนวันก่อน
+  const tomorrow = new Date(now); tomorrow.setDate(now.getDate()+1);
+  const tds = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth()+1).padStart(2,'0')}-${String(tomorrow.getDate()).padStart(2,'0')}`;
+  const holTomorrow = TH_HOLIDAYS_2569[tds];
+  if(holTomorrow && now.getHours()===17 && now.getMinutes()<5){
+    const holKey='hol_'+tds;
+    if(!_notifBreakChecked[holKey]){
+      _notifBreakChecked[holKey]=true;
+      addNotification('🎉','วันหยุดพรุ่งนี้',holTomorrow,'holiday','calendar');
+    }
+  }
+  // 2. ฝนใกล้ตก — ตรวจจาก weather data
+  if(_weatherData){
+    const probs = _weatherData.hourly?.precipitation_probability||[];
+    const times = _weatherData.hourly?.time||[];
+    const h = now.getHours();
+    times.forEach((t,i)=>{
+      const th = new Date(t).getHours();
+      if(th===h+1 && probs[i]>=70){
+        const rKey='rain_'+tds+'_'+th;
+        if(!_notifBreakChecked[rKey]){
+          _notifBreakChecked[rKey]=true;
+          addNotification('🌧','ฝนใกล้ตก!',`โอกาสฝน ${probs[i]}% เวลา ${th}:00 น.`,'warning','weather');
+        }
+      }
+    });
+  }
+  // 3. เวลาพัก — ตรวจจาก currentUser profile
+  if(currentUser){
+    ['break1','break2'].forEach(bk=>{
+      const btime = currentUser[bk];
+      if(!btime) return;
+      const [bh,bm] = btime.split(':').map(Number);
+      if(now.getHours()===bh && now.getMinutes()===bm){
+        const bKey='break_'+bk+'_'+tds;
+        if(!_notifBreakChecked[bKey]){
+          _notifBreakChecked[bKey]=true;
+          addNotification('☕','ถึงเวลาพักแล้ว!',`เวลาพัก ${btime} น.`,'info');
+        }
+      }
+    });
+  }
+  // 4. งานถูก assign — ตรวจ TASKS ที่ pic ตรงกับ user ปัจจุบัน
+  if(currentUser && TASKS.length){
+    const myTasks = TASKS.filter(t=>t.pic===currentUser.name && t.status!=='done');
+    const lastCheck = _notifBreakChecked['task_check_ts']||0;
+    if(Date.now()-lastCheck > 300000){ // ตรวจทุก 5 นาที
+      _notifBreakChecked['task_check_ts'] = Date.now();
+      const recent = myTasks.filter(t=>(t.createdAt||0)>lastCheck && lastCheck>0);
+      recent.forEach(t=>{
+        addNotification('📋',`งานใหม่: ${t.company}`,`${fmtTaskNo(t.taskNo)} ถูก assign ให้คุณ`,'task','tasks');
+      });
+    }
+  }
+}
+
+// เช็คทุก 60 วินาที
+setInterval(checkAllNotifications, 60000);
+
+/* ===== PIXEL ART AVATAR ===== */
+const PIXEL_COLS = 12, PIXEL_ROWS = 12;
+const PIXEL_PALETTE_COLORS = [
+  '#ffffff','#000000','#374151','#6b7280','#d1d5db',
+  '#ef4444','#f97316','#f59e0b','#eab308','#84cc16',
+  '#22c55e','#10b981','#14b8a6','#06b6d4','#3b82f6',
+  '#6366f1','#8b5cf6','#a855f7','#ec4899','#fecdd3',
+  '#fed7aa','#fef9c3','#d1fae5','#bfdbfe','#e9d5ff',
+  '#fbbf24','#7c3aed','#1d4ed8','#065f46','#78350f'
+];
+let _pixelData = Array(PIXEL_ROWS).fill(null).map(()=>Array(PIXEL_COLS).fill('#ffffff'));
+let _pixelColor = '#000000';
+let _pixelTool = 'draw';
+let _pixelDrawing = false;
+let _savedPixelData = null;
+
+function openPixelModal(){
+  // Load existing avatar data if any
+  if(currentUser?.pixelData) _pixelData = JSON.parse(JSON.stringify(currentUser.pixelData));
+  else _pixelData = Array(PIXEL_ROWS).fill(null).map(()=>Array(PIXEL_COLS).fill('#ffffff'));
+  initPixelGrid();
+  updatePixelPreview();
+  document.getElementById('pixelModal').classList.add('open');
+}
+
+function initPixelGrid(){
+  const grid = document.getElementById('pixelGrid');
+  grid.innerHTML='';
+  _pixelData.forEach((row,r)=>{
+    row.forEach((color,c)=>{
+      const cell = document.createElement('div');
+      cell.className='pixel-cell';
+      cell.style.background = color;
+      cell.dataset.r=r; cell.dataset.c=c;
+      cell.addEventListener('mousedown', e=>{ _pixelDrawing=true; paintPixel(r,c); e.preventDefault(); });
+      cell.addEventListener('mouseover', ()=>{ if(_pixelDrawing) paintPixel(r,c); });
+      grid.appendChild(cell);
+    });
+  });
+  document.addEventListener('mouseup', ()=>{ _pixelDrawing=false; });
+
+  // Init palette
+  const palette = document.getElementById('pixelPalette');
+  palette.innerHTML = PIXEL_PALETTE_COLORS.map(c=>`
+    <div class="pixel-color ${c===_pixelColor?'active':''}" style="background:${c}" onclick="setPixelColor('${c}')" title="${c}"></div>`).join('');
+}
+
+function paintPixel(r,c){
+  if(_pixelTool==='erase'){ _pixelData[r][c]='#ffffff'; }
+  else if(_pixelTool==='fill'){
+    const target=_pixelData[r][c];
+    if(target===_pixelColor) return;
+    floodFill(r,c,target,_pixelColor);
+  } else { _pixelData[r][c]=_pixelColor; }
+  // Update cell
+  const cells = document.getElementById('pixelGrid').children;
+  cells[r*PIXEL_COLS+c].style.background = _pixelData[r][c];
+  updatePixelPreview();
+}
+
+function floodFill(r,c,target,replace){
+  if(r<0||r>=PIXEL_ROWS||c<0||c>=PIXEL_COLS) return;
+  if(_pixelData[r][c]!==target) return;
+  _pixelData[r][c]=replace;
+  floodFill(r-1,c,target,replace); floodFill(r+1,c,target,replace);
+  floodFill(r,c-1,target,replace); floodFill(r,c+1,target,replace);
+}
+
+function setPixelColor(c){
+  _pixelColor=c;
+  document.querySelectorAll('.pixel-color').forEach(el=>el.classList.toggle('active',el.style.background===c||el.dataset?.color===c));
+  if(_pixelTool==='erase') setPixelTool('draw');
+  initPixelGrid(); // re-render palette
+}
+
+function setPixelTool(t){
+  _pixelTool=t;
+  ['draw','erase','fill'].forEach(x=>document.getElementById('ptool-'+x)?.classList.toggle('active',x===t));
+}
+
+function clearPixelCanvas(){
+  _pixelData=Array(PIXEL_ROWS).fill(null).map(()=>Array(PIXEL_COLS).fill('#ffffff'));
+  initPixelGrid(); updatePixelPreview();
+}
+
+function fillPixelTemplate(){
+  // Simple stick figure template
+  const t=[
+    [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,0,1,1,1,1,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,1,1,1,1,1,1,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,0,0,1,1,0,0,0,0,0],
+    [0,0,0,0,1,0,0,1,0,0,0,0],
+    [0,0,0,1,1,0,0,1,1,0,0,0],
+    [0,0,0,1,0,0,0,0,1,0,0,0],
+    [0,0,0,1,0,0,0,0,1,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0],
+  ];
+  _pixelData=t.map(row=>row.map(v=>v?_pixelColor:'#ffffff'));
+  initPixelGrid(); updatePixelPreview();
+}
+
+function updatePixelPreview(){
+  const canvas=document.getElementById('pixelPreview');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const cw=canvas.width/PIXEL_COLS, ch=canvas.height/PIXEL_ROWS;
+  _pixelData.forEach((row,r)=>{
+    row.forEach((color,c)=>{
+      ctx.fillStyle=color;
+      ctx.fillRect(c*cw,r*ch,cw,ch);
+    });
+  });
+  // Also update um preview
+  const umPrev=document.getElementById('umAvatarPreview');
+  if(umPrev){
+    const uctx=umPrev.getContext('2d');
+    _pixelData.forEach((row,r)=>{
+      row.forEach((color,c)=>{
+        uctx.fillStyle=color;
+        uctx.fillRect(c*(48/PIXEL_COLS),r*(48/PIXEL_ROWS),48/PIXEL_COLS,48/PIXEL_ROWS);
+      });
+    });
+  }
+}
+
+function savePixelAvatar(){
+  _savedPixelData = JSON.parse(JSON.stringify(_pixelData));
+  closeModal('pixelModal');
+  showToast('✅ บันทึก Avatar แล้ว — กด "บันทึก" ใน User form ด้วยครับ');
+}
+
+function renderPixelToCanvas(pixelData, canvas){
+  if(!pixelData||!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const cw=canvas.width/PIXEL_COLS, ch=canvas.height/PIXEL_ROWS;
+  pixelData.forEach((row,r)=>{
+    row.forEach((color,c)=>{
+      ctx.fillStyle=color||'#fff';
+      ctx.fillRect(c*cw,r*ch,cw,ch);
+    });
+  });
+}
+
+/* ===== TEAM CHAT ===== */
+const CHAT_KEY='fw_chat_v1';
+let CHAT_MSGS=[];
+let _chatGHIssueNum=null;
+let _chatOpen=false;
+let _chatUnread=0;
+
+async function loadChatMsgs(){
+  const local=loadData(CHAT_KEY,[]);
+  if(local.length){ CHAT_MSGS=local; renderChat(); }
+  if(!getGHToken()) return;
+  try{
+    const issues=await ghFetch(`/issues?labels=chat&state=open&per_page=3`);
+    if(issues.length){
+      _chatGHIssueNum=issues[0].number;
+      const d=ghDecode(issues[0].body);
+      if(d&&Array.isArray(d)){
+        CHAT_MSGS=d;
+        saveData(CHAT_KEY,CHAT_MSGS);
+        renderChat();
+        // Check for unread messages
+        const lastSeen=loadData('fw_chat_seen',0);
+        const newMsgs=CHAT_MSGS.filter(m=>m.ts>lastSeen&&m.sender!==currentUser?.name);
+        if(newMsgs.length&&!_chatOpen){
+          _chatUnread+=newMsgs.length;
+          updateChatBadge();
+          newMsgs.slice(-1).forEach(m=>{
+            addNotification('💬',`${m.sender}`,m.text.slice(0,40),'chat','chat');
+          });
+        }
+      }
+    }
+  }catch(e){ console.warn('Chat load GH:', e.message); }
+}
+
+async function saveChatMsgs(){
+  saveData(CHAT_KEY,CHAT_MSGS);
+  if(!getGHToken()) return;
+  syncStart();
+  const body=ghEncode(CHAT_MSGS.slice(-200)); // keep last 200 msgs
+  const title='Team Chat Messages';
+  try{
+    if(_chatGHIssueNum){
+      await ghFetch(`/issues/${_chatGHIssueNum}`,{method:'PATCH',body:{title,body}});
+    } else {
+      const created=await ghFetch('/issues',{method:'POST',body:{title,body,labels:['chat']}});
+      _chatGHIssueNum=created.number;
+    }
+    syncDone();
+  }catch(e){ syncError(e); }
+}
+
+function toggleChat(){
+  _chatOpen=!_chatOpen;
+  document.getElementById('chatPopup').classList.toggle('open',_chatOpen);
+  document.getElementById('chatFab').style.display=_chatOpen?'none':'flex';
+  if(_chatOpen){
+    _chatUnread=0; updateChatBadge();
+    saveData('fw_chat_seen',Date.now());
+    renderChat();
+    setTimeout(()=>scrollChatBottom(),100);
+    // Poll for new messages every 30s when open
+    loadChatMsgs();
+  }
+}
+
+function updateChatBadge(){
+  const b=document.getElementById('chatFabBadge');
+  b.textContent=_chatUnread>9?'9+':_chatUnread;
+  b.classList.toggle('show',_chatUnread>0);
+}
+
+function renderChat(){
+  const container=document.getElementById('chatMsgs');
+  if(!CHAT_MSGS.length){
+    container.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#9ca3af">🎉 เริ่มสนทนากับทีม!</div>';
+    return;
+  }
+  let html=''; let lastDate='';
+  CHAT_MSGS.slice(-100).forEach(m=>{
+    const d=new Date(m.ts).toLocaleDateString('th-TH',{day:'2-digit',month:'short'});
+    if(d!==lastDate){ html+=`<div class="chat-date-sep">— ${d} —</div>`; lastDate=d; }
+    const isMine=m.sender===currentUser?.name;
+    const av=isMine?(currentUser.emoji||currentUser.name[0]):m.sender[0];
+    const time=new Date(m.ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    html+=`<div class="chat-msg-row ${isMine?'mine':''}">
+      <div class="chat-av" style="background:${isMine?'var(--primary)':'#8b5cf6'}">${av}</div>
+      <div>
+        ${!isMine?`<div style="font-size:10px;color:#6b7280;margin-bottom:2px;padding-left:2px">${m.sender}</div>`:''}
+        <div class="chat-bubble">${escHtml(m.text)}</div>
+        <div class="chat-msg-meta">${time}</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML=html;
+  scrollChatBottom();
+}
+
+function scrollChatBottom(){
+  const c=document.getElementById('chatMsgs');
+  c.scrollTop=c.scrollHeight;
+}
+
+async function sendChatMsg(){
+  const inp=document.getElementById('chatInput');
+  const text=inp.value.trim();
+  if(!text||!currentUser) return;
+  const msg={id:Date.now().toString(),sender:currentUser.name,text,ts:Date.now()};
+  CHAT_MSGS.push(msg);
+  inp.value=''; inp.style.height='auto';
+  renderChat();
+  saveChatMsgs();
 }
 
 /* ===== WEATHER ===== */
@@ -2294,7 +2908,9 @@ document.addEventListener('click', e=>{
     document.getElementById('weatherPopup').classList.remove('open');
     _weatherPopupOpen=false;
   }
-  if(!e.target.closest('#calPopup')&&!e.target.closest('#calBtn')){
+  // Calendar: ปิดเฉพาะเมื่อคลิกนอก popup และนอกปุ่ม
+  // ไม่ปิดเมื่อคลิก evFormModal (event form)
+  if(!e.target.closest('#calPopup')&&!e.target.closest('#calBtn')&&!e.target.closest('#evFormModal')){
     document.getElementById('calPopup').classList.remove('open');
   }
 });
@@ -2638,6 +3254,11 @@ loadConfig().then(()=>{
   setTimeout(()=>initWeather(), 500);
   // Init calendar
   setTimeout(()=>loadCalEvents(), 1000);
+  // Init notifications
+  loadNotifications();
+  // Init chat (poll every 60s)
+  setTimeout(()=>loadChatMsgs(), 1500);
+  setInterval(()=>{ if(!_chatOpen) loadChatMsgs(); }, 60000);
   // Init GH labels
   if(getGHToken()) setTimeout(()=>ghEnsureLabels(), 2000);
 });
