@@ -1253,13 +1253,14 @@ async function ghEnsureLabels(){
     const existing = await ghFetch('/labels?per_page=100');
     const names = new Set(existing.map(l=>l.name));
     const needed = [
-      {name:'kb',        color:'0075ca', description:'Knowledge Base'},
-      {name:'pw',        color:'e4e669', description:'Password Manager'},
-      {name:'task',      color:'7057ff', description:'Task'},
-      {name:'quicklinks',color:'0e8a16', description:'Quick Links Master'},
-      {name:'calendar',  color:'d93f0b', description:'Calendar Events'},
-      {name:'chat',      color:'0075ca', description:'Team Chat Messages'},
-      {name:'meta',      color:'cccccc', description:'System'},
+      {name:'kb',         color:'0075ca', description:'Knowledge Base'},
+      {name:'pw',         color:'e4e669', description:'Password Manager'},
+      {name:'task',       color:'7057ff', description:'Task'},
+      {name:'task-deleted',color:'b60205', description:'Task marked deleted (hidden from app)'},
+      {name:'quicklinks', color:'0e8a16', description:'Quick Links Master'},
+      {name:'calendar',   color:'d93f0b', description:'Calendar Events'},
+      {name:'chat',       color:'0075ca', description:'Team Chat Messages'},
+      {name:'meta',       color:'cccccc', description:'System'},
     ];
     for(const lb of needed){
       if(!names.has(lb.name)){
@@ -1348,9 +1349,11 @@ async function ghTaskGetAll(){
   const issues = await ghFetch(`/issues?labels=${GH_LABELS.task}&state=open&per_page=100`);
   const closed = await ghFetch(`/issues?labels=${GH_LABELS.task}&state=closed&per_page=100`);
   const all = [...issues, ...closed].map(iss=>{
+    const labelNames = (iss.labels||[]).map(l=>l.name);
+    // Filter out deleted tasks — they were marked with 'task-deleted' label
+    if(labelNames.includes('task-deleted')) return null;
     const d = ghDecode(iss.body);
     if(!d) return null;
-    const labelNames = (iss.labels||[]).map(l=>l.name);
     let status = d.status || 'received';
     if(labelNames.includes('task-done') || iss.state==='closed') status='done';
     else if(labelNames.includes('task-checking')) status='checking';
@@ -1378,7 +1381,8 @@ async function ghTaskSave(item){
 }
 async function ghTaskDelete(issueNumber){
   delete _cache['task_all'];
-  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed', labels:['task-done', GH_LABELS.task]}});
+  // Mark with 'task-deleted' label so loadTasksFromGH knows to ignore it
+  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed', labels:['task-deleted', GH_LABELS.task]}});
 }
 
 // ---- Quick Links Master via single Issue ----
@@ -1696,24 +1700,31 @@ async function saveTask(){
   const now=Date.now();
   const existing=editingTaskId?TASKS.find(t=>t.id===editingTaskId):null;
   let imgs = taskImgs.length ? [...taskImgs] : undefined;
-  // Step 1: re-compress any image that is still too big (e.g., legacy items loaded from GitHub
-  //         or pasted before compression existed)
+  // Build a base candidate (without images) to know how much room is left for images
+  const baseCandidate={id:editingTaskId||nxtTaskId(),taskNo:existing?.taskNo||(editingTaskId?undefined:nxtTaskNo()),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:undefined,createdAt:existing?.createdAt||now,updatedAt:now,createdBy:existing?.createdBy||(currentUser?.name||''),_issueNumber:existing?._issueNumber};
+  const baseSize = estimateBodySize(baseCandidate);
+  const imgsBudget = Math.max(0, GH_BODY_BUDGET - baseSize - 200); // 200 char headroom
+
   if(imgs && imgs.length){
+    // Calculate per-image target: split budget evenly, but cap at IMG_TARGET_CHARS
+    const perImgTarget = Math.min(IMG_TARGET_CHARS, Math.floor(imgsBudget / imgs.length) - 50);
+    if(perImgTarget < 2000){
+      // Budget too tight — too many images requested
+      if(!confirm(`⚠️ มีรูปเยอะเกินไป (${imgs.length} ภาพ) อาจต้องตัดบางรูปออก\nต้องการบันทึกต่อหรือไม่?`)){ return; }
+    }
+    showToast('🔄 กำลังบีบอัดรูป...',2000);
     const recompressed=[];
-    let didRecompress=false;
     for(const im of imgs){
-      if(im && im.length > IMG_TARGET_CHARS*1.2){
-        didRecompress=true;
-        recompressed.push(await compressImage(im, IMG_TARGET_CHARS));
+      if(im && im.length > perImgTarget){
+        recompressed.push(await compressImage(im, perImgTarget));
       } else {
         recompressed.push(im);
       }
     }
     imgs=recompressed;
-    if(didRecompress) showToast('🔄 บีบอัดรูปอัตโนมัติเรียบร้อย',1500);
   }
   // Step 2: build candidate and check total body size — drop oldest images if still over budget
-  let candidate={id:editingTaskId||nxtTaskId(),taskNo:existing?.taskNo||(editingTaskId?undefined:nxtTaskNo()),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:imgs,createdAt:existing?.createdAt||now,updatedAt:now,createdBy:existing?.createdBy||(currentUser?.name||''),_issueNumber:existing?._issueNumber};
+  let candidate={...baseCandidate, images: imgs};
   let dropped=0;
   while(imgs && imgs.length && estimateBodySize(candidate) > GH_BODY_BUDGET){
     imgs.shift(); dropped++;
@@ -1724,11 +1735,9 @@ async function saveTask(){
     if(!confirm(`⚠️ ขนาดข้อมูลใหญ่เกินที่ GitHub รับได้ แม้บีบอัดรูปแล้ว\nต้องตัดรูปออก ${dropped} ภาพ (เก็บรูปล่าสุด ${remaining} ภาพ)\nต้องการบันทึกต่อหรือไม่?`)){
       return;
     }
-    // Sync the form state to match what will be saved
     taskImgs = imgs ? [...imgs] : [];
     renderImgPreview();
   } else if(imgs){
-    // keep taskImgs in sync with possibly recompressed copies
     taskImgs = [...imgs];
   }
   const item={...candidate,_dirty:true};
@@ -1787,10 +1796,11 @@ function compressImage(dataURL, targetChars=18000){
   });
 }
 
-// GitHub issue body limit is 65,536 chars. We leave headroom for metadata.
-const GH_BODY_BUDGET = 60000;
-// Target per-image size so a task can hold ~3 images comfortably
-const IMG_TARGET_CHARS = 18000;
+// GitHub issue body limit is 65,536 chars. Be conservative — JSON.stringify
+// escapes characters which makes the actual body longer than the raw image string.
+const GH_BODY_BUDGET = 55000;
+// Target per-image size so 3 images comfortably fit within the budget
+const IMG_TARGET_CHARS = 14000;
 function estimateBodySize(item){
   try{ return JSON.stringify(item).length; } catch{ return 0; }
 }
