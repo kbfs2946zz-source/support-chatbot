@@ -302,6 +302,78 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .token-badge{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:700;margin-left:4px}
 .token-badge.set{background:#d1fae5;color:#065f46}
 .token-badge.unset{background:#fee2e2;color:#991b1b}
+/* ===== WEATHER WIDGET ===== */
+.weather-btn{display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);border-radius:10px;padding:5px 10px;cursor:pointer;color:#fff;font-family:inherit;font-size:12px;transition:background .15s;position:relative}
+.weather-btn:hover{background:rgba(255,255,255,.2)}
+.weather-icon{font-size:18px;line-height:1}
+.weather-info{display:flex;flex-direction:column;align-items:flex-start;gap:1px}
+.weather-temp{font-size:13px;font-weight:700;line-height:1}
+.weather-uv{font-size:10px;opacity:.8;line-height:1}
+.weather-rain-alert{position:absolute;top:-5px;right:-5px;background:#ef4444;border-radius:50%;width:14px;height:14px;display:none;align-items:center;justify-content:center;font-size:8px;border:1.5px solid white;animation:pulse 2s infinite}
+.weather-rain-alert.show{display:flex}
+/* Weather popup */
+.weather-popup{position:fixed;top:60px;right:20px;background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.18);width:300px;z-index:400;display:none;overflow:hidden}
+.weather-popup.open{display:block}
+.wp-header{padding:16px 18px 12px;color:#fff;position:relative}
+.wp-header.sunny{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.wp-header.cloudy{background:linear-gradient(135deg,#6b7280,#374151)}
+.wp-header.rainy{background:linear-gradient(135deg,#3b82f6,#1e40af)}
+.wp-header.partly{background:linear-gradient(135deg,#06b6d4,#3b82f6)}
+.wp-city{font-size:11px;opacity:.85;margin-bottom:2px}
+.wp-big-icon{font-size:48px;line-height:1;float:right;margin-top:-8px}
+.wp-temp-big{font-size:36px;font-weight:700;line-height:1}
+.wp-desc{font-size:12px;opacity:.85;margin-top:3px}
+.wp-body{padding:12px 18px}
+.wp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.wp-stat{background:#f8fafc;border-radius:8px;padding:8px 10px;text-align:center}
+.wp-stat-val{font-size:16px;font-weight:700;color:#1a202c}
+.wp-stat-lbl{font-size:10px;color:#6b7280;margin-top:2px}
+.wp-stat-icon{font-size:14px;margin-bottom:2px}
+.uv-bar-wrap{background:#e2e8f0;border-radius:20px;height:6px;overflow:hidden;margin-top:4px}
+.uv-bar{height:100%;border-radius:20px;transition:width .4s}
+.wp-hourly{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.wp-hour{flex-shrink:0;text-align:center;background:#f8fafc;border-radius:8px;padding:6px 8px;min-width:44px}
+.wp-hour-time{font-size:10px;color:#6b7280}
+.wp-hour-icon{font-size:16px;margin:3px 0}
+.wp-hour-prob{font-size:10px;color:#3b82f6;font-weight:600}
+.wp-rain-warn{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 12px;font-size:12px;color:#991b1b;display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.wp-footer{font-size:10px;color:#9ca3af;text-align:center;padding-bottom:10px}
+/* ===== CALENDAR WIDGET ===== */
+.cal-btn{display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);border-radius:10px;padding:5px 10px;cursor:pointer;color:#fff;font-family:inherit;font-size:12px;transition:background .15s}
+.cal-btn:hover{background:rgba(255,255,255,.2)}
+.cal-date-num{font-size:15px;font-weight:700;line-height:1}
+.cal-day-name{font-size:10px;opacity:.8;line-height:1}
+/* Calendar popup */
+.cal-popup{position:fixed;top:60px;right:20px;background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.18);width:320px;z-index:400;display:none}
+.cal-popup.open{display:block}
+.cal-popup-hdr{padding:14px 16px;background:linear-gradient(135deg,#1a56db,#1e429f);color:#fff;border-radius:16px 16px 0 0;display:flex;align-items:center}
+.cal-popup-hdr h3{font-size:14px;font-weight:700;flex:1}
+.cal-nav{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 4px;opacity:.8}
+.cal-nav:hover{opacity:1}
+.cal-grid{padding:10px 12px}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.cal-wd{text-align:center;font-size:10px;font-weight:700;color:#6b7280;padding:3px 0}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:12px;position:relative;transition:background .12s}
+.cal-day:hover{background:#eff6ff}
+.cal-day.today{background:var(--primary);color:#fff;font-weight:700}
+.cal-day.today:hover{background:var(--primary-dark)}
+.cal-day.other-month{color:#d1d5db}
+.cal-day.has-event::after{content:'';position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:#ef4444}
+.cal-day.today.has-event::after{background:#fff}
+.cal-events{padding:0 12px 12px;max-height:180px;overflow-y:auto}
+.cal-event-item{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:8px;margin-bottom:5px;font-size:12px;cursor:pointer}
+.cal-event-item:hover{background:#f8fafc}
+.cal-ev-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.cal-ev-title{font-weight:600;flex:1;line-height:1.3}
+.cal-ev-time{font-size:10px;color:#6b7280}
+.cal-ev-del{background:none;border:none;color:#d1d5db;cursor:pointer;font-size:13px;padding:0}
+.cal-ev-del:hover{color:#ef4444}
+.cal-add-bar{padding:8px 12px;border-top:1px solid #f1f5f9;display:flex;gap:6px}
+.cal-add-inp{flex:1;padding:6px 10px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;font-family:inherit;outline:none}
+.cal-add-inp:focus{border-color:var(--primary)}
+.cal-add-btn{background:var(--primary);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.cal-selected-date{padding:6px 12px;font-size:11px;font-weight:600;color:var(--muted);border-top:1px solid #f1f5f9}
 /* PIN change modal */
 .pin-change-wrap{display:flex;gap:10px;align-items:center}
 .pin-input-field{flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:20px;font-family:monospace;letter-spacing:6px;text-align:center;outline:none}
@@ -363,6 +435,23 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   </div>
   <div class="header-right">
     <div class="status"><div class="dot"></div><span id="syncStatus">Online</span></div>
+    <!-- Weather button -->
+    <button class="weather-btn" onclick="toggleWeatherPopup()" id="weatherBtn" title="พยากรณ์อากาศ">
+      <span class="weather-icon" id="wIcon">⏳</span>
+      <div class="weather-info">
+        <span class="weather-temp" id="wTemp">--°</span>
+        <span class="weather-uv" id="wUV">UV --</span>
+      </div>
+      <span class="weather-rain-alert" id="wRainAlert">🌧</span>
+    </button>
+    <!-- Calendar button -->
+    <button class="cal-btn" onclick="toggleCalPopup()" id="calBtn" title="ปฏิทิน">
+      <span style="font-size:16px">📅</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-start">
+        <span class="cal-date-num" id="calDateNum">--</span>
+        <span class="cal-day-name" id="calDayName">---</span>
+      </div>
+    </button>
     <button class="hbtn purple" onclick="openTaskPanel()">📋 งาน<span class="task-badge" id="taskBadge">0</span></button>
     <button class="hbtn yellow" onclick="openPW()">🔑 Password</button>
     <button class="hbtn green" onclick="openSidebarEditor()">🔗 Quick Links</button>
@@ -408,8 +497,8 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 </div>
 
 <!-- ===== TASK PANEL ===== -->
-<div class="overlay" id="taskOverlay" onclick="closeOverlayBg(event,'taskOverlay')">
-  <div class="panel wide" style="max-height:92vh">
+<div class="overlay" id="taskOverlay" onclick="closeOverlayBg(event,'taskOverlay')" style="padding:10px">
+  <div class="panel wide" style="max-height:98vh;max-width:1200px">
     <!-- Header -->
     <div class="panel-hdr task-panel-hdr">
       <span style="font-size:20px">📋</span>
@@ -471,7 +560,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     <div class="tk-table-wrap" id="tk-table" style="display:none">
       <table class="tk-table">
         <thead><tr>
-          <th>#</th><th>บริษัท</th><th>ผู้รับผิดชอบ</th><th>รายละเอียด</th><th>สถานะ</th><th>อัพเดต</th><th></th>
+          <th>เลขที่</th><th>บริษัท</th><th>ผู้รับผิดชอบ</th><th>รายละเอียด</th><th>สถานะ</th><th>อัพเดต</th><th></th>
         </tr></thead>
         <tbody id="tk-tbody"></tbody>
       </table>
@@ -751,6 +840,62 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   </div>
 </div>
 
+<!-- ===== WEATHER POPUP ===== -->
+<div class="weather-popup" id="weatherPopup">
+  <div class="wp-header sunny" id="wpHeader">
+    <div class="wp-city" id="wpCity">กำลังโหลด...</div>
+    <div class="wp-big-icon" id="wpBigIcon">⏳</div>
+    <div class="wp-temp-big" id="wpTempBig">--°C</div>
+    <div class="wp-desc" id="wpDesc">--</div>
+  </div>
+  <div class="wp-body">
+    <div id="wpRainWarn" style="display:none" class="wp-rain-warn">🌧 <span id="wpRainWarnText"></span></div>
+    <div class="wp-grid">
+      <div class="wp-stat">
+        <div class="wp-stat-icon">🌡️</div>
+        <div class="wp-stat-val" id="wpFeels">--°</div>
+        <div class="wp-stat-lbl">รู้สึกเหมือน</div>
+      </div>
+      <div class="wp-stat">
+        <div class="wp-stat-icon">🌧</div>
+        <div class="wp-stat-val" id="wpRain">--%</div>
+        <div class="wp-stat-lbl">โอกาสฝน</div>
+      </div>
+      <div class="wp-stat">
+        <div class="wp-stat-icon">☀️</div>
+        <div class="wp-stat-val" id="wpUVVal">--</div>
+        <div class="wp-stat-lbl">UV Index</div>
+        <div class="uv-bar-wrap"><div class="uv-bar" id="wpUVBar" style="width:0%;background:#10b981"></div></div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px">ต่อไปอีก 6 ชั่วโมง</div>
+    <div class="wp-hourly" id="wpHourly"></div>
+  </div>
+  <div class="wp-footer" id="wpUpdated">อัพเดท: --</div>
+</div>
+
+<!-- ===== CALENDAR POPUP ===== -->
+<div class="cal-popup" id="calPopup">
+  <div class="cal-popup-hdr">
+    <button class="cal-nav" onclick="calNav(-1)">‹</button>
+    <h3 id="calMonthTitle">-- ----</h3>
+    <button class="cal-nav" onclick="calNav(1)">›</button>
+  </div>
+  <div class="cal-grid">
+    <div class="cal-weekdays">
+      <div class="cal-wd">อา</div><div class="cal-wd">จ</div><div class="cal-wd">อ</div>
+      <div class="cal-wd">พ</div><div class="cal-wd">พฤ</div><div class="cal-wd">ศ</div><div class="cal-wd">ส</div>
+    </div>
+    <div class="cal-days" id="calDays"></div>
+  </div>
+  <div class="cal-selected-date" id="calSelectedDate">เลือกวันเพื่อดู/เพิ่ม event</div>
+  <div class="cal-events" id="calEvents"></div>
+  <div class="cal-add-bar">
+    <input class="cal-add-inp" id="calNewEvent" placeholder="เพิ่ม event... (เช่น ประชุม DLT 10:00)" onkeydown="if(event.key==='Enter')addCalEvent()">
+    <button class="cal-add-btn" onclick="addCalEvent()">➕</button>
+  </div>
+</div>
+
 <!-- Token Setup Modal -->
 <div class="modal-overlay" id="tokenModal">
   <div class="modal" style="max-width:500px">
@@ -860,6 +1005,7 @@ async function ghEnsureLabels(){
       {name:'pw',        color:'e4e669', description:'Password Manager'},
       {name:'task',      color:'7057ff', description:'Task'},
       {name:'quicklinks',color:'0e8a16', description:'Quick Links Master'},
+      {name:'calendar',  color:'d93f0b', description:'Calendar Events'},
       {name:'meta',      color:'cccccc', description:'System'},
     ];
     for(const lb of needed){
@@ -1060,7 +1206,14 @@ async function loadTasksFromGH(){
 let editingTaskId=null,taskImgs=[],taskFilterStatus='',taskCurrentView='kanban';
 function loadData(key,def){try{const s=localStorage.getItem(key);if(s)return JSON.parse(s);}catch(e){}return def;}
 function saveData(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
+const TASK_NO_KEY='fw_task_counter_v1';
 function nxtTaskId(){return TASKS.length?Math.max(...TASKS.map(t=>t.id||0))+1:1;}
+function nxtTaskNo(){
+  let n=loadData(TASK_NO_KEY,0)+1;
+  saveData(TASK_NO_KEY,n);
+  return n;
+}
+function fmtTaskNo(no){return no?'#'+String(no).padStart(3,'0'):'';}
 function escHtml(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function fmtDate(ts){if(!ts)return'-';const d=new Date(ts),now=new Date(),diff=Math.floor((now-d)/1000);if(diff<60)return'เมื่อกี้';if(diff<3600)return Math.floor(diff/60)+'m ago';if(diff<86400)return Math.floor(diff/3600)+'h ago';return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short'});}
 const SL_LABEL={received:'🟡 รับเรื่อง',checking:'🔵 กำลังตรวจสอบ',done:'🟢 เรียบร้อย'};
@@ -1125,7 +1278,7 @@ function renderTasks(){
     const list=getList(taskFilterStatus||'');
     document.getElementById('tk-tbody').innerHTML=list.length
       ?list.map((t,i)=>`<tr class="${t.status==='done'?'tr-done':''}">
-        <td style="color:var(--muted);font-size:12px">${i+1}</td>
+        <td style="color:var(--primary);font-size:12px;font-weight:700;white-space:nowrap">${fmtTaskNo(t.taskNo)}</td>
         <td><span style="font-weight:700">${t.company}</span></td>
         <td><span style="background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 9px;font-size:12px">${t.pic||'-'}</span></td>
         <td style="max-width:260px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.detail||'-')}</td>
@@ -1143,7 +1296,10 @@ function renderTasks(){
 function renderCard(t){
   const imgs=t.images||[];
   return `<div class="task-card ${`status-${t.status}`}" onclick="openTaskForm(${t.id})">
-    <div class="tc-company">🏢 ${t.company}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div class="tc-company">🏢 ${t.company}</div>
+      ${t.taskNo?`<span style="font-size:10px;font-weight:700;color:var(--primary);background:var(--primary-light);padding:2px 7px;border-radius:20px">${fmtTaskNo(t.taskNo)}</span>`:''}
+    </div>
     ${t.pic?`<div class="tc-pic-tag">👤 ${t.pic}</div>`:''}
     ${t.detail?`<div class="tc-detail-preview">${escHtml(t.detail)}</div>`:''}
     ${imgs.length?`<div class="tc-imgs-sm">${imgs.slice(0,3).map(img=>`<img src="${img}" onclick="event.stopPropagation();openLightbox('${img}')">`).join('')}${imgs.length>3?`<div style="width:44px;height:34px;background:var(--bg);border:1px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--muted)">+${imgs.length-3}</div>`:''}</div>`:''}
@@ -1197,12 +1353,13 @@ function saveTask(){
   if(!company){alert('กรุณาระบุบริษัท');return;}
   const now=Date.now();
   const existing=editingTaskId?TASKS.find(t=>t.id===editingTaskId):null;
-  const item={id:editingTaskId||nxtTaskId(),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:taskImgs.length?[...taskImgs]:undefined,createdAt:existing?.createdAt||now,updatedAt:now,_issueNumber:existing?._issueNumber};
+  const item={id:editingTaskId||nxtTaskId(),taskNo:existing?.taskNo||(editingTaskId?undefined:nxtTaskNo()),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:taskImgs.length?[...taskImgs]:undefined,createdAt:existing?.createdAt||now,updatedAt:now,createdBy:existing?.createdBy||(currentUser?.name||''),_issueNumber:existing?._issueNumber};
   if(!COMPANIES.includes(company)){COMPANIES.push(company);saveData(COMPANIES_KEY,COMPANIES);}
   if(pic&&!TEAM.includes(pic)){TEAM.push(pic);saveData(TEAM_KEY,TEAM);}
-  if(editingTaskId)TASKS=TASKS.map(t=>t.id===editingTaskId?item:t);else TASKS.push(item);
+  // Optimistic UI — แสดงทันที ก่อน sync GitHub
+  if(editingTaskId)TASKS=TASKS.map(t=>t.id===editingTaskId?item:t);else TASKS.unshift(item);
   closeModal('taskFormModal');renderTasks();updateTaskBadge();
-  showToast(editingTaskId?'✅ แก้ไขแล้ว!':'✅ เพิ่มงานแล้ว!');
+  showToast(editingTaskId?'✅ แก้ไขแล้ว!':'✅ เพิ่มงาน '+fmtTaskNo(item.taskNo)+' แล้ว!');
   syncStart();
   ghTaskSave(item).then(res=>{ if(res.number&&!item._issueNumber)item._issueNumber=res.number; syncDone(); }).catch(syncError);
 }
@@ -1385,7 +1542,9 @@ function renderKBList(){
   const q=(document.getElementById('kbSearch').value||'').toLowerCase();
   const f=KB.filter(k=>!q||k.title.toLowerCase().includes(q)||k.keywords.some(kw=>kw.includes(q)));
   document.getElementById('kb-total').textContent=`${KB.length} topics`;
-  document.getElementById('kbList').innerHTML=f.length?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${f.length}/${KB.length}</div>${f.map(k=>`<div class="kb-item"><div class="kb-row"><div style="flex:1"><div class="kb-title">${k.title}</div><div class="kb-kw">🔑 ${k.keywords.slice(0,5).join(', ')}</div></div><div><button class="btn-edit" onclick="openForm(${k.id})">✏️</button> <button class="btn-del" onclick="delKB(${k.id})">🗑️</button></div></div></div>`).join('')}`:'<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';
+  // Sort: newest first
+  const sorted=[...f].sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+  document.getElementById('kbList').innerHTML=sorted.length?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${sorted.length}/${KB.length}</div>${sorted.map(k=>`<div class="kb-item"><div class="kb-row"><div style="flex:1"><div class="kb-title">${k.title}</div><div class="kb-kw">🔑 ${(k.keywords||[]).slice(0,5).join(', ')}</div>${k.createdAt?`<div style="font-size:10px;color:var(--muted);margin-top:2px">➕ ${k.createdBy||'?'} · ${fmtDateFull(k.createdAt)}${k.updatedBy&&k.updatedBy!==k.createdBy?' · ✏️ '+k.updatedBy:''}</div>`:''}</div><div><button class="btn-edit" onclick="openForm(${k.id})">✏️</button> <button class="btn-del" onclick="delKB(${k.id})">🗑️</button></div></div></div>`).join('')}`:'<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';
 }
 function delKB(id){
   if(!confirm('ลบ?'))return;
@@ -1411,10 +1570,12 @@ function saveForm(){
   const links=[];
   linkEls.forEach(row=>{const inp=row.querySelectorAll('input');const icon=inp[0].value.trim(),ttl=inp[1].value.trim(),url=inp[2].value.trim();if(ttl&&url)links.push({icon:icon||'🔗',title:ttl,url});});
   const existing=editingId?KB.find(k=>k.id===editingId):null;
-  const item={id:editingId||nxtId(),title,keywords,answer,steps:steps?.length?steps:undefined,extra,links:links.length?links:undefined,_issueNumber:existing?._issueNumber};
-  if(editingId)KB=KB.map(k=>k.id===editingId?item:k);else KB.push(item);
+  const now2=Date.now();
+  const item={id:editingId||nxtId(),title,keywords,answer,steps:steps?.length?steps:undefined,extra,links:links.length?links:undefined,_issueNumber:existing?._issueNumber,createdAt:existing?.createdAt||now2,updatedAt:now2,createdBy:existing?.createdBy||(currentUser?.name||''),updatedBy:currentUser?.name||''};
+  // Optimistic UI — ใหม่อยู่บนสุด
+  if(editingId)KB=KB.map(k=>k.id===editingId?item:k);else KB.unshift(item);
   closeModal('formModal');renderKBList();
-  showToast(editingId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');
+  showToast(editingId?'✅ แก้ไขแล้ว!':'✅ เพิ่ม KB แล้ว!');
   syncStart();
   ghKBSave(item).then(res=>{
     if(res.number&&!item._issueNumber){item._issueNumber=res.number;}
@@ -1443,7 +1604,9 @@ function renderPWList(){
   const q=(document.getElementById('pwSearch').value||'').trim();const list=q?searchPW(q):PW;
   document.getElementById('pw-total').textContent=`${PW.length} รายการ`;
   if(!list.length){document.getElementById('pwList').innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';return;}
-  document.getElementById('pwList').innerHTML=list.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div></div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
+  // Sort newest first
+  const sortedPW=[...list].sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
+  document.getElementById('pwList').innerHTML=sortedPW.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div>${p.createdAt?`<div style="font-size:10px;color:var(--muted);margin-top:2px">➕ ${p.createdBy||'?'} · ${fmtDateFull(p.createdAt)}</div>`:''}</div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
 }
 function togglePass(id){showPassIds.has(id)?showPassIds.delete(id):showPassIds.add(id);renderPWList();}
 function deletePW(id){
@@ -1460,10 +1623,12 @@ function savePWForm(){
   if(!company||!username||!password){alert('กรุณากรอกข้อมูลให้ครบ');return;}
   const aliasRaw=document.getElementById('pw-f-alias').value.trim();
   const existing=editingPWId?PW.find(p=>p.id===editingPWId):null;
-  const item={id:editingPWId||nxtPWId(),company,alias:aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[],url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined,_issueNumber:existing?._issueNumber};
-  if(editingPWId)PW=PW.map(p=>p.id===editingPWId?item:p);else PW.push(item);
+  const now3=Date.now();
+  const item={id:editingPWId||nxtPWId(),company,alias:aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[],url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined,_issueNumber:existing?._issueNumber,createdAt:existing?.createdAt||now3,updatedAt:now3,createdBy:existing?.createdBy||(currentUser?.name||''),updatedBy:currentUser?.name||''};
+  // Optimistic UI — ใหม่อยู่บนสุด
+  if(editingPWId)PW=PW.map(p=>p.id===editingPWId?item:p);else PW.unshift(item);
   closeModal('pwFormModal');renderPWList();
-  showToast(editingPWId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');
+  showToast(editingPWId?'✅ แก้ไขแล้ว!':'✅ เพิ่ม Password แล้ว!');
   syncStart();
   ghPWSave(item).then(res=>{ if(res.number&&!item._issueNumber)item._issueNumber=res.number; syncDone(); }).catch(syncError);
 }
@@ -1494,12 +1659,25 @@ function handleTeachInput(input){
   return false;
 }
 
+function renderPWResult(r){
+  return r.map(p=>`<div style="background:#fffbeb;border:1px solid #fde047;border-radius:10px;padding:10px 12px;margin-bottom:6px">
+    <div style="font-weight:700;color:#78350f">🔑 ${p.company}</div>
+    ${p.url?`<a href="${p.url}" target="_blank" style="font-size:11px;color:var(--primary)">${p.url}</a>`:''}
+    <div style="margin-top:6px;font-size:13px">👤 <span style="font-family:monospace">${p.username}</span> <button onclick="copyText('${p.username}')" style="background:#d1fae5;border:none;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer">📋 Copy User</button></div>
+    <div style="font-size:13px">🔒 <span style="font-family:monospace">••••••••</span> <button onclick="copyText('${p.password}')" style="background:#d1fae5;border:none;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer">📋 Copy Pass</button></div>
+    ${p.note?`<div style="font-size:11px;color:var(--muted);margin-top:4px">📝 ${p.note}</div>`:''}
+  </div>`).join('');
+}
+
+// Keywords that trigger PW search in chatbot
+const PW_TRIGGERS=['user','รหัส','password','pass','pw','username','login','เข้าสู่ระบบ','ล็อกอิน'];
+
 function handleCommand(input){
   const q=input.trim(),cmd=q.split(' ')[0].toLowerCase(),arg=q.slice(cmd.length).trim();
   if(cmd==='/pw'){
     if(!arg){openPW();return true;}
     const r=searchPW(arg);if(!r.length){addMsg('bot',`🔑 ไม่พบ "${arg}"<br><span style="font-size:12px">กด 🔑 Password เพื่อเพิ่ม</span>`);return true;}
-    addMsg('bot',`<h3>🔑 พบ ${r.length} รายการ</h3>${r.map(p=>`<div style="background:#fffbeb;border:1px solid #fde047;border-radius:10px;padding:10px 12px;margin-bottom:6px"><div style="font-weight:700;color:#78350f">🔑 ${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:11px;color:var(--primary)">${p.url}</a>`:''}<div style="margin-top:6px;font-size:13px">👤 <span style="font-family:monospace">${p.username}</span> <button onclick="copyText('${p.username}')" style="background:#d1fae5;border:none;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer">📋</button></div><div style="font-size:13px">🔒 <span style="font-family:monospace">${p.password}</span> <button onclick="copyText('${p.password}')" style="background:#d1fae5;border:none;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer">📋</button></div>${p.note?`<div style="font-size:11px;color:var(--muted);margin-top:4px">📝 ${p.note}</div>`:''}</div>`).join('')}`);return true;
+    addMsg('bot',`<h3>🔑 พบ ${r.length} รายการ</h3>${renderPWResult(r)}`);return true;
   }
   if(['/เพิ่ม','/สอน','/teach','/add'].includes(cmd)){startTeach();return true;}
   if(['/ดู','/list','/kb'].includes(cmd)){addMsg('bot',`<h3>📚 KB — ${KB.length} topics</h3><p>${KB.map((k,i)=>`<span class="tag">${i+1}. ${k.title}</span>`).join(' ')}</p>`);return true;}
@@ -1518,7 +1696,28 @@ function sendMessage(){
   if(teachState){handleTeachInput(q);return;}
   if(q.startsWith('/')){if(!handleCommand(q))addMsg('bot',`ไม่รู้จักคำสั่ง <b>${q}</b> ลอง <b>/help</b>`);return;}
   showTyping();
-  setTimeout(()=>{removeTyping();const r=searchKB(q);r?addMsg('bot',renderResult(r)):addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p>ลองถามด้วยคำอื่น หรือพิมพ์ <b>/เพิ่ม</b> เพื่อสอน chatbot</p>`);},400);
+  setTimeout(()=>{
+    removeTyping();
+    const ql = q.toLowerCase();
+
+    // ข้อ 3: ตรวจว่ามี PW trigger keyword ก่อน KB
+    const hasPWTrigger = PW_TRIGGERS.some(t => ql.includes(t));
+    if(hasPWTrigger){
+      // extract search term — ตัด trigger word ออก
+      let searchTerm = ql;
+      PW_TRIGGERS.forEach(t => { searchTerm = searchTerm.replace(t,'').trim(); });
+      if(!searchTerm) searchTerm = ql; // fallback ถ้าตัดแล้วเหลือว่าง
+      const pwRes = searchPW(searchTerm);
+      if(pwRes.length){
+        addMsg('bot',`<h3>🔑 พบ Password "${searchTerm}" — ${pwRes.length} รายการ</h3>${renderPWResult(pwRes)}`);
+        return;
+      }
+    }
+
+    // ปกติค้น KB
+    const r=searchKB(q);
+    r?addMsg('bot',renderResult(r)):addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p>ลองถามด้วยคำอื่น หรือพิมพ์ <b>/เพิ่ม</b> เพื่อสอน chatbot</p><p style="font-size:12px;color:var(--muted)">💡 ค้นหา password ด้วย: <b>รหัส [ชื่อบริษัท]</b> หรือ <b>user [ชื่อ]</b></p>`);
+  },300);
 }
 function handleSugg(t){document.getElementById('userInput').value=t;sendMessage();}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
@@ -1831,23 +2030,352 @@ function savePinChange() {
   showToast('✅ เปลี่ยน PIN แล้ว!');
 }
 
+/* ===== WEATHER ===== */
+const WMO_ICONS = {
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',
+  45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',
+  61:'🌧️',63:'🌧️',65:'🌧️',
+  71:'❄️',73:'❄️',75:'❄️',
+  80:'🌦️',81:'🌧️',82:'⛈️',
+  95:'⛈️',96:'⛈️',99:'⛈️'
+};
+const WMO_DESC = {
+  0:'ท้องฟ้าแจ่มใส',1:'มีเมฆบางส่วน',2:'มีเมฆบางส่วน',3:'มีเมฆมาก',
+  45:'หมอกลง',48:'หมอกลง',
+  51:'ฝนปรอยเล็กน้อย',53:'ฝนปรอย',55:'ฝนปรอยหนัก',
+  61:'ฝนเบา',63:'ฝนปานกลาง',65:'ฝนหนัก',
+  80:'ฝนตกเป็นพักๆ',81:'ฝนตกหนักเป็นพักๆ',82:'ฝนพายุ',
+  95:'พายุฝนฟ้าคะนอง',96:'พายุฝน+ลูกเห็บ',99:'พายุรุนแรง'
+};
+const WMO_BG = {
+  0:'sunny',1:'partly',2:'partly',3:'cloudy',45:'cloudy',48:'cloudy',
+  51:'rainy',53:'rainy',55:'rainy',61:'rainy',63:'rainy',65:'rainy',
+  80:'rainy',81:'rainy',82:'rainy',95:'rainy',96:'rainy',99:'rainy'
+};
+
+let _weatherData = null;
+let _weatherPopupOpen = false;
+let _weatherLat = null, _weatherLon = null, _weatherCity = '';
+
+async function initWeather(){
+  // Update calendar date display regardless
+  const now = new Date();
+  const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const calNum = document.getElementById('calDateNum');
+  const calDay = document.getElementById('calDayName');
+  if(calNum) calNum.textContent = now.getDate();
+  if(calDay) calDay.textContent = days[now.getDay()];
+
+  // Get GPS location
+  if(!navigator.geolocation){ loadWeatherByCoords(13.75,100.52,'กรุงเทพฯ'); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      _weatherLat = pos.coords.latitude;
+      _weatherLon = pos.coords.longitude;
+      // Reverse geocode with open-meteo's nearby city name (use nominatim)
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${_weatherLat}&lon=${_weatherLon}&format=json&accept-language=th`)
+        .then(r=>r.json())
+        .then(d=>{ _weatherCity = d.address?.city||d.address?.town||d.address?.state||'ตำแหน่งปัจจุบัน'; })
+        .catch(()=>{ _weatherCity='ตำแหน่งปัจจุบัน'; });
+      loadWeatherByCoords(_weatherLat, _weatherLon, _weatherCity||'ตำแหน่งปัจจุบัน');
+    },
+    () => loadWeatherByCoords(13.75, 100.52, 'กรุงเทพฯ'),
+    {timeout:8000}
+  );
+}
+
+async function loadWeatherByCoords(lat, lon, city){
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,apparent_temperature,weathercode,precipitation,uv_index&hourly=precipitation_probability,weathercode,temperature_2m&forecast_days=1&timezone=auto`;
+    const r = await fetch(url);
+    const d = await r.json();
+    _weatherData = d;
+    _weatherCity = city;
+    renderWeatherBtn(d);
+    renderWeatherPopup(d, city);
+    // Refresh every 30 min
+    setTimeout(()=>loadWeatherByCoords(lat,lon,city), 1800000);
+  } catch(e){ console.warn('Weather load failed:', e.message); }
+}
+
+function renderWeatherBtn(d){
+  const cur = d.current;
+  const icon = WMO_ICONS[cur.weathercode] || '🌡️';
+  const temp = Math.round(cur.temperature_2m);
+  const uv = cur.uv_index != null ? cur.uv_index.toFixed(1) : '--';
+  document.getElementById('wIcon').textContent = icon;
+  document.getElementById('wTemp').textContent = temp + '°C';
+  document.getElementById('wUV').textContent = 'UV ' + uv;
+
+  // Rain alert: check next 3 hours precipitation probability
+  const now = new Date();
+  const nowHour = now.getHours();
+  const probs = d.hourly?.precipitation_probability || [];
+  const times = d.hourly?.time || [];
+  let maxRainNext3h = 0;
+  let rainHour = null;
+  times.forEach((t,i)=>{
+    const h = new Date(t).getHours();
+    if(h>=nowHour && h<=nowHour+3 && probs[i]>maxRainNext3h){
+      maxRainNext3h = probs[i];
+      rainHour = h;
+    }
+  });
+  const alert = document.getElementById('wRainAlert');
+  if(maxRainNext3h >= 50){
+    alert.classList.add('show');
+    alert.title = `ฝนอาจตก ${rainHour}:00 (${maxRainNext3h}%)`;
+  } else {
+    alert.classList.remove('show');
+  }
+}
+
+function renderWeatherPopup(d, city){
+  const cur = d.current;
+  const wc = cur.weathercode;
+  const icon = WMO_ICONS[wc] || '🌡️';
+  const desc = WMO_DESC[wc] || 'อากาศปัจจุบัน';
+  const bg = WMO_BG[wc] || 'partly';
+  const temp = Math.round(cur.temperature_2m);
+  const feels = Math.round(cur.apparent_temperature);
+  const uv = cur.uv_index != null ? cur.uv_index.toFixed(1) : '--';
+  const uvNum = parseFloat(uv)||0;
+
+  // UV bar color
+  let uvColor = '#10b981';
+  if(uvNum>=3) uvColor='#f59e0b';
+  if(uvNum>=6) uvColor='#ef4444';
+  if(uvNum>=8) uvColor='#7c3aed';
+  const uvPct = Math.min(100, (uvNum/12)*100);
+
+  // Next 6 hours
+  const now = new Date();
+  const nowHour = now.getHours();
+  const probs = d.hourly?.precipitation_probability || [];
+  const codes = d.hourly?.weathercode || [];
+  const temps = d.hourly?.temperature_2m || [];
+  const times = d.hourly?.time || [];
+
+  let rainWarnText = '';
+  let maxRainProb = 0;
+
+  const hourlyHTML = times.map((t,i)=>{
+    const h = new Date(t).getHours();
+    if(h < nowHour || h > nowHour+6) return '';
+    const prob = probs[i]||0;
+    if(prob > maxRainProb){ maxRainProb = prob; }
+    if(prob >= 50 && !rainWarnText){ rainWarnText = `คาดว่าฝนจะตก ${h}:00 น. (โอกาส ${prob}%)`; }
+    const hIcon = WMO_ICONS[codes[i]||0]||'🌡️';
+    const hTemp = Math.round(temps[i]||temp);
+    return `<div class="wp-hour">
+      <div class="wp-hour-time">${h}:00</div>
+      <div class="wp-hour-icon">${hIcon}</div>
+      <div class="wp-hour-prob">${prob}%</div>
+      <div style="font-size:10px;color:#374151">${hTemp}°</div>
+    </div>`;
+  }).join('');
+
+  // Update popup
+  document.getElementById('wpHeader').className = 'wp-header ' + bg;
+  document.getElementById('wpCity').textContent = '📍 ' + (city||'ตำแหน่งปัจจุบัน');
+  document.getElementById('wpBigIcon').textContent = icon;
+  document.getElementById('wpTempBig').textContent = temp + '°C';
+  document.getElementById('wpDesc').textContent = desc;
+  document.getElementById('wpFeels').textContent = feels + '°';
+  document.getElementById('wpRain').textContent = maxRainProb + '%';
+  document.getElementById('wpUVVal').textContent = uv;
+  document.getElementById('wpUVBar').style.width = uvPct + '%';
+  document.getElementById('wpUVBar').style.background = uvColor;
+  document.getElementById('wpHourly').innerHTML = hourlyHTML;
+  document.getElementById('wpUpdated').textContent = 'อัพเดท: ' + new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+
+  const rw = document.getElementById('wpRainWarn');
+  if(rainWarnText){ rw.style.display='flex'; document.getElementById('wpRainWarnText').textContent=rainWarnText; }
+  else { rw.style.display='none'; }
+}
+
+function toggleWeatherPopup(){
+  const wp = document.getElementById('weatherPopup');
+  const cp = document.getElementById('calPopup');
+  cp.classList.remove('open');
+  _weatherPopupOpen = !_weatherPopupOpen;
+  wp.classList.toggle('open', _weatherPopupOpen);
+  // Position near button
+  const btn = document.getElementById('weatherBtn');
+  const rect = btn.getBoundingClientRect();
+  wp.style.top = (rect.bottom+8)+'px';
+  wp.style.right = (window.innerWidth-rect.right)+'px';
+  wp.style.left = 'auto';
+}
+
+// Close popups on outside click
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#weatherPopup')&&!e.target.closest('#weatherBtn')){
+    document.getElementById('weatherPopup').classList.remove('open');
+    _weatherPopupOpen=false;
+  }
+  if(!e.target.closest('#calPopup')&&!e.target.closest('#calBtn')){
+    document.getElementById('calPopup').classList.remove('open');
+  }
+});
+
+/* ===== CALENDAR ===== */
+let _calYear = new Date().getFullYear();
+let _calMonth = new Date().getMonth();
+let _calSelectedDate = null;
+let CAL_EVENTS = [];
+const CAL_KEY = 'fw_cal_v1';
+let _calGHIssueNum = null;
+
+// Load events from GitHub Issues or localStorage fallback
+async function loadCalEvents(){
+  // localStorage first (fast)
+  const local = loadData(CAL_KEY, []);
+  if(local.length){ CAL_EVENTS = local; renderCal(); }
+  // Then sync from GH
+  if(!getGHToken()) return;
+  try{
+    const issues = await ghFetch(`/issues?labels=calendar&state=open&per_page=5`);
+    if(issues.length){
+      _calGHIssueNum = issues[0].number;
+      const d = ghDecode(issues[0].body);
+      if(d && Array.isArray(d)){ CAL_EVENTS = d; saveData(CAL_KEY, CAL_EVENTS); renderCal(); }
+    }
+  }catch(e){ console.warn('Cal load GH:', e.message); }
+}
+
+async function saveCalEvents(){
+  saveData(CAL_KEY, CAL_EVENTS);
+  renderCal();
+  if(!getGHToken()) return;
+  syncStart();
+  const body = ghEncode(CAL_EVENTS);
+  const title = 'Calendar Events Master';
+  try{
+    if(_calGHIssueNum){
+      await ghFetch(`/issues/${_calGHIssueNum}`, {method:'PATCH', body:{title, body}});
+    } else {
+      const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['calendar']}});
+      _calGHIssueNum = created.number;
+    }
+    syncDone();
+  }catch(e){ syncError(e); }
+}
+
+function toggleCalPopup(){
+  const cp = document.getElementById('calPopup');
+  const wp = document.getElementById('weatherPopup');
+  wp.classList.remove('open'); _weatherPopupOpen=false;
+  const isOpen = cp.classList.toggle('open');
+  if(isOpen){
+    const btn = document.getElementById('calBtn');
+    const rect = btn.getBoundingClientRect();
+    cp.style.top=(rect.bottom+8)+'px';
+    cp.style.right=(window.innerWidth-rect.right)+'px';
+    cp.style.left='auto';
+    renderCal();
+  }
+}
+
+function calNav(dir){
+  _calMonth += dir;
+  if(_calMonth>11){_calMonth=0;_calYear++;}
+  if(_calMonth<0){_calMonth=11;_calYear--;}
+  renderCal();
+}
+
+function renderCal(){
+  const thMonths=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('calMonthTitle').textContent = thMonths[_calMonth]+' '+(_calYear+543);
+  const today = new Date();
+  const firstDay = new Date(_calYear,_calMonth,1).getDay();
+  const daysInMonth = new Date(_calYear,_calMonth+1,0).getDate();
+  const daysInPrev = new Date(_calYear,_calMonth,0).getDate();
+
+  let html = '';
+  // Prev month tail
+  for(let i=firstDay-1;i>=0;i--){
+    html+=`<div class="cal-day other-month">${daysInPrev-i}</div>`;
+  }
+  // This month
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = d===today.getDate()&&_calMonth===today.getMonth()&&_calYear===today.getFullYear();
+    const isSelected = dateStr===_calSelectedDate;
+    const hasEv = CAL_EVENTS.some(e=>e.date===dateStr);
+    const cls = [
+      'cal-day',
+      isToday?'today':'',
+      isSelected&&!isToday?'selected':'',
+      hasEv?'has-event':''
+    ].filter(Boolean).join(' ');
+    html+=`<div class="${cls}" onclick="calSelectDay('${dateStr}')" style="${isSelected&&!isToday?'background:var(--primary-light);font-weight:700':''}">${d}</div>`;
+  }
+  // Next month
+  const total = firstDay+daysInMonth;
+  const nextDays = total%7===0?0:7-(total%7);
+  for(let i=1;i<=nextDays;i++){
+    html+=`<div class="cal-day other-month">${i}</div>`;
+  }
+  document.getElementById('calDays').innerHTML=html;
+  renderCalEvents();
+}
+
+function calSelectDay(dateStr){
+  _calSelectedDate = dateStr;
+  const d = new Date(dateStr);
+  const days=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const months=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('calSelectedDate').textContent = `${days[d.getDay()]}ที่ ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543}`;
+  document.getElementById('calNewEvent').placeholder = `เพิ่ม event วัน ${d.getDate()} ${months[d.getMonth()]}...`;
+  document.getElementById('calNewEvent').focus();
+  renderCal();
+  renderCalEvents();
+}
+
+function renderCalEvents(){
+  const container = document.getElementById('calEvents');
+  const evts = _calSelectedDate ? CAL_EVENTS.filter(e=>e.date===_calSelectedDate) : [];
+  const colors=['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899'];
+  if(!evts.length){ container.innerHTML=_calSelectedDate?'<div style="text-align:center;padding:12px;font-size:12px;color:#9ca3af">ไม่มี event วันนี้</div>':''; return; }
+  container.innerHTML = evts.map((ev,i)=>`
+    <div class="cal-event-item">
+      <div class="cal-ev-dot" style="background:${colors[i%colors.length]}"></div>
+      <div style="flex:1">
+        <div class="cal-ev-title">${ev.title}</div>
+        ${ev.time?`<div class="cal-ev-time">⏰ ${ev.time}</div>`:''}
+        <div style="font-size:10px;color:#9ca3af">➕ ${ev.addedBy||'?'}</div>
+      </div>
+      <button class="cal-ev-del" onclick="delCalEvent('${ev.id}')">✕</button>
+    </div>`).join('');
+}
+
+function addCalEvent(){
+  const inp = document.getElementById('calNewEvent');
+  const val = inp.value.trim();
+  if(!val) return;
+  if(!_calSelectedDate){ showToast('กรุณาเลือกวันก่อนครับ'); return; }
+
+  // Parse time from title e.g. "ประชุม 10:00" or "ประชุม 10.30"
+  const timeMatch = val.match(/(\d{1,2})[:.:](\d{2})/);
+  let title = val, time = '';
+  if(timeMatch){ time = timeMatch[1].padStart(2,'0')+':'+timeMatch[2]; title = val.replace(timeMatch[0],'').trim(); }
+
+  const ev = { id: Date.now().toString(), date:_calSelectedDate, title, time, addedBy:currentUser?.name||'', addedAt:Date.now() };
+  CAL_EVENTS.push(ev);
+  inp.value='';
+  saveCalEvents();
+  showToast('✅ เพิ่ม event แล้ว');
+}
+
+function delCalEvent(id){
+  CAL_EVENTS = CAL_EVENTS.filter(e=>e.id!==id);
+  saveCalEvents();
+}
+
 /* ===== GITHUB TOKEN SETUP ===== */
-function updateTokenBadge(){
-  const t = getGHToken();
-  const badge = document.getElementById('tokenBadge');
-  if(!badge) return;
-  if(t){ badge.textContent='✓ Set'; badge.className='token-badge set'; }
-  else { badge.textContent='ยังไม่ตั้ง'; badge.className='token-badge unset'; }
-}
-
-function openTokenSetup(){
-  const t = getGHToken();
-  document.getElementById('gh-token-input').value = t || '';
-  document.getElementById('gh-token-input').type = 'password';
-  document.getElementById('tokenTestResult').style.display = 'none';
-  document.getElementById('tokenModal').classList.add('open');
-}
-
 function saveGHToken(){
   const t = document.getElementById('gh-token-input').value.trim();
   if(!t){ alert('กรุณากรอก Token'); return; }
@@ -1959,6 +2487,11 @@ window.syncError = function(e){
 loadConfig().then(()=>{
   initApp();
   updateTokenBadge();
+  // Init weather (GPS + Open-Meteo)
+  setTimeout(()=>initWeather(), 500);
+  // Init calendar
+  setTimeout(()=>loadCalEvents(), 1000);
+  // Init GH labels
   if(getGHToken()) setTimeout(()=>ghEnsureLabels(), 2000);
 });
 </script>
