@@ -297,6 +297,10 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .role-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
 .role-badge.admin{background:#fef3c7;color:#92400e}
 .role-badge.user{background:#eff6ff;color:#1e40af}
+/* Token setup */
+.token-badge{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:700;margin-left:4px}
+.token-badge.set{background:#d1fae5;color:#065f46}
+.token-badge.unset{background:#fee2e2;color:#991b1b}
 /* PIN change modal */
 .pin-change-wrap{display:flex;gap:10px;align-items:center}
 .pin-input-field{flex:1;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:20px;font-family:monospace;letter-spacing:6px;text-align:center;outline:none}
@@ -357,11 +361,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     <p id="appSubtitle">Terminus Fleet Management | GPS Support Bot</p>
   </div>
   <div class="header-right">
-    <div class="status"><div class="dot"></div>Online</div>
+    <div class="status"><div class="dot"></div><span id="syncStatus">Online</span></div>
     <button class="hbtn purple" onclick="openTaskPanel()">📋 งาน<span class="task-badge" id="taskBadge">0</span></button>
     <button class="hbtn yellow" onclick="openPW()">🔑 Password</button>
     <button class="hbtn green" onclick="openSidebarEditor()">🔗 Quick Links</button>
     <button class="hbtn blue" onclick="openAdmin()">⚙️ KB</button>
+    <button class="hbtn" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)" onclick="openTokenSetup()" id="tokenBtn" title="ตั้งค่า GitHub Token">🔐 Token<span class="token-badge unset" id="tokenBadge">ยังไม่ตั้ง</span></button>
     <div class="user-chip" onclick="openUserMenu()" id="userChip" title="จัดการผู้ใช้ / ออกจากระบบ">
       <div class="uc-av" id="currentUserAv">?</div>
       <span class="uc-name" id="currentUserName">-</span>
@@ -745,6 +750,36 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   </div>
 </div>
 
+<!-- Token Setup Modal -->
+<div class="modal-overlay" id="tokenModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-hdr" style="background:#1e293b">
+      <h3 style="color:#f1f5f9">🔐 ตั้งค่า GitHub Token</h3>
+      <button class="close-btn" style="color:#94a3b8" onclick="closeModal('tokenModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:10px 14px;font-size:12px;color:#78350f;margin-bottom:4px">
+        ⚠️ Token จะเก็บใน <b>localStorage ของเครื่องนี้เท่านั้น</b> — ไม่ได้ส่งหรือเก็บที่อื่น ทุกเครื่องต้องกรอก token ของตัวเอง
+      </div>
+      <div class="field">
+        <label>GitHub Personal Access Token</label>
+        <div style="display:flex;gap:6px">
+          <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;font-family:monospace;font-size:12px" autocomplete="off">
+          <button class="btn btn-ghost" onclick="document.getElementById('gh-token-input').type=document.getElementById('gh-token-input').type==='password'?'text':'password'">👁️</button>
+        </div>
+        <div class="hint">สร้างได้ที่ GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens<br>Permissions ที่ต้องการ: <b>Issues: Read & Write</b></div>
+      </div>
+      <div id="tokenTestResult" style="display:none;padding:8px 12px;border-radius:7px;font-size:12px;margin-top:4px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="testGHToken()">🔍 ทดสอบ Token</button>
+      <span style="flex:1"></span>
+      <button class="btn btn-ghost" onclick="closeModal('tokenModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveGHToken()">💾 บันทึก Token</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -755,6 +790,204 @@ function closeOverlayBg(e,id){if(e.target===document.getElementById(id))closePan
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function copyText(txt){navigator.clipboard.writeText(txt).then(()=>showToast('📋 คัดลอกแล้ว!')).catch(()=>alert(txt));}
 function fmtDateFull(ts){const d=new Date(ts);return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}
+
+/* ===== GITHUB ISSUES DB ===== */
+// Token stored in localStorage only — never embedded in source code
+const GH_REPO   = 'kbfs2946zz-source/support-chatbot';
+function getGHToken(){ return localStorage.getItem('fw_gh_token')||''; }
+function setGHToken(t){ localStorage.setItem('fw_gh_token',t); }
+const GH_API    = `https://api.github.com/repos/${GH_REPO}`;
+const GH_LABELS = { kb:'kb', pw:'pw', task:'task', ql:'quicklinks', meta:'meta' };
+
+// Cache layer (avoid hammering API)
+const _cache = {};
+function cacheGet(k){ return _cache[k]; }
+function cacheSet(k,v,ttl=30000){ _cache[k]={v,exp:Date.now()+ttl}; }
+function cacheValid(k){ const c=_cache[k]; return c&&Date.now()<c.exp?c.v:null; }
+
+async function ghFetch(path, opts={}){
+  const token = getGHToken();
+  if(!token) throw new Error('ยังไม่ได้ตั้งค่า GitHub Token — กดปุ่ม ⚙️ Token ในส่วน header');
+  const url = path.startsWith('http') ? path : GH_API+path;
+  const res = await fetch(url, {
+    ...opts,
+    headers: {
+      'Authorization': `token ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json',
+      ...(opts.headers||{})
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`GitHub API ${res.status}: ${data.message||JSON.stringify(data)}`);
+  return data;
+}
+
+// Ensure required labels exist (run once on first load)
+async function ghEnsureLabels(){
+  const cached = cacheValid('labels_init');
+  if (cached) return;
+  try {
+    const existing = await ghFetch('/labels?per_page=100');
+    const names = new Set(existing.map(l=>l.name));
+    const needed = [
+      {name:'kb',        color:'0075ca', description:'Knowledge Base'},
+      {name:'pw',        color:'e4e669', description:'Password Manager'},
+      {name:'task',      color:'7057ff', description:'Task'},
+      {name:'quicklinks',color:'0e8a16', description:'Quick Links Master'},
+      {name:'meta',      color:'cccccc', description:'System'},
+    ];
+    for(const lb of needed){
+      if(!names.has(lb.name)){
+        await ghFetch('/labels', {method:'POST', body:lb});
+      }
+    }
+    cacheSet('labels_init', true, 86400000);
+  } catch(e){ console.warn('ghEnsureLabels:', e.message); }
+}
+
+// ---- Issue body encode/decode ----
+function ghEncode(obj){ return '```json\n'+JSON.stringify(obj,null,2)+'\n```'; }
+function ghDecode(body){
+  if(!body) return null;
+  const m = body.match(/```json\n([\s\S]*?)\n```/);
+  try{ return m ? JSON.parse(m[1]) : null; } catch{ return null; }
+}
+
+// ---- KB via GitHub Issues ----
+async function ghKBGetAll(){
+  const cached = cacheValid('kb_all');
+  if(cached) return cached;
+  const issues = await ghFetch(`/issues?labels=${GH_LABELS.kb}&state=open&per_page=100`);
+  const items = issues.map(iss=>({
+    ...ghDecode(iss.body),
+    _issueNumber: iss.number,
+    _title: iss.title
+  })).filter(x=>x.id);
+  cacheSet('kb_all', items, 15000);
+  return items;
+}
+async function ghKBSave(item){
+  delete _cache['kb_all'];
+  const title = item.title || 'KB Item';
+  const body  = ghEncode(item);
+  if(item._issueNumber){
+    return ghFetch(`/issues/${item._issueNumber}`, {method:'PATCH', body:{title, body}});
+  } else {
+    return ghFetch('/issues', {method:'POST', body:{title, body, labels:[GH_LABELS.kb]}});
+  }
+}
+async function ghKBDelete(issueNumber){
+  delete _cache['kb_all'];
+  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed'}});
+}
+
+// ---- PW via GitHub Issues ----
+// Obfuscate password (base64 — NOT true encryption, just prevents casual viewing)
+function pwObf(s){ try{ return btoa(unescape(encodeURIComponent(s))); } catch{ return s; } }
+function pwDeobf(s){ try{ return decodeURIComponent(escape(atob(s))); } catch{ return s; } }
+
+async function ghPWGetAll(){
+  const cached = cacheValid('pw_all');
+  if(cached) return cached;
+  const issues = await ghFetch(`/issues?labels=${GH_LABELS.pw}&state=open&per_page=100`);
+  const items = issues.map(iss=>{
+    const d = ghDecode(iss.body);
+    if(!d) return null;
+    return { ...d, password: pwDeobf(d._pwenc||''), _issueNumber: iss.number };
+  }).filter(Boolean);
+  cacheSet('pw_all', items, 15000);
+  return items;
+}
+async function ghPWSave(item){
+  delete _cache['pw_all'];
+  const stored = { ...item, _pwenc: pwObf(item.password), password: undefined };
+  delete stored.password;
+  const title = `PW: ${item.company}`;
+  const body  = ghEncode(stored);
+  if(item._issueNumber){
+    return ghFetch(`/issues/${item._issueNumber}`, {method:'PATCH', body:{title, body}});
+  } else {
+    return ghFetch('/issues', {method:'POST', body:{title, body, labels:[GH_LABELS.pw]}});
+  }
+}
+async function ghPWDelete(issueNumber){
+  delete _cache['pw_all'];
+  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed'}});
+}
+
+// ---- Tasks via GitHub Issues ----
+const TASK_STATUS_LABEL = { received:'task-received', checking:'task-checking', done:'task-done' };
+async function ghTaskGetAll(){
+  const cached = cacheValid('task_all');
+  if(cached) return cached;
+  const issues = await ghFetch(`/issues?labels=${GH_LABELS.task}&state=open&per_page=100`);
+  const closed = await ghFetch(`/issues?labels=${GH_LABELS.task}&state=closed&per_page=50`);
+  const all = [...issues, ...closed].map(iss=>{
+    const d = ghDecode(iss.body);
+    if(!d) return null;
+    const labelNames = (iss.labels||[]).map(l=>l.name);
+    let status = d.status || 'received';
+    if(labelNames.includes('task-done') || iss.state==='closed') status='done';
+    else if(labelNames.includes('task-checking')) status='checking';
+    else if(labelNames.includes('task-received')) status='received';
+    return { ...d, status, _issueNumber: iss.number, _ghState: iss.state };
+  }).filter(Boolean);
+  cacheSet('task_all', all, 15000);
+  return all;
+}
+async function ghTaskSave(item){
+  delete _cache['task_all'];
+  const title = `[${item.company}] ${item.pic||''}`;
+  const body  = ghEncode(item);
+  const state = item.status==='done' ? 'closed' : 'open';
+  const labelArr = [GH_LABELS.task];
+  if(item.status==='received') labelArr.push('task-received');
+  if(item.status==='checking') labelArr.push('task-checking');
+  if(item.status==='done')     labelArr.push('task-done');
+  if(item._issueNumber){
+    return ghFetch(`/issues/${item._issueNumber}`, {method:'PATCH', body:{title, body, state, labels:labelArr}});
+  } else {
+    return ghFetch('/issues', {method:'POST', body:{title, body, labels:labelArr}});
+  }
+}
+async function ghTaskDelete(issueNumber){
+  delete _cache['task_all'];
+  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed', labels:['task-done', GH_LABELS.task]}});
+}
+
+// ---- Quick Links Master via single Issue ----
+let _qlIssueNum = null;
+async function ghQLGet(){
+  const cached = cacheValid('ql_master');
+  if(cached) return cached;
+  const issues = await ghFetch(`/issues?labels=${GH_LABELS.ql}&state=open&per_page=5`);
+  if(issues.length){
+    _qlIssueNum = issues[0].number;
+    const d = ghDecode(issues[0].body);
+    if(d){ cacheSet('ql_master', d, 30000); return d; }
+  }
+  return null;
+}
+async function ghQLSave(slData){
+  delete _cache['ql_master'];
+  const body = ghEncode(slData);
+  const title = 'Quick Links Master';
+  if(_qlIssueNum){
+    return ghFetch(`/issues/${_qlIssueNum}`, {method:'PATCH', body:{title, body}});
+  } else {
+    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:[GH_LABELS.ql]}});
+    _qlIssueNum = created.number;
+    return created;
+  }
+}
+
+// ---- Sync indicator ----
+let _syncPending = 0;
+function syncStart(){ _syncPending++; showToast('🔄 กำลังซิงค์...', 1000); }
+function syncDone(){ _syncPending=Math.max(0,_syncPending-1); }
+function syncError(e){ _syncPending=Math.max(0,_syncPending-1); showToast('❌ Sync error: '+e.message, 3000); console.error(e); }
 
 /* ===== SETTINGS / LOGO ===== */
 const SETTINGS_KEY='fw_settings_v1';
@@ -785,6 +1018,21 @@ function saveLogo(){SETTINGS.logoEmoji=document.getElementById('logoEmoji').valu
 /* ===== TASK MANAGER ===== */
 const TASK_KEY='fw_tasks_v1',COMPANIES_KEY='fw_companies_v1',TEAM_KEY='fw_team_v1';
 let TASKS=loadData(TASK_KEY,[]),COMPANIES=loadData(COMPANIES_KEY,['SCCO','CPAC','DLT','ORC','ATP','CPF']),TEAM=loadData(TEAM_KEY,['Takky','Admin','Support L1','Support L2']);
+
+async function loadTasksFromGH(){
+  try{
+    const items = await ghTaskGetAll();
+    if(items && items.length > 0){
+      TASKS = items;
+      // Sync COMPANIES and TEAM from loaded tasks
+      items.forEach(t=>{
+        if(t.company&&!COMPANIES.includes(t.company)){COMPANIES.push(t.company);saveData(COMPANIES_KEY,COMPANIES);}
+        if(t.pic&&!TEAM.includes(t.pic)){TEAM.push(t.pic);saveData(TEAM_KEY,TEAM);}
+      });
+      renderTasks();updateTaskBadge();
+    }
+  } catch(e){ console.warn('Tasks load from GH:', e.message); }
+}
 let editingTaskId=null,taskImgs=[],taskFilterStatus='',taskCurrentView='kanban';
 function loadData(key,def){try{const s=localStorage.getItem(key);if(s)return JSON.parse(s);}catch(e){}return def;}
 function saveData(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
@@ -802,6 +1050,7 @@ function updateTaskBadge(){
 function openTaskPanel(){
   document.getElementById('taskOverlay').classList.add('open');
   renderTasks();
+  loadTasksFromGH();
 }
 
 function setTaskFilter(s){
@@ -891,11 +1140,19 @@ function renderCard(t){
 function quickUpdateStatus(id,status){
   const t=TASKS.find(x=>x.id===id);if(!t)return;
   t.status=status;t.updatedAt=Date.now();
-  saveData(TASK_KEY,TASKS);renderTasks();updateTaskBadge();
+  renderTasks();updateTaskBadge();
   showToast(`✅ ${SL_LABEL[status]}`);
+  syncStart();
+  ghTaskSave(t).then(syncDone).catch(syncError);
 }
 
-function deleteTask(id){if(!confirm('ลบงานนี้?'))return;TASKS=TASKS.filter(t=>t.id!==id);saveData(TASK_KEY,TASKS);renderTasks();updateTaskBadge();}
+function deleteTask(id){
+  if(!confirm('ลบงานนี้?'))return;
+  const t=TASKS.find(x=>x.id===id);
+  TASKS=TASKS.filter(x=>x.id!==id);
+  renderTasks();updateTaskBadge();
+  if(t?._issueNumber){ syncStart(); ghTaskDelete(t._issueNumber).then(syncDone).catch(syncError); }
+}
 
 function openTaskForm(id=null){
   editingTaskId=id;taskImgs=[];
@@ -915,13 +1172,15 @@ function saveTask(){
   const pic=document.getElementById('t-pic').value.trim();
   if(!company){alert('กรุณาระบุบริษัท');return;}
   const now=Date.now();
-  const item={id:editingTaskId||nxtTaskId(),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:taskImgs.length?[...taskImgs]:undefined,createdAt:editingTaskId?(TASKS.find(t=>t.id===editingTaskId)?.createdAt||now):now,updatedAt:now};
+  const existing=editingTaskId?TASKS.find(t=>t.id===editingTaskId):null;
+  const item={id:editingTaskId||nxtTaskId(),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:taskImgs.length?[...taskImgs]:undefined,createdAt:existing?.createdAt||now,updatedAt:now,_issueNumber:existing?._issueNumber};
   if(!COMPANIES.includes(company)){COMPANIES.push(company);saveData(COMPANIES_KEY,COMPANIES);}
   if(pic&&!TEAM.includes(pic)){TEAM.push(pic);saveData(TEAM_KEY,TEAM);}
   if(editingTaskId)TASKS=TASKS.map(t=>t.id===editingTaskId?item:t);else TASKS.push(item);
-  saveData(TASK_KEY,TASKS);
   closeModal('taskFormModal');renderTasks();updateTaskBadge();
   showToast(editingTaskId?'✅ แก้ไขแล้ว!':'✅ เพิ่มงานแล้ว!');
+  syncStart();
+  ghTaskSave(item).then(res=>{ if(res.number&&!item._issueNumber)item._issueNumber=res.number; syncDone(); }).catch(syncError);
 }
 
 function handleDetailPaste(e){
@@ -1035,14 +1294,22 @@ function renderSLEditor(){
     </div>`).join('');
 }
 function addSLSection(){SL.push({s:'📌 หมวดหมู่ใหม่',open:true,l:[]});renderSLEditor();}
-function saveSL(){saveDataSL();buildSidebar();closePanel('sidebarOverlay');showToast('✅ บันทึก Quick Links แล้ว!');}
+function saveSL(){
+  saveDataSL();
+  buildSidebar();
+  closePanel('sidebarOverlay');
+  showToast('✅ บันทึก Quick Links แล้ว!');
+  // Also sync master copy to GH (for reference/sharing)
+  syncStart();
+  ghQLSave(SL).then(syncDone).catch(syncError);
+}
 function openAddSLLink(si){editingSLSection=si;document.getElementById('sl-f-icon').value='🔗';document.getElementById('sl-f-name').value='';document.getElementById('sl-f-url').value='';document.getElementById('sl-f-badge').value='';document.getElementById('slLinkModal').classList.add('open');}
 function saveSLLink(){const icon=document.getElementById('sl-f-icon').value||'🔗',name=document.getElementById('sl-f-name').value.trim(),url=document.getElementById('sl-f-url').value.trim(),badge=document.getElementById('sl-f-badge').value.trim();if(!name||!url){alert('กรุณากรอกชื่อและ URL');return;}SL[editingSLSection].l.push({i:icon,n:name,u:url,b:badge||undefined});closeModal('slLinkModal');renderSLEditor();buildSidebar();}
 function exportSLxlsx(){const rows=[['section','icon','name','url','badge']];SL.forEach(sec=>sec.l.forEach(l=>rows.push([sec.s,l.i,l.n,l.u,l.b||''])));const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:25},{wch:6},{wch:30},{wch:70},{wch:10}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'QuickLinks');XLSX.writeFile(wb,'quick_links.xlsx');}
 function importSLxlsx(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'binary'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[2]&&r[3]);const smap={};rows.forEach(r=>{const sec=r[0]||'อื่นๆ';if(!smap[sec])smap[sec]=[];smap[sec].push({i:r[1]||'🔗',n:r[2],u:r[3],b:r[4]||undefined});});const newSL=Object.entries(smap).map(([s,l])=>({s,open:true,l}));if(confirm(`Import ${rows.length} ลิงก์?`)){SL=newSL;saveDataSL();buildSidebar();renderSLEditor();showToast('✅ Import สำเร็จ!');}}catch(err){alert('❌ '+err.message);}};r.readAsBinaryString(f);e.target.value='';}
 
 /* ===== KB ===== */
-const KB_KEY='freewill_kb_v3';
+const KB_KEY='freewill_kb_v3'; // kept for migration only
 const DEFAULT_KB=[
   {id:1,keywords:['daily','งานช่าง','ติดตั้ง','ผูกกล่อง','billing'],title:'📋 งานติดตั้ง / ผูกกล่อง (Daily)',answer:'งาน Daily ที่ต้องทำทุกวัน:',steps:['งานติดตั้งใหม่ — เช็คผูกกล่อง+Billing','งานซ่อมรถโม่ — เช็คแชร์เข้า SCCO','ตรวจให้เสร็จก่อน 14:00'],links:[{icon:'🔧',title:'งานติดตั้ง',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician'},{icon:'🔄',title:'งานซ่อมเปลี่ยน',url:'https://login.terminusfleet.com/receiver/test/show_daily_maintenance_technician2'}]},
   {id:2,keywords:['dlt','masterfile','กรมขนส่ง','finish page'],title:'🏛️ DLT / กรมขนส่งทางบก',extra:'รันบอทอัพเดท master ทุกวัน | ลบ master รถยกเลิกสัญญา',links:[{icon:'📑',title:'DLT Finish Page',url:'https://gpstmc.dlt.go.th/dltgps/web/finish_page/'},{icon:'📂',title:'DLT Masterfile',url:'https://gpstmc.dlt.go.th/dltgps/web/p34_masterfile/index.php'},{icon:'📊',title:'DLT Report',url:'https://login.terminusfleet.com/report/report/dltreport'}]},
@@ -1061,6 +1328,18 @@ const DEFAULT_KB=[
 let KB=loadData(KB_KEY,null)||JSON.parse(JSON.stringify(DEFAULT_KB));
 let editingId=null;
 function nxtId(){return Math.max(...KB.map(k=>k.id||0),0)+1;}
+
+// Load KB from GitHub Issues on open
+async function loadKBFromGH(){
+  try{
+    const items = await ghKBGetAll();
+    if(items && items.length > 0){
+      // Merge: GH is source of truth, keep local as fallback only
+      KB = items;
+      renderKBList();
+    }
+  } catch(e){ console.warn('KB load from GH:', e.message); }
+}
 function normalize(s){return s.toLowerCase().replace(/\s+/g,' ').trim();}
 function tokenize(s){return normalize(s).split(/[\s,/]+/).filter(w=>w.length>1);}
 function searchKB(query){
@@ -1077,28 +1356,65 @@ function renderResult(item){
   if(item.links?.length)h+=item.links.map(l=>`<a class="lcard" href="${l.url}" target="_blank"><span style="font-size:15px;flex-shrink:0">${l.icon}</span><span style="flex:1;overflow:hidden"><div style="font-weight:700;font-size:12px">${l.title}</div><div class="lc-u">${l.url}</div></span><span style="font-size:12px;margin-left:auto">↗</span></a>`).join('');
   return h;
 }
-function openAdmin(){document.getElementById('adminOverlay').classList.add('open');renderKBList();}
+function openAdmin(){document.getElementById('adminOverlay').classList.add('open');renderKBList();loadKBFromGH();}
 function renderKBList(){
   const q=(document.getElementById('kbSearch').value||'').toLowerCase();
   const f=KB.filter(k=>!q||k.title.toLowerCase().includes(q)||k.keywords.some(kw=>kw.includes(q)));
   document.getElementById('kb-total').textContent=`${KB.length} topics`;
   document.getElementById('kbList').innerHTML=f.length?`<div style="font-size:12px;color:var(--muted);margin-bottom:8px">${f.length}/${KB.length}</div>${f.map(k=>`<div class="kb-item"><div class="kb-row"><div style="flex:1"><div class="kb-title">${k.title}</div><div class="kb-kw">🔑 ${k.keywords.slice(0,5).join(', ')}</div></div><div><button class="btn-edit" onclick="openForm(${k.id})">✏️</button> <button class="btn-del" onclick="delKB(${k.id})">🗑️</button></div></div></div>`).join('')}`:'<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';
 }
-function delKB(id){if(!confirm('ลบ?'))return;KB=KB.filter(k=>k.id!==id);saveData(KB_KEY,KB);renderKBList();}
+function delKB(id){
+  if(!confirm('ลบ?'))return;
+  const item=KB.find(k=>k.id===id);
+  KB=KB.filter(k=>k.id!==id);
+  renderKBList();
+  if(item?._issueNumber){
+    syncStart();
+    ghKBDelete(item._issueNumber).then(syncDone).catch(syncError);
+  }
+}
 function openForm(id=null){editingId=id;const item=id?KB.find(k=>k.id===id):null;document.getElementById('formTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่ม Topic';document.getElementById('f-title').value=item?.title||'';document.getElementById('f-keywords').value=item?.keywords?.join(', ')||'';document.getElementById('f-answer').value=item?.answer||'';document.getElementById('f-steps').value=item?.steps?.join('\n')||'';document.getElementById('f-extra').value=item?.extra||'';const rows=document.getElementById('linkRows');rows.innerHTML='';(item?.links||[]).forEach(l=>addLinkRow(l));document.getElementById('formModal').classList.add('open');}
 function addLinkRow(l=null){const rows=document.getElementById('linkRows');const d=document.createElement('div');d.className='link-row';d.innerHTML=`<input type="text" value="${l?.icon||'🔗'}" maxlength="4" style="text-align:center"><input type="text" value="${l?.title||''}" placeholder="ชื่อ"><input type="text" value="${l?.url||''}" placeholder="https://..."><button class="del-link" onclick="this.parentElement.remove()">✕</button>`;rows.appendChild(d);}
-function saveForm(){const title=document.getElementById('f-title').value.trim(),kwRaw=document.getElementById('f-keywords').value.trim();if(!title||!kwRaw){alert('กรุณากรอกชื่อและ keywords');return;}const keywords=kwRaw.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);const answer=document.getElementById('f-answer').value.trim()||undefined;const stepsRaw=document.getElementById('f-steps').value.trim();const steps=stepsRaw?stepsRaw.split('\n').map(s=>s.trim()).filter(Boolean):undefined;const extra=document.getElementById('f-extra').value.trim()||undefined;const linkEls=document.getElementById('linkRows').querySelectorAll('.link-row');const links=[];linkEls.forEach(row=>{const inp=row.querySelectorAll('input');const icon=inp[0].value.trim(),ttl=inp[1].value.trim(),url=inp[2].value.trim();if(ttl&&url)links.push({icon:icon||'🔗',title:ttl,url});});const item={id:editingId||nxtId(),title,keywords,answer,steps:steps?.length?steps:undefined,extra,links:links.length?links:undefined};if(editingId)KB=KB.map(k=>k.id===editingId?item:k);else KB.push(item);saveData(KB_KEY,KB);closeModal('formModal');renderKBList();showToast(editingId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');}
+function saveForm(){
+  const title=document.getElementById('f-title').value.trim(),kwRaw=document.getElementById('f-keywords').value.trim();
+  if(!title||!kwRaw){alert('กรุณากรอกชื่อและ keywords');return;}
+  const keywords=kwRaw.split(',').map(k=>k.trim().toLowerCase()).filter(Boolean);
+  const answer=document.getElementById('f-answer').value.trim()||undefined;
+  const stepsRaw=document.getElementById('f-steps').value.trim();
+  const steps=stepsRaw?stepsRaw.split('\n').map(s=>s.trim()).filter(Boolean):undefined;
+  const extra=document.getElementById('f-extra').value.trim()||undefined;
+  const linkEls=document.getElementById('linkRows').querySelectorAll('.link-row');
+  const links=[];
+  linkEls.forEach(row=>{const inp=row.querySelectorAll('input');const icon=inp[0].value.trim(),ttl=inp[1].value.trim(),url=inp[2].value.trim();if(ttl&&url)links.push({icon:icon||'🔗',title:ttl,url});});
+  const existing=editingId?KB.find(k=>k.id===editingId):null;
+  const item={id:editingId||nxtId(),title,keywords,answer,steps:steps?.length?steps:undefined,extra,links:links.length?links:undefined,_issueNumber:existing?._issueNumber};
+  if(editingId)KB=KB.map(k=>k.id===editingId?item:k);else KB.push(item);
+  closeModal('formModal');renderKBList();
+  showToast(editingId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');
+  syncStart();
+  ghKBSave(item).then(res=>{
+    if(res.number&&!item._issueNumber){item._issueNumber=res.number;}
+    syncDone();
+  }).catch(syncError);
+}
 function exportKBxlsx(){const rows=[['id','title','keywords','answer','steps','extra','links']];KB.forEach(k=>rows.push([k.id,k.title,(k.keywords||[]).join(', '),k.answer||'',(k.steps||[]).join('\n'),k.extra||'',(k.links||[]).map(l=>l.icon+'|'+l.title+'|'+l.url).join('\n')]));const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:5},{wch:35},{wch:40},{wch:40},{wch:60},{wch:50},{wch:80}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'KB');XLSX.writeFile(wb,'knowledge_base.xlsx');}
 function importKBxlsx(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'binary'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[1]);const data=rows.map((r,i)=>({id:parseInt(r[0])||i+1,title:r[1]||'',keywords:(r[2]||'').split(',').map(k=>k.trim().toLowerCase()).filter(Boolean),answer:r[3]||undefined,steps:r[4]?r[4].split('\n').map(s=>s.trim()).filter(Boolean):undefined,extra:r[5]||undefined,links:r[6]?(r[6].split('\n').map(l=>{const p=l.split('|');return p.length>=3?{icon:p[0],title:p[1],url:p[2]}:null;}).filter(Boolean)):undefined}));if(confirm(`Import ${data.length} topics?`)){KB=data;saveData(KB_KEY,KB);renderKBList();showToast('✅ Import สำเร็จ!');}}catch(err){alert('❌ '+err.message);}};r.readAsBinaryString(f);e.target.value='';}
 
 /* ===== PASSWORD MANAGER ===== */
 const PW_KEY='freewill_pw_v1';
-let PW=loadData(PW_KEY,[{id:1,company:'SCCO',alias:['scco'],url:'https://app-v2.terminusfleet.com',username:'scco_admin',password:'Scco@2024',note:'Admin V2'},{id:2,company:'CPAC',alias:['cpac'],url:'https://fleetlink.cipcloud.net',username:'freewill@gpsvendor',password:'password',note:'FleetLink'}]);
+let PW=loadData(PW_KEY,[]);
 let editingPWId=null,showPassIds=new Set();
 function nxtPWId(){return Math.max(...PW.map(p=>p.id||0),0)+1;}
+
+async function loadPWFromGH(){
+  try{
+    const items = await ghPWGetAll();
+    if(items && items.length > 0){ PW = items; renderPWList(); }
+  } catch(e){ console.warn('PW load from GH:', e.message); }
+}
 function normA(s){return s.toLowerCase().replace(/\s+/g,'');}
 function searchPW(q){const nq=normA(q);return PW.filter(p=>normA(p.company).includes(nq)||normA(p.username).includes(nq)||(p.note&&normA(p.note).includes(nq))||(p.alias&&p.alias.some(a=>normA(a).includes(nq)||nq.includes(normA(a)))));}
-function openPW(){document.getElementById('pwOverlay').classList.add('open');showPassIds.clear();renderPWList();}
+function openPW(){document.getElementById('pwOverlay').classList.add('open');showPassIds.clear();renderPWList();loadPWFromGH();}
 function renderPWList(){
   const q=(document.getElementById('pwSearch').value||'').trim();const list=q?searchPW(q):PW;
   document.getElementById('pw-total').textContent=`${PW.length} รายการ`;
@@ -1106,10 +1422,27 @@ function renderPWList(){
   document.getElementById('pwList').innerHTML=list.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div></div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
 }
 function togglePass(id){showPassIds.has(id)?showPassIds.delete(id):showPassIds.add(id);renderPWList();}
-function deletePW(id){const p=PW.find(x=>x.id===id);if(!confirm(`ลบ "${p?.company}"?`))return;PW=PW.filter(x=>x.id!==id);saveData(PW_KEY,PW);renderPWList();}
+function deletePW(id){
+  const p=PW.find(x=>x.id===id);
+  if(!confirm(`ลบ "${p?.company}"?`))return;
+  PW=PW.filter(x=>x.id!==id);
+  renderPWList();
+  if(p?._issueNumber){ syncStart(); ghPWDelete(p._issueNumber).then(syncDone).catch(syncError); }
+}
 function openPWForm(id=null){editingPWId=id;const p=id?PW.find(x=>x.id===id):null;document.getElementById('pwFormTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่มรหัสผ่าน';document.getElementById('pw-f-company').value=p?.company||'';document.getElementById('pw-f-alias').value=p?.alias?.join(', ')||'';document.getElementById('pw-f-url').value=p?.url||'';document.getElementById('pw-f-user').value=p?.username||'';document.getElementById('pw-f-pass').value=p?.password||'';document.getElementById('pw-f-note').value=p?.note||'';document.getElementById('pwFormModal').classList.add('open');}
 function genPass(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];document.getElementById('pw-f-pass').value=p;}
-function savePWForm(){const company=document.getElementById('pw-f-company').value.trim(),username=document.getElementById('pw-f-user').value.trim(),password=document.getElementById('pw-f-pass').value.trim();if(!company||!username||!password){alert('กรุณากรอกข้อมูลให้ครบ');return;}const aliasRaw=document.getElementById('pw-f-alias').value.trim();const item={id:editingPWId||nxtPWId(),company,alias:aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[],url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined};if(editingPWId)PW=PW.map(p=>p.id===editingPWId?item:p);else PW.push(item);saveData(PW_KEY,PW);closeModal('pwFormModal');renderPWList();showToast(editingPWId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');}
+function savePWForm(){
+  const company=document.getElementById('pw-f-company').value.trim(),username=document.getElementById('pw-f-user').value.trim(),password=document.getElementById('pw-f-pass').value.trim();
+  if(!company||!username||!password){alert('กรุณากรอกข้อมูลให้ครบ');return;}
+  const aliasRaw=document.getElementById('pw-f-alias').value.trim();
+  const existing=editingPWId?PW.find(p=>p.id===editingPWId):null;
+  const item={id:editingPWId||nxtPWId(),company,alias:aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[],url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined,_issueNumber:existing?._issueNumber};
+  if(editingPWId)PW=PW.map(p=>p.id===editingPWId?item:p);else PW.push(item);
+  closeModal('pwFormModal');renderPWList();
+  showToast(editingPWId?'✅ แก้ไขแล้ว!':'✅ เพิ่มแล้ว!');
+  syncStart();
+  ghPWSave(item).then(res=>{ if(res.number&&!item._issueNumber)item._issueNumber=res.number; syncDone(); }).catch(syncError);
+}
 function exportPWxlsx(){const rows=[['id','company','alias','url','username','password','note']];PW.forEach(p=>rows.push([p.id,p.company,(p.alias||[]).join(', '),p.url||'',p.username,p.password,p.note||'']));const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:5},{wch:25},{wch:20},{wch:40},{wch:25},{wch:20},{wch:25}];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Passwords');XLSX.writeFile(wb,'passwords.xlsx');}
 function importPWxlsx(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const wb=XLSX.read(ev.target.result,{type:'binary'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[1]&&r[4]&&r[5]);const data=rows.map((r,i)=>({id:parseInt(r[0])||i+1,company:r[1],alias:(r[2]||'').split(',').map(a=>a.trim().toLowerCase()).filter(Boolean),url:r[3]||undefined,username:r[4],password:String(r[5]),note:r[6]||undefined}));if(confirm(`Import ${data.length} รายการ?`)){PW=data;saveData(PW_KEY,PW);renderPWList();showToast('✅ Import สำเร็จ!');}}catch(err){alert('❌ '+err.message);}};r.readAsBinaryString(f);e.target.value='';}
 
@@ -1474,8 +1807,85 @@ function savePinChange() {
   showToast('✅ เปลี่ยน PIN แล้ว!');
 }
 
+/* ===== GITHUB TOKEN SETUP ===== */
+function updateTokenBadge(){
+  const t = getGHToken();
+  const badge = document.getElementById('tokenBadge');
+  if(!badge) return;
+  if(t){ badge.textContent='✓ Set'; badge.className='token-badge set'; }
+  else { badge.textContent='ยังไม่ตั้ง'; badge.className='token-badge unset'; }
+}
+
+function openTokenSetup(){
+  const t = getGHToken();
+  document.getElementById('gh-token-input').value = t || '';
+  document.getElementById('gh-token-input').type = 'password';
+  document.getElementById('tokenTestResult').style.display = 'none';
+  document.getElementById('tokenModal').classList.add('open');
+}
+
+function saveGHToken(){
+  const t = document.getElementById('gh-token-input').value.trim();
+  if(!t){ alert('กรุณากรอก Token'); return; }
+  setGHToken(t);
+  updateTokenBadge();
+  closeModal('tokenModal');
+  showToast('✅ บันทึก Token แล้ว — ข้อมูลจะ sync กับ GitHub Issues');
+  // Re-init labels after token set
+  setTimeout(()=>ghEnsureLabels(), 500);
+}
+
+async function testGHToken(){
+  const t = document.getElementById('gh-token-input').value.trim();
+  const res = document.getElementById('tokenTestResult');
+  res.style.display = 'block';
+  res.style.background = '#f1f5f9';
+  res.style.border = '1px solid #e2e8f0';
+  res.style.color = '#64748b';
+  res.textContent = '🔄 กำลังทดสอบ...';
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}`, {
+      headers: { 'Authorization': `token ${t}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    const data = await r.json();
+    if(r.ok){
+      res.style.background = '#f0fdf4'; res.style.border = '1px solid #bbf7d0'; res.style.color = '#065f46';
+      res.textContent = `✅ Token ใช้งานได้! Repo: ${data.full_name} (${data.private?'Private':'Public'})`;
+    } else {
+      res.style.background = '#fef2f2'; res.style.border = '1px solid #fecaca'; res.style.color = '#991b1b';
+      res.textContent = `❌ Token ผิด: ${data.message}`;
+    }
+  } catch(e){
+    res.style.background = '#fef2f2'; res.style.border = '1px solid #fecaca'; res.style.color = '#991b1b';
+    res.textContent = `❌ Error: ${e.message}`;
+  }
+}
+
 /* ===== INIT ===== */
+// Override syncStart/syncDone to update header status
+const _origSyncStart = syncStart, _origSyncDone = syncDone;
+window.syncStart = function(){
+  _origSyncStart();
+  const el = document.getElementById('syncStatus');
+  if(el) el.textContent = '🔄 Syncing...';
+};
+window.syncDone = function(){
+  _origSyncDone();
+  const el = document.getElementById('syncStatus');
+  if(el){ el.textContent = '✅ Synced'; setTimeout(()=>{ if(el) el.textContent='Online'; },2000); }
+};
+window.syncError = function(e){
+  _syncPending = Math.max(0,_syncPending-1);
+  const el = document.getElementById('syncStatus');
+  if(el){ el.textContent = '⚠️ Sync failed'; setTimeout(()=>{ if(el) el.textContent='Online'; },4000); }
+  console.error('syncError:', e);
+  showToast('❌ GitHub sync error: '+e.message, 3500);
+};
+
 initApp();
+updateTokenBadge();
+// Init GitHub labels in background (non-blocking, only if token exists)
+setTimeout(()=>{ if(getGHToken()) ghEnsureLabels(); }, 2000);
 </script>
 </body>
 </html>
