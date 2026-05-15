@@ -1346,7 +1346,7 @@ async function ghTaskGetAll(){
   const cached = cacheValid('task_all');
   if(cached) return cached;
   const issues = await ghFetch(`/issues?labels=${GH_LABELS.task}&state=open&per_page=100`);
-  const closed = await ghFetch(`/issues?labels=${GH_LABELS.task}&state=closed&per_page=50`);
+  const closed = await ghFetch(`/issues?labels=${GH_LABELS.task}&state=closed&per_page=100`);
   const all = [...issues, ...closed].map(iss=>{
     const d = ghDecode(iss.body);
     if(!d) return null;
@@ -1357,7 +1357,8 @@ async function ghTaskGetAll(){
     else if(labelNames.includes('task-received')) status='received';
     return { ...d, status, _issueNumber: iss.number, _ghState: iss.state };
   }).filter(Boolean);
-  cacheSet('task_all', all, 15000);
+  // Shorter cache TTL so a fresh status change is observable when user re-opens panel
+  cacheSet('task_all', all, 3000);
   return all;
 }
 async function ghTaskSave(item){
@@ -1410,7 +1411,14 @@ async function ghQLSave(slData){
 let _syncPending = 0;
 function syncStart(){ _syncPending++; showToast('🔄 กำลังซิงค์...', 1000); }
 function syncDone(){ _syncPending=Math.max(0,_syncPending-1); }
-function syncError(e){ _syncPending=Math.max(0,_syncPending-1); showToast('❌ Sync error: '+e.message, 3000); console.error(e); }
+function syncError(e){
+  _syncPending=Math.max(0,_syncPending-1);
+  const msg = e && e.message ? e.message : String(e);
+  // GitHub sometimes returns 422 when body is too large — give actionable hint
+  const hint = /422|too large|body is too long/i.test(msg) ? ' (ลองลดจำนวนรูปลง)' : '';
+  showToast('❌ Sync error: '+msg+hint, 6000);
+  console.error('[Sync Error]',e);
+}
 
 /* ===== SETTINGS / LOGO ===== */
 const SETTINGS_KEY='fw_settings_v1';
@@ -1445,16 +1453,78 @@ let TASKS=loadData(TASK_KEY,[]),COMPANIES=loadData(COMPANIES_KEY,['SCCO','CPAC',
 async function loadTasksFromGH(){
   try{
     const items = await ghTaskGetAll();
-    if(items && items.length > 0){
-      TASKS = items;
-      // Sync COMPANIES and TEAM from loaded tasks
-      items.forEach(t=>{
-        if(t.company&&!COMPANIES.includes(t.company)){COMPANIES.push(t.company);saveData(COMPANIES_KEY,COMPANIES);}
-        if(t.pic&&!TEAM.includes(t.pic)){TEAM.push(t.pic);saveData(TEAM_KEY,TEAM);}
-      });
-      renderTasks();updateTaskBadge();
-    }
+    if(!items) return;
+    // Build map by _issueNumber for fast lookup
+    const remoteByIssue = {};
+    items.forEach(r=>{ if(r._issueNumber!=null) remoteByIssue[r._issueNumber]=r; });
+    // Tombstones: tasks that we deleted locally — don't resurrect them within 5 min
+    const tomb = loadData('fw_task_tombstones_v1',{});
+    const TOMB_TTL = 5*60*1000;
+    const now = Date.now();
+    // Clean expired tombstones
+    Object.keys(tomb).forEach(k=>{ if(now-tomb[k]>TOMB_TTL) delete tomb[k]; });
+    saveData('fw_task_tombstones_v1',tomb);
+
+    // 1) Start from local (preserves _dirty pending writes & unsynced new tasks)
+    const localByIssue = {};
+    const localOrphan = []; // local tasks without _issueNumber (never synced)
+    TASKS.forEach(t=>{
+      if(t._issueNumber!=null) localByIssue[t._issueNumber]=t;
+      else localOrphan.push(t);
+    });
+
+    const merged = [];
+    // 2) For each remote task, prefer local copy if local is dirty or newer
+    items.forEach(r=>{
+      if(tomb[r._issueNumber]) return; // suppressed by tombstone
+      const l = localByIssue[r._issueNumber];
+      if(!l){ merged.push(r); return; }
+      // local exists — keep local if dirty OR local.updatedAt >= remote.updatedAt
+      if(l._dirty || (l.updatedAt||0) >= (r.updatedAt||0)){
+        // preserve _issueNumber + _dirty flag from local
+        merged.push({ ...l });
+      } else {
+        // remote is newer — adopt remote but keep local images if remote dropped them due to body limit
+        const remote = { ...r };
+        if(!remote.images && l.images && l.images.length){ remote.images = l.images; }
+        merged.push(remote);
+      }
+    });
+    // 3) Append local tasks that never synced (no _issueNumber yet)
+    localOrphan.forEach(t=>merged.push(t));
+    // 4) Append local tasks whose _issueNumber is NOT in remote (e.g., closed-and-past-pagination) but only if recently updated
+    TASKS.forEach(t=>{
+      if(t._issueNumber!=null && !remoteByIssue[t._issueNumber] && !tomb[t._issueNumber]){
+        merged.push(t);
+      }
+    });
+
+    TASKS = merged;
+    // Sync COMPANIES and TEAM
+    TASKS.forEach(t=>{
+      if(t.company&&!COMPANIES.includes(t.company)){COMPANIES.push(t.company);saveData(COMPANIES_KEY,COMPANIES);}
+      if(t.pic&&!TEAM.includes(t.pic)){TEAM.push(t.pic);saveData(TEAM_KEY,TEAM);}
+    });
+    saveData(TASK_KEY,TASKS);
+    renderTasks();updateTaskBadge();
+    // Retry any dirty tasks in background
+    retryDirtyTasks();
   } catch(e){ console.warn('Tasks load from GH:', e.message); }
+}
+
+// Push tasks that failed to sync earlier
+async function retryDirtyTasks(){
+  const dirty = TASKS.filter(t=>t._dirty);
+  if(!dirty.length) return;
+  for(const t of dirty){
+    try{
+      const res = await ghTaskSave(t);
+      if(res&&res.number&&!t._issueNumber)t._issueNumber=res.number;
+      delete t._dirty;
+      saveData(TASK_KEY,TASKS);
+    } catch(e){ console.warn('retry failed for task',t.id,e.message); }
+  }
+  renderTasks();updateTaskBadge();
 }
 let editingTaskId=null,taskImgs=[],taskFilterStatus='',taskCurrentView='kanban';
 function loadData(key,def){try{const s=localStorage.getItem(key);if(s)return JSON.parse(s);}catch(e){}return def;}
@@ -1572,19 +1642,38 @@ function renderCard(t){
 
 function quickUpdateStatus(id,status){
   const t=TASKS.find(x=>x.id===id);if(!t)return;
-  t.status=status;t.updatedAt=Date.now();
+  t.status=status;t.updatedAt=Date.now();t._dirty=true;
+  saveData(TASK_KEY,TASKS);
   renderTasks();updateTaskBadge();
   showToast(`✅ ${SL_LABEL[status]}`);
   syncStart();
-  ghTaskSave(t).then(syncDone).catch(syncError);
+  ghTaskSave(t).then(res=>{
+    if(res&&res.number&&!t._issueNumber)t._issueNumber=res.number;
+    delete t._dirty;
+    saveData(TASK_KEY,TASKS);
+    syncDone();
+  }).catch(e=>{ syncError(e); /* keep _dirty so it retries later */ });
 }
 
 function deleteTask(id){
   if(!confirm('ลบงานนี้?'))return;
   const t=TASKS.find(x=>x.id===id);
   TASKS=TASKS.filter(x=>x.id!==id);
+  // remember deletion so loadTasksFromGH won't resurrect this task before GitHub processes the delete
+  if(t?._issueNumber){
+    const tomb=loadData('fw_task_tombstones_v1',{});
+    tomb[t._issueNumber]=Date.now();
+    saveData('fw_task_tombstones_v1',tomb);
+  }
+  saveData(TASK_KEY,TASKS);
   renderTasks();updateTaskBadge();
-  if(t?._issueNumber){ syncStart(); ghTaskDelete(t._issueNumber).then(syncDone).catch(syncError); }
+  if(t?._issueNumber){
+    syncStart();
+    ghTaskDelete(t._issueNumber).then(()=>{
+      // keep tombstone for 5 min in case GitHub indexer is slow
+      syncDone();
+    }).catch(syncError);
+  }
 }
 
 function openTaskForm(id=null){
@@ -1600,21 +1689,72 @@ function openTaskForm(id=null){
   document.getElementById('taskFormModal').classList.add('open');
 }
 
-function saveTask(){
+async function saveTask(){
   const company=document.getElementById('t-company').value.trim();
   const pic=document.getElementById('t-pic').value.trim();
   if(!company){alert('กรุณาระบุบริษัท');return;}
   const now=Date.now();
   const existing=editingTaskId?TASKS.find(t=>t.id===editingTaskId):null;
-  const item={id:editingTaskId||nxtTaskId(),taskNo:existing?.taskNo||(editingTaskId?undefined:nxtTaskNo()),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:taskImgs.length?[...taskImgs]:undefined,createdAt:existing?.createdAt||now,updatedAt:now,createdBy:existing?.createdBy||(currentUser?.name||''),_issueNumber:existing?._issueNumber};
+  // Re-compress any uncompressed images (e.g., legacy items loaded from GitHub)
+  let imgs = taskImgs.length ? [...taskImgs] : undefined;
+  // Build candidate item and check body size — drop oldest images if over budget
+  let candidate={id:editingTaskId||nxtTaskId(),taskNo:existing?.taskNo||(editingTaskId?undefined:nxtTaskNo()),company,pic,status:document.getElementById('t-status').value,detail:document.getElementById('t-detail').value.trim()||undefined,images:imgs,createdAt:existing?.createdAt||now,updatedAt:now,createdBy:existing?.createdBy||(currentUser?.name||''),_issueNumber:existing?._issueNumber};
+  let dropped=0;
+  while(imgs && imgs.length && estimateBodySize(candidate) > GH_BODY_BUDGET){
+    imgs.shift(); dropped++;
+    candidate.images = imgs.length ? imgs : undefined;
+  }
+  if(dropped>0){
+    if(!confirm(`⚠️ ขนาดข้อมูลใหญ่เกินที่ GitHub รับได้\nต้องตัดรูปออก ${dropped} ภาพ (เก็บรูปล่าสุด ${imgs.length} ภาพ)\nต้องการบันทึกต่อหรือไม่?`)){
+      return;
+    }
+  }
+  const item={...candidate,_dirty:true};
   if(!COMPANIES.includes(company)){COMPANIES.push(company);saveData(COMPANIES_KEY,COMPANIES);}
   if(pic&&!TEAM.includes(pic)){TEAM.push(pic);saveData(TEAM_KEY,TEAM);}
   // Optimistic UI — แสดงทันที ก่อน sync GitHub
   if(editingTaskId)TASKS=TASKS.map(t=>t.id===editingTaskId?item:t);else TASKS.unshift(item);
+  saveData(TASK_KEY,TASKS);
   closeModal('taskFormModal');renderTasks();updateTaskBadge();
   showToast(editingTaskId?'✅ แก้ไขแล้ว!':'✅ เพิ่มงาน '+fmtTaskNo(item.taskNo)+' แล้ว!');
   syncStart();
-  ghTaskSave(item).then(res=>{ if(res.number&&!item._issueNumber)item._issueNumber=res.number; syncDone(); }).catch(syncError);
+  ghTaskSave(item).then(res=>{
+    if(res&&res.number&&!item._issueNumber)item._issueNumber=res.number;
+    delete item._dirty;
+    saveData(TASK_KEY,TASKS);
+    syncDone();
+  }).catch(e=>{ syncError(e); /* keep _dirty for retry later */ });
+}
+
+// Compress image to JPEG, max dimension 1024px, quality 0.7
+// Returns a Promise<string> resolving to a data URL
+function compressImage(dataURL, maxDim=1024, quality=0.7){
+  return new Promise((resolve)=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(w>maxDim||h>maxDim){
+        if(w>=h){ h=Math.round(h*maxDim/w); w=maxDim; }
+        else    { w=Math.round(w*maxDim/h); h=maxDim; }
+      }
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      const ctx=c.getContext('2d');
+      // White background in case of transparent PNG to keep JPEG file small & readable
+      ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      try{ resolve(c.toDataURL('image/jpeg',quality)); }
+      catch(e){ resolve(dataURL); } // fallback
+    };
+    img.onerror=()=>resolve(dataURL);
+    img.src=dataURL;
+  });
+}
+
+// Rough check: how many KB an item will take when JSON-encoded inside a GitHub issue body.
+// GitHub issue body limit is 65,536 chars. We leave ~5KB headroom for metadata.
+const GH_BODY_BUDGET = 60000;
+function estimateBodySize(item){
+  try{ return JSON.stringify(item).length; } catch{ return 0; }
 }
 
 function handleDetailPaste(e){
@@ -1624,7 +1764,12 @@ function handleDetailPaste(e){
       e.preventDefault();
       const file=item.getAsFile();
       const reader=new FileReader();
-      reader.onload=ev=>{taskImgs.push(ev.target.result);renderImgPreview();showToast('🖼️ วางรูปแล้ว!');};
+      reader.onload=async ev=>{
+        const compressed=await compressImage(ev.target.result);
+        taskImgs.push(compressed);
+        renderImgPreview();
+        showToast('🖼️ วางรูปแล้ว!');
+      };
       reader.readAsDataURL(file);
     }
   }
