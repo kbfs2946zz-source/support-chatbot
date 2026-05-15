@@ -439,7 +439,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .pixel-tool.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .pixel-preview{width:48px;height:48px;border-radius:10px;border:2px solid var(--border);overflow:hidden}
 /* ===== TEAM CHAT ===== */
-.chat-popup{position:fixed;bottom:20px;right:20px;width:340px;height:500px;background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.22);z-index:400;display:none;flex-direction:column;overflow:hidden}
+.chat-popup{position:fixed;bottom:90px;right:20px;width:340px;height:500px;background:#fff;border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.22);z-index:400;display:none;flex-direction:column;overflow:hidden}
 .chat-popup.open{display:flex}
 .chat-popup-hdr{padding:12px 16px;background:linear-gradient(135deg,#1a56db,#1e429f);color:#fff;display:flex;align-items:center;gap:8px;flex-shrink:0}
 .chat-popup-hdr h3{font-size:13px;font-weight:700;flex:1}
@@ -460,8 +460,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .chat-input:focus{border-color:var(--primary)}
 .chat-send{width:34px;height:34px;border-radius:50%;background:var(--primary);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .chat-send:hover{background:var(--primary-dark)}
-.chat-fab{position:fixed;bottom:20px;right:20px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#7c3aed);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 6px 20px rgba(26,86,219,.4);z-index:399;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.chat-fab{position:fixed;bottom:90px;right:20px;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#1a56db,#7c3aed);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 6px 20px rgba(26,86,219,.4);z-index:399;display:flex;align-items:center;justify-content:center;transition:transform .15s}
 .chat-fab:hover{transform:scale(1.08)}
+.chat-tab{padding:8px 12px;font-size:11px;font-weight:600;color:#6b7280;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .12s;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.chat-tab:hover{color:var(--primary);background:#eff6ff}
+.chat-tab.active{color:var(--primary);border-bottom-color:var(--primary);background:#fff}
+.chat-tab-badge{display:inline-flex;align-items:center;justify-content:center;background:#ef4444;color:#fff;border-radius:10px;min-width:14px;height:14px;font-size:9px;font-weight:700;padding:0 3px;margin-left:4px}
 .chat-fab-badge{position:absolute;top:-3px;right:-3px;background:#ef4444;color:#fff;border-radius:50%;min-width:16px;height:16px;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid white}
 .chat-fab-badge.show{display:flex}
 /* PIN change modal */
@@ -879,22 +883,23 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
         <div style="display:flex;align-items:center;gap:10px">
           <canvas id="umAvatarPreview" width="48" height="48" style="border-radius:10px;border:2px solid var(--border);image-rendering:pixelated;cursor:pointer" onclick="openPixelModal()" title="คลิกเพื่อสร้าง Pixel Art"></canvas>
           <div>
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">หรือใส่ Emoji แทน</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">หรือใส่ Emoji</div>
             <input type="text" id="um-f-emoji" value="👤" maxlength="4" style="font-size:22px;text-align:center;width:60px">
           </div>
-          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openPixelModal()">🎨 Pixel Art</button>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openPixelModal()">🎨 Pixel Art</button>
+            <label class="btn btn-ghost" style="font-size:11px;padding:5px 10px;cursor:pointer;text-align:center">
+              🖼️ Upload รูป
+              <input type="file" accept="image/*" style="display:none" onchange="handleAvatarImageUpload(event)">
+            </label>
+          </div>
         </div>
       </div>
       <div class="field"><label>📧 Email</label><input type="email" id="um-f-email" placeholder="name@freewillfx.com"></div>
       <div class="field"><label>📱 เบอร์โทร</label><input type="tel" id="um-f-phone" placeholder="08x-xxx-xxxx"></div>
       <div class="field">
-        <label>⏰ เวลาพัก (สำหรับแจ้งเตือน)</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="time" id="um-f-break1" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none" title="พักช่วงที่ 1">
-          <span style="font-size:12px;color:var(--muted)">และ</span>
-          <input type="time" id="um-f-break2" style="padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none" title="พักช่วงที่ 2">
-        </div>
-        <div class="hint">ระบบจะแจ้งเตือนเมื่อถึงเวลาพัก</div>
+        <label>⏰ เวลาพัก</label>
+        <input type="time" id="um-f-break1" style="padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;width:140px">
       </div>
       <div class="field"><label>Role</label>
         <select id="um-f-role" style="width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none">
@@ -1088,10 +1093,11 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 <div class="chat-popup" id="chatPopup">
   <div class="chat-popup-hdr">
     <div class="chat-online-dot"></div>
-    <h3>💬 Team Chat</h3>
-    <span id="chatOnlineCount" style="font-size:10px;opacity:.8"></span>
+    <h3 id="chatTitle">💬 Team Chat</h3>
     <button class="chat-close" onclick="toggleChat()">×</button>
   </div>
+  <!-- Channel tabs -->
+  <div style="display:flex;overflow-x:auto;border-bottom:1px solid #e2e8f0;background:#f8fafc;flex-shrink:0" id="chatTabs"></div>
   <div class="chat-msgs" id="chatMsgs">
     <div style="text-align:center;padding:20px;font-size:12px;color:#9ca3af">🎉 เริ่มสนทนากับทีม!</div>
   </div>
@@ -2142,12 +2148,19 @@ function loginSuccess(user) {
 
   buildSidebar();
   updateUserChip();
+  renderChatTabs();
 }
 
 function updateUserChip() {
   if (!currentUser) return;
-  document.getElementById('currentUserAv').textContent = currentUser.emoji || currentUser.name[0].toUpperCase();
-  document.getElementById('currentUserAv').style.background = userColor(currentUser.id);
+  const av = document.getElementById('currentUserAv');
+  if(currentUser.avatarImg){
+    av.innerHTML = `<img src="${currentUser.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    av.style.background = 'transparent';
+  } else {
+    av.textContent = currentUser.emoji || currentUser.name[0].toUpperCase();
+    av.style.background = userColor(currentUser.id);
+  }
   document.getElementById('currentUserName').textContent = currentUser.name;
 }
 
@@ -2239,7 +2252,6 @@ function openEditUser(uid) {
   document.getElementById('um-f-email').value = u.email||'';
   document.getElementById('um-f-phone').value = u.phone||'';
   document.getElementById('um-f-break1').value = u.break1||'';
-  document.getElementById('um-f-break2').value = u.break2||'';
   const prev = document.getElementById('umAvatarPreview');
   if(u.pixelData && prev) renderPixelToCanvas(u.pixelData, prev);
   document.getElementById('addUserModal').classList.add('open');
@@ -2253,7 +2265,7 @@ function saveUserForm() {
   const email = document.getElementById('um-f-email').value.trim();
   const phone = document.getElementById('um-f-phone').value.trim();
   const break1 = document.getElementById('um-f-break1').value;
-  const break2 = document.getElementById('um-f-break2').value;
+  const break2 = undefined;
   if (!name) { alert('กรุณากรอกชื่อ'); return; }
   if (pin && (pin.length !== 4 || !/^\d{4}$/.test(pin))) { alert('PIN ต้องเป็นตัวเลข 4 หลัก'); return; }
 
@@ -2264,6 +2276,7 @@ function saveUserForm() {
     u.email=email||undefined; u.phone=phone||undefined;
     u.break1=break1||undefined; u.break2=break2||undefined;
     if(_savedPixelData) u.pixelData=_savedPixelData;
+    if(_savedAvatarImg) u.avatarImg=_savedAvatarImg;
     if(pin) u.pin=pin;
     if(currentUser?.id===editingUserId){ currentUser={...currentUser,...u}; updateUserChip(); }
   } else {
@@ -2271,9 +2284,10 @@ function saveUserForm() {
     USERS.push({ id:nxtUserId(), name, emoji, role, pin,
       email:email||undefined, phone:phone||undefined,
       break1:break1||undefined, break2:break2||undefined,
-      pixelData:_savedPixelData||undefined });
+      pixelData:_savedPixelData||undefined,
+      avatarImg:_savedAvatarImg||undefined });
   }
-  _savedPixelData=null;
+  _savedPixelData=null; _savedAvatarImg=null;
   saveData(USERS_KEY, USERS);
   closeModal('addUserModal');
   renderUMList(); buildUserGrid();
@@ -2431,7 +2445,7 @@ function checkAllNotifications(){
   }
   // 3. เวลาพัก — ตรวจจาก currentUser profile
   if(currentUser){
-    ['break1','break2'].forEach(bk=>{
+    ['break1'].forEach(bk=>{
       const btime = currentUser[bk];
       if(!btime) return;
       const [bh,bm] = btime.split(':').map(Number);
@@ -2596,6 +2610,46 @@ function savePixelAvatar(){
   showToast('✅ บันทึก Avatar แล้ว — กด "บันทึก" ใน User form ด้วยครับ');
 }
 
+function handleAvatarImageUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      // Draw to 12x12 pixel grid (scale down)
+      const offscreen = document.createElement('canvas');
+      offscreen.width = PIXEL_COLS; offscreen.height = PIXEL_ROWS;
+      const ctx = offscreen.getContext('2d');
+      ctx.drawImage(img, 0, 0, PIXEL_COLS, PIXEL_ROWS);
+      // Extract pixel data
+      const imgData = ctx.getImageData(0, 0, PIXEL_COLS, PIXEL_ROWS);
+      for(let r=0;r<PIXEL_ROWS;r++){
+        for(let c=0;c<PIXEL_COLS;c++){
+          const i=(r*PIXEL_COLS+c)*4;
+          const [R,G,B,A] = [imgData.data[i],imgData.data[i+1],imgData.data[i+2],imgData.data[i+3]];
+          _pixelData[r][c] = A<128 ? '#ffffff' : `#${R.toString(16).padStart(2,'0')}${G.toString(16).padStart(2,'0')}${B.toString(16).padStart(2,'0')}`;
+        }
+      }
+      // Also store full image as base64 for header display
+      _savedAvatarImg = ev.target.result;
+      // Render full image to preview canvas
+      const prev = document.getElementById('umAvatarPreview');
+      if(prev){
+        const pctx = prev.getContext('2d');
+        pctx.drawImage(img, 0, 0, 48, 48);
+      }
+      initPixelGrid(); updatePixelPreview();
+      showToast('✅ โหลดรูปเป็น Avatar แล้ว');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value='';
+}
+
+let _savedAvatarImg = null; // full-res image for header display
+
 function renderPixelToCanvas(pixelData, canvas){
   if(!pixelData||!canvas) return;
   const ctx=canvas.getContext('2d');
@@ -2609,52 +2663,78 @@ function renderPixelToCanvas(pixelData, canvas){
 }
 
 /* ===== TEAM CHAT ===== */
-const CHAT_KEY='fw_chat_v1';
-let CHAT_MSGS=[];
-let _chatGHIssueNum=null;
+// Channel: 'group' = ทั้งหมด, 'dm_<name>' = คุยส่วนตัว
+const CHAT_KEY='fw_chat_v2';
+let _CHAT_ALL={}; // { channelId: [{id,sender,text,ts}] }
+let _chatGHNums={}; // { channelId: issueNumber }
 let _chatOpen=false;
+let _chatChannel='group'; // current channel
 let _chatUnread=0;
+let _chatUnreadPerCh={}; // { channelId: count }
+
+function chatChannelKey(ch){ return `fw_chat_${ch}`; }
+
+function getChannelMsgs(ch){ return _CHAT_ALL[ch]||[]; }
+function setChannelMsgs(ch,msgs){ _CHAT_ALL[ch]=msgs; saveData(chatChannelKey(ch),msgs); }
 
 async function loadChatMsgs(){
-  const local=loadData(CHAT_KEY,[]);
-  if(local.length){ CHAT_MSGS=local; renderChat(); }
+  // Load group channel
+  const localGroup=loadData(chatChannelKey('group'),[]);
+  if(localGroup.length){ _CHAT_ALL['group']=localGroup; }
+  // Load DM channels from localStorage
+  USERS.forEach(u=>{
+    if(!currentUser||u.id===currentUser.id) return;
+    const dmKey=getDMChannel(currentUser.name,u.name);
+    const local=loadData(chatChannelKey(dmKey),[]);
+    if(local.length) _CHAT_ALL[dmKey]=local;
+  });
+  renderChatTabs(); renderChat();
   if(!getGHToken()) return;
   try{
-    const issues=await ghFetch(`/issues?labels=chat&state=open&per_page=3`);
-    if(issues.length){
-      _chatGHIssueNum=issues[0].number;
-      const d=ghDecode(issues[0].body);
+    const issues=await ghFetch(`/issues?labels=chat&state=open&per_page=20`);
+    issues.forEach(iss=>{
+      const ch=iss.title.replace('Chat:','').trim();
+      const d=ghDecode(iss.body);
       if(d&&Array.isArray(d)){
-        CHAT_MSGS=d;
-        saveData(CHAT_KEY,CHAT_MSGS);
-        renderChat();
-        // Check for unread messages
-        const lastSeen=loadData('fw_chat_seen',0);
-        const newMsgs=CHAT_MSGS.filter(m=>m.ts>lastSeen&&m.sender!==currentUser?.name);
-        if(newMsgs.length&&!_chatOpen){
-          _chatUnread+=newMsgs.length;
-          updateChatBadge();
-          newMsgs.slice(-1).forEach(m=>{
-            addNotification('💬',`${m.sender}`,m.text.slice(0,40),'chat','chat');
-          });
-        }
+        _CHAT_ALL[ch]=d;
+        _chatGHNums[ch]=iss.number;
+        saveData(chatChannelKey(ch),d);
       }
-    }
+    });
+    // Check new messages
+    const lastSeen=loadData('fw_chat_seen',0);
+    Object.entries(_CHAT_ALL).forEach(([ch,msgs])=>{
+      const newMsgs=msgs.filter(m=>m.ts>lastSeen&&m.sender!==currentUser?.name);
+      if(newMsgs.length&&!_chatOpen){
+        _chatUnreadPerCh[ch]=((_chatUnreadPerCh[ch]||0)+newMsgs.length);
+        _chatUnread+=newMsgs.length;
+        newMsgs.slice(-1).forEach(m=>{
+          const label=ch==='group'?'Team Chat':`DM: ${m.sender}`;
+          addNotification('💬',label,m.text.slice(0,40),'chat');
+        });
+      }
+    });
+    updateChatBadge(); renderChatTabs(); renderChat();
   }catch(e){ console.warn('Chat load GH:', e.message); }
 }
 
-async function saveChatMsgs(){
-  saveData(CHAT_KEY,CHAT_MSGS);
+function getDMChannel(a,b){
+  return 'dm_'+[a,b].sort().join('_');
+}
+
+async function saveChatChannel(ch){
+  const msgs=(getChannelMsgs(ch)).slice(-200);
+  setChannelMsgs(ch,msgs);
   if(!getGHToken()) return;
   syncStart();
-  const body=ghEncode(CHAT_MSGS.slice(-200)); // keep last 200 msgs
-  const title='Team Chat Messages';
+  const body=ghEncode(msgs);
+  const title=`Chat:${ch}`;
   try{
-    if(_chatGHIssueNum){
-      await ghFetch(`/issues/${_chatGHIssueNum}`,{method:'PATCH',body:{title,body}});
+    if(_chatGHNums[ch]){
+      await ghFetch(`/issues/${_chatGHNums[ch]}`,{method:'PATCH',body:{title,body}});
     } else {
       const created=await ghFetch('/issues',{method:'POST',body:{title,body,labels:['chat']}});
-      _chatGHIssueNum=created.number;
+      _chatGHNums[ch]=created.number;
     }
     syncDone();
   }catch(e){ syncError(e); }
@@ -2665,11 +2745,11 @@ function toggleChat(){
   document.getElementById('chatPopup').classList.toggle('open',_chatOpen);
   document.getElementById('chatFab').style.display=_chatOpen?'none':'flex';
   if(_chatOpen){
-    _chatUnread=0; updateChatBadge();
+    _chatUnread=0; _chatUnreadPerCh={};
+    updateChatBadge();
     saveData('fw_chat_seen',Date.now());
-    renderChat();
+    renderChatTabs(); renderChat();
     setTimeout(()=>scrollChatBottom(),100);
-    // Poll for new messages every 30s when open
     loadChatMsgs();
   }
 }
@@ -2680,21 +2760,56 @@ function updateChatBadge(){
   b.classList.toggle('show',_chatUnread>0);
 }
 
+function renderChatTabs(){
+  const tabs=document.getElementById('chatTabs');
+  if(!tabs||!currentUser) return;
+  // Group tab + DM tabs per user
+  const channels=[{id:'group',label:'👥 ทั้งหมด'}];
+  USERS.filter(u=>u.id!==currentUser.id).forEach(u=>{
+    const dmCh=getDMChannel(currentUser.name,u.name);
+    channels.push({id:dmCh, label:(u.emoji||u.name[0])+' '+u.name});
+  });
+  tabs.innerHTML=channels.map(ch=>{
+    const unread=_chatUnreadPerCh[ch.id]||0;
+    return `<button class="chat-tab ${_chatChannel===ch.id?'active':''}" onclick="switchChatChannel('${ch.id}')">
+      ${ch.label}${unread?`<span class="chat-tab-badge">${unread}</span>`:''}
+    </button>`;
+  }).join('');
+}
+
+function switchChatChannel(ch){
+  _chatChannel=ch;
+  _chatUnreadPerCh[ch]=0;
+  const isDM=ch.startsWith('dm_');
+  const other=isDM?ch.replace('dm_','').replace(currentUser.name,'').replace('_','').trim():'';
+  document.getElementById('chatTitle').textContent=isDM?`💬 DM: ${other}`:'💬 Team Chat';
+  document.getElementById('chatInput').placeholder=isDM?`ส่งข้อความถึง ${other}...`:'พิมพ์ข้อความ...';
+  renderChatTabs(); renderChat();
+}
+
 function renderChat(){
   const container=document.getElementById('chatMsgs');
-  if(!CHAT_MSGS.length){
-    container.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#9ca3af">🎉 เริ่มสนทนากับทีม!</div>';
+  const msgs=getChannelMsgs(_chatChannel);
+  if(!msgs.length){
+    container.innerHTML='<div style="text-align:center;padding:20px;font-size:12px;color:#9ca3af">ยังไม่มีข้อความ — เริ่มสนทนาได้เลย!</div>';
     return;
   }
   let html=''; let lastDate='';
-  CHAT_MSGS.slice(-100).forEach(m=>{
+  msgs.slice(-100).forEach(m=>{
     const d=new Date(m.ts).toLocaleDateString('th-TH',{day:'2-digit',month:'short'});
     if(d!==lastDate){ html+=`<div class="chat-date-sep">— ${d} —</div>`; lastDate=d; }
     const isMine=m.sender===currentUser?.name;
-    const av=isMine?(currentUser.emoji||currentUser.name[0]):m.sender[0];
+    const senderUser=USERS.find(u=>u.name===m.sender);
+    let avHtml='';
+    if(senderUser?.avatarImg){
+      avHtml=`<img src="${senderUser.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      avHtml=senderUser?.emoji||m.sender[0];
+    }
     const time=new Date(m.ts).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+    const bgColor=isMine?'var(--primary)':userColor(senderUser?.id||'');
     html+=`<div class="chat-msg-row ${isMine?'mine':''}">
-      <div class="chat-av" style="background:${isMine?'var(--primary)':'#8b5cf6'}">${av}</div>
+      <div class="chat-av" style="background:${bgColor}">${avHtml}</div>
       <div>
         ${!isMine?`<div style="font-size:10px;color:#6b7280;margin-bottom:2px;padding-left:2px">${m.sender}</div>`:''}
         <div class="chat-bubble">${escHtml(m.text)}</div>
@@ -2715,11 +2830,13 @@ async function sendChatMsg(){
   const inp=document.getElementById('chatInput');
   const text=inp.value.trim();
   if(!text||!currentUser) return;
-  const msg={id:Date.now().toString(),sender:currentUser.name,text,ts:Date.now()};
-  CHAT_MSGS.push(msg);
+  const msg={id:Date.now().toString(),sender:currentUser.name,text,ts:Date.now(),channel:_chatChannel};
+  const msgs=getChannelMsgs(_chatChannel);
+  msgs.push(msg);
+  setChannelMsgs(_chatChannel,msgs);
   inp.value=''; inp.style.height='auto';
   renderChat();
-  saveChatMsgs();
+  saveChatChannel(_chatChannel);
 }
 
 /* ===== WEATHER ===== */
