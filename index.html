@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FreeWill FX — Support Chatbot</title>
+<script src="config.js" onerror="console.log('config.js not loaded yet')"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--primary:#1a56db;--primary-dark:#1e429f;--primary-light:#e8f0fe;--bg:#f0f4f8;--card:#fff;--text:#1a202c;--muted:#6b7280;--border:#e2e8f0;--success:#059669;--danger:#dc2626;--warning:#d97706}
@@ -764,7 +765,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
       <div class="field">
         <label>GitHub Personal Access Token</label>
         <div style="display:flex;gap:6px">
-          <input type="password" id="gh-token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;font-family:monospace;font-size:12px" autocomplete="off">
+          <input type="password" id="gh-token-input" placeholder="github_pat_xxxxxx หรือ token ของคุณ" style="flex:1;font-family:monospace;font-size:12px" autocomplete="off">
           <button class="btn btn-ghost" onclick="document.getElementById('gh-token-input').type=document.getElementById('gh-token-input').type==='password'?'text':'password'">👁️</button>
         </div>
         <div class="hint">สร้างได้ที่ GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens<br>Permissions ที่ต้องการ: <b>Issues: Read & Write</b></div>
@@ -792,10 +793,39 @@ function copyText(txt){navigator.clipboard.writeText(txt).then(()=>showToast('�
 function fmtDateFull(ts){const d=new Date(ts);return d.toLocaleDateString('th-TH',{day:'2-digit',month:'short',year:'2-digit'})+' '+d.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}
 
 /* ===== GITHUB ISSUES DB ===== */
-// Token stored in localStorage only — never embedded in source code
-const GH_REPO   = 'kbfs2946zz-source/support-chatbot';
-function getGHToken(){ return localStorage.getItem('fw_gh_token')||''; }
-function setGHToken(t){ localStorage.setItem('fw_gh_token',t); }
+// Token loaded from config.js (separate file, not embedded in this source)
+const GH_REPO = 'kbfs2946zz-source/support-chatbot';
+let _ghTokenResolved = '';
+function getGHToken(){ return _ghTokenResolved || (window.FW_CONFIG?.gh_token) || localStorage.getItem('fw_gh_token') || ''; }
+function setGHToken(t){ _ghTokenResolved = t; localStorage.setItem('fw_gh_token', t); }
+
+// Load config.js at startup
+async function loadConfig(){
+  // Already loaded via <script src="config.js"> or window.FW_CONFIG
+  if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== 'PASTE_YOUR_TOKEN_HERE'){
+    _ghTokenResolved = window.FW_CONFIG.gh_token;
+    return true;
+  }
+  // Fallback: fetch config.js dynamically
+  try {
+    const r = await fetch('./config.js?_='+Date.now());
+    if(r.ok){
+      const txt = await r.text();
+      // Execute the config script
+      const blob = new Blob([txt], {type:'application/javascript'});
+      const url = URL.createObjectURL(blob);
+      await import(url).catch(()=>{
+        // eval fallback
+        try{ eval(txt); }catch(e){}
+      });
+      if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== 'PASTE_YOUR_TOKEN_HERE'){
+        _ghTokenResolved = window.FW_CONFIG.gh_token;
+        return true;
+      }
+    }
+  } catch(e){ console.log('config.js not found, using localStorage'); }
+  return false;
+}
 const GH_API    = `https://api.github.com/repos/${GH_REPO}`;
 const GH_LABELS = { kb:'kb', pw:'pw', task:'task', ql:'quicklinks', meta:'meta' };
 
@@ -1861,6 +1891,55 @@ async function testGHToken(){
   }
 }
 
+/* ===== GITHUB TOKEN SETUP ===== */
+function updateTokenBadge(){
+  const t = getGHToken();
+  const badge = document.getElementById('tokenBadge');
+  const btn   = document.getElementById('tokenBtn');
+  if(!badge) return;
+  if(t && t !== 'PASTE_YOUR_TOKEN_HERE'){
+    badge.textContent='✓';
+    badge.className='token-badge set';
+    // Hide button if config.js loaded successfully (token auto-configured)
+    if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== 'PASTE_YOUR_TOKEN_HERE'){
+      if(btn) btn.style.display='none';
+    }
+  } else {
+    badge.textContent='ยังไม่ตั้ง';
+    badge.className='token-badge unset';
+  }
+}
+
+function openTokenSetup(){
+  const t = getGHToken();
+  document.getElementById('gh-token-input').value = (t && t !== 'PASTE_YOUR_TOKEN_HERE') ? t : '';
+  document.getElementById('gh-token-input').type = 'password';
+  document.getElementById('tokenTestResult').style.display = 'none';
+  document.getElementById('tokenModal').classList.add('open');
+}
+
+function saveGHToken(){
+  const t = document.getElementById('gh-token-input').value.trim();
+  if(!t){ alert('กรุณากรอก Token'); return; }
+  setGHToken(t);
+  updateTokenBadge();
+  closeModal('tokenModal');
+  showToast('✅ บันทึก Token แล้ว');
+  setTimeout(()=>ghEnsureLabels(), 500);
+}
+
+async function testGHToken(){
+  const t = document.getElementById('gh-token-input').value.trim();
+  const res = document.getElementById('tokenTestResult');
+  res.style.display='block'; res.style.background='#f1f5f9'; res.style.border='1px solid #e2e8f0'; res.style.color='#64748b'; res.textContent='🔄 กำลังทดสอบ...';
+  try{
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}`,{headers:{'Authorization':`token ${t}`,'Accept':'application/vnd.github.v3+json'}});
+    const d = await r.json();
+    if(r.ok){ res.style.background='#f0fdf4'; res.style.border='1px solid #bbf7d0'; res.style.color='#065f46'; res.textContent=`✅ Token ใช้งานได้! Repo: ${d.full_name}`; }
+    else { res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ Token ผิด: ${d.message}`; }
+  }catch(e){ res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ Error: ${e.message}`; }
+}
+
 /* ===== INIT ===== */
 // Override syncStart/syncDone to update header status
 const _origSyncStart = syncStart, _origSyncDone = syncDone;
@@ -1882,10 +1961,12 @@ window.syncError = function(e){
   showToast('❌ GitHub sync error: '+e.message, 3500);
 };
 
-initApp();
-updateTokenBadge();
-// Init GitHub labels in background (non-blocking, only if token exists)
-setTimeout(()=>{ if(getGHToken()) ghEnsureLabels(); }, 2000);
+// Load config then init
+loadConfig().then(()=>{
+  initApp();
+  updateTokenBadge();
+  if(getGHToken()) setTimeout(()=>ghEnsureLabels(), 2000);
+});
 </script>
 </body>
 </html>
