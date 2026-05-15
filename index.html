@@ -1281,6 +1281,10 @@ async function ghEnsureLabels(){
       {name:'quicklinks',color:'0e8a16', description:'Quick Links Master'},
       {name:'calendar',  color:'d93f0b', description:'Calendar Events'},
       {name:'chat',      color:'0075ca', description:'Team Chat Messages'},
+      {name:'users',         color:'1d76db', description:'User accounts (shared across machines)'},
+      {name:'user-sl',       color:'bfdadc', description:'Per-user Quick Links sidebar'},
+      {name:'notifications', color:'fbca04', description:'User notifications'},
+      {name:'settings',      color:'5319e7', description:'App settings (logo, title)'},
       {name:'meta',      color:'cccccc', description:'System'},
     ];
     for(const lb of needed){
@@ -1429,6 +1433,104 @@ async function ghQLSave(slData){
   }
 }
 
+// ---- Users via single Issue (shared across all machines) ----
+let _usersIssueNum = null;
+async function ghUsersGet(){
+  const cached = cacheValid('users_all');
+  if(cached) return cached;
+  const issues = await ghFetch(`/issues?labels=users&state=open&per_page=3`);
+  if(issues.length){
+    _usersIssueNum = issues[0].number;
+    const d = ghDecode(issues[0].body);
+    if(d && Array.isArray(d)){ cacheSet('users_all', d, 5000); return d; }
+  }
+  return null;
+}
+async function ghUsersSave(usersArr){
+  delete _cache['users_all'];
+  const body = ghEncode(usersArr);
+  const title = 'Users Master';
+  if(_usersIssueNum){
+    return ghFetch(`/issues/${_usersIssueNum}`, {method:'PATCH', body:{title, body}});
+  } else {
+    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['users']}});
+    _usersIssueNum = created.number;
+    return created;
+  }
+}
+
+// ---- Per-user Quick Links via single Issue ----
+let _userSLIssueNum = null;
+async function ghUserSLGet(){
+  const cached = cacheValid('user_sl_all');
+  if(cached) return cached;
+  const issues = await ghFetch(`/issues?labels=user-sl&state=open&per_page=3`);
+  if(issues.length){
+    _userSLIssueNum = issues[0].number;
+    const d = ghDecode(issues[0].body);
+    if(d && typeof d==='object'){ cacheSet('user_sl_all', d, 10000); return d; }
+  }
+  return null;
+}
+async function ghUserSLSave(slMap){
+  delete _cache['user_sl_all'];
+  const body = ghEncode(slMap);
+  const title = 'Per-User Quick Links';
+  if(_userSLIssueNum){
+    return ghFetch(`/issues/${_userSLIssueNum}`, {method:'PATCH', body:{title, body}});
+  } else {
+    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['user-sl']}});
+    _userSLIssueNum = created.number;
+    return created;
+  }
+}
+
+// ---- App Settings via single Issue ----
+let _settingsIssueNum = null;
+async function ghSettingsGet(){
+  const issues = await ghFetch(`/issues?labels=settings&state=open&per_page=3`);
+  if(issues.length){
+    _settingsIssueNum = issues[0].number;
+    const d = ghDecode(issues[0].body);
+    if(d && typeof d==='object') return d;
+  }
+  return null;
+}
+async function ghSettingsSave(settings){
+  const body = ghEncode(settings);
+  const title = 'App Settings';
+  if(_settingsIssueNum){
+    return ghFetch(`/issues/${_settingsIssueNum}`, {method:'PATCH', body:{title, body}});
+  } else {
+    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['settings']}});
+    _settingsIssueNum = created.number;
+    return created;
+  }
+}
+
+// ---- Notifications via single Issue ----
+let _notifIssueNum = null;
+async function ghNotifGet(){
+  const issues = await ghFetch(`/issues?labels=notifications&state=open&per_page=3`);
+  if(issues.length){
+    _notifIssueNum = issues[0].number;
+    const d = ghDecode(issues[0].body);
+    if(d && Array.isArray(d)) return d;
+  }
+  return null;
+}
+async function ghNotifSave(notifArr){
+  const body = ghEncode(notifArr);
+  const title = 'Notifications';
+  if(_notifIssueNum){
+    return ghFetch(`/issues/${_notifIssueNum}`, {method:'PATCH', body:{title, body}});
+  } else {
+    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['notifications']}});
+    _notifIssueNum = created.number;
+    return created;
+  }
+}
+
 // ---- Sync indicator ----
 let _syncPending = 0;
 function syncStart(){ _syncPending++; showToast('🔄 กำลังซิงค์...', 1000); }
@@ -1466,7 +1568,12 @@ function openLogoEditor(){
 }
 function handleLogoUpload(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{SETTINGS.logoImg=ev.target.result;document.getElementById('logoPreview').innerHTML=`<img src="${ev.target.result}">`;};r.readAsDataURL(f);e.target.value='';}
 function clearLogo(){SETTINGS.logoImg='';document.getElementById('logoPreview').textContent=document.getElementById('logoEmoji').value||'🛰️';}
-function saveLogo(){SETTINGS.logoEmoji=document.getElementById('logoEmoji').value||'🛰️';SETTINGS.title=document.getElementById('appTitleInput').value||'FreeWill FX';SETTINGS.subtitle=document.getElementById('appSubtitleInput').value||'';saveSettings();applySettings();closePanel('logoOverlay');showToast('✅ บันทึกแล้ว!');}
+function saveLogo(){SETTINGS.logoEmoji=document.getElementById('logoEmoji').value||'🛰️';SETTINGS.title=document.getElementById('appTitleInput').value||'FreeWill FX';SETTINGS.subtitle=document.getElementById('appSubtitleInput').value||'';saveSettings();applySettings();closePanel('logoOverlay');showToast('✅ บันทึกแล้ว!');
+  if(getGHToken()){
+    syncStart();
+    ghSettingsSave(SETTINGS).then(syncDone).catch(syncError);
+  }
+}
 
 /* ===== TASK MANAGER ===== */
 const TASK_KEY='fw_tasks_v1',COMPANIES_KEY='fw_companies_v1',TEAM_KEY='fw_team_v1';
@@ -2237,7 +2344,7 @@ function buildRAGContext(){
   }).join('\n\n---\n\n');
 
   const coText = COMPANY_MASTER.length
-    ? 'รายชื่อบริษัทลูกค้า:\n' + COMPANY_MASTER.map(c=>`- ${c.name}${c.abbr?' ('+c.abbr+')':''}${c.contacts?' ผู้ติดต่อ: '+c.contacts.replace(/\n/g,', ')':''}`).join('\n')
+    ? 'รายชื่อบริษัทลูกค้า:\n' + COMPANY_MASTER.map(c=>`- ${c.name}${c.abbr?' ('+c.abbr+')':''}${c.contacts?' ผู้ติดต่อ: '+c.contacts.replace(/\n/g,', '):''}`).join('\n')
     : '';
 
   return `คุณคือ AI ผู้ช่วยของ FreeWill FX บริษัทพัฒนาระบบ Fleet Management (Terminus) และ GPS ติดตามรถ
@@ -2369,12 +2476,12 @@ function clearSession() { localStorage.removeItem(SESSION_KEY); }
 function slKey(uid) { return `fw_sl_${uid}`; }
 
 /* --- Init Login --- */
-function initApp() {
-  applySettings();
+async function initApp() {
   buildSuggs();
   updateTaskBadge();
 
-  // Apply logo to login screen
+  // 1) Apply local-cached settings first (fast paint)
+  applySettings();
   const ls = SETTINGS;
   const ll = document.getElementById('loginLogo');
   const llp = document.getElementById('loginLogoPin');
@@ -2388,7 +2495,28 @@ function initApp() {
   }
   lt.textContent = ls.title || 'FreeWill FX Support';
 
-  // Check existing session (same tab session)
+  // 2) Try to load USERS & SETTINGS from GitHub before showing login (cross-machine sync)
+  if(getGHToken()){
+    try {
+      const [remoteUsers, remoteSettings] = await Promise.all([
+        ghUsersGet().catch(()=>null),
+        ghSettingsGet().catch(()=>null)
+      ]);
+      if(remoteUsers && Array.isArray(remoteUsers) && remoteUsers.length){
+        USERS = remoteUsers;
+        saveData(USERS_KEY, USERS);
+      } else {
+        ghUsersSave(USERS).catch(e=>console.warn('seed users to GH:',e.message));
+      }
+      if(remoteSettings){
+        SETTINGS = { ...SETTINGS, ...remoteSettings };
+        saveSettings();
+        applySettings();
+      }
+    } catch(e){ console.warn('initial sync failed:', e.message); }
+  }
+
+  // 3) Existing session check
   const sess = loadSession();
   if (sess) {
     const u = USERS.find(x => x.id === sess.id);
@@ -2489,6 +2617,17 @@ function loginSuccess(user) {
   buildSidebar();
   updateUserChip();
   renderChatTabs();
+
+  // Pull this user's quick links from GitHub (other-machine sync)
+  if(getGHToken()){
+    ghUserSLGet().then(slMap=>{
+      if(slMap && slMap[user.id]){
+        SL = slMap[user.id];
+        saveData(slKey(user.id), SL);
+        buildSidebar();
+      }
+    }).catch(()=>{});
+  }
 }
 
 function updateUserChip() {
@@ -2516,11 +2655,24 @@ function doLogout() {
 }
 
 /* --- Override saveSL to use per-user key --- */
+let _slSaveDebounce = null;
 function saveDataSL() {
   if (currentUser) {
     saveData(slKey(currentUser.id), SL);
   } else {
     saveData(SL_KEY, SL);
+  }
+  if(currentUser && getGHToken()){
+    clearTimeout(_slSaveDebounce);
+    _slSaveDebounce = setTimeout(async ()=>{
+      try {
+        const remoteMap = await ghUserSLGet().catch(()=>null) || {};
+        remoteMap[currentUser.id] = SL;
+        syncStart();
+        await ghUserSLSave(remoteMap);
+        syncDone();
+      } catch(e){ syncError(e); }
+    }, 1500);
   }
 }
 
@@ -2632,6 +2784,10 @@ function saveUserForm() {
   closeModal('addUserModal');
   renderUMList(); buildUserGrid();
   showToast(editingUserId ? '✅ แก้ไขแล้ว!' : '✅ เพิ่มผู้ใช้แล้ว!');
+  if(getGHToken()){
+    syncStart();
+    ghUsersSave(USERS).then(syncDone).catch(syncError);
+  }
 }
 
 function deleteUser(uid) {
@@ -2643,6 +2799,10 @@ function deleteUser(uid) {
   renderUMList();
   buildUserGrid();
   showToast('🗑️ ลบแล้ว');
+  if(getGHToken()){
+    syncStart();
+    ghUsersSave(USERS).then(syncDone).catch(syncError);
+  }
 }
 
 function openChangePinSelf() {
@@ -2662,6 +2822,10 @@ function savePinChange() {
   saveData(USERS_KEY, USERS);
   closeModal('changePinModal');
   showToast('✅ เปลี่ยน PIN แล้ว!');
+  if(getGHToken()){
+    syncStart();
+    ghUsersSave(USERS).then(syncDone).catch(syncError);
+  }
 }
 
 /* ===== NOTIFICATION SYSTEM ===== */
