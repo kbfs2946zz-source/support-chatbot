@@ -185,19 +185,19 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .tk-kanban{display:flex;gap:14px;padding:14px 18px;overflow-x:auto;flex:1;align-items:flex-start}
 .tk-col{flex:1;min-width:260px}
 .tk-col-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px 10px 0 0;font-size:12px;font-weight:700}
-.tk-col-hdr.received{background:#fef2f2;border:1px solid #fecaca;border-bottom:none;color:#991b1b}
-.tk-col-hdr.checking{background:#fefce8;border:1px solid #fde68a;border-bottom:none;color:#854d0e}
+.tk-col-hdr.received{background:#fefce8;border:1px solid #fde68a;border-bottom:none;color:#92400e}
+.tk-col-hdr.checking{background:#eff6ff;border:1px solid #bfdbfe;border-bottom:none;color:#1e40af}
 .tk-col-hdr.done{background:#f0fdf4;border:1px solid #bbf7d0;border-bottom:none;color:#065f46}
 .tk-col-cnt{margin-left:auto;background:rgba(0,0,0,.07);border-radius:20px;padding:1px 8px;font-size:11px}
 .tk-col-body{border-radius:0 0 10px 10px;padding:8px;display:flex;flex-direction:column;gap:7px;min-height:80px}
-.tk-col-body.received{border:1px solid #fecaca;border-top:none}
+.tk-col-body.received{border:1px solid #fde68a;border-top:none}
 .tk-col-body.checking{border:1px solid #bfdbfe;border-top:none}
 .tk-col-body.done{border:1px solid #bbf7d0;border-top:none}
 /* task card minimal */
 .task-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .14s;position:relative}
 .task-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.09);border-color:#c7d2fe}
-.task-card.status-received{border-left:3px solid #ef4444}
-.task-card.status-checking{border-left:3px solid #eab308}
+.task-card.status-received{border-left:3px solid #f59e0b}
+.task-card.status-checking{border-left:3px solid #3b82f6}
 .task-card.status-done{border-left:3px solid #10b981;opacity:.72}
 .tc-company{font-weight:700;font-size:13px;color:var(--text);margin-bottom:5px}
 .tc-pic-tag{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--muted);margin-bottom:6px}
@@ -210,7 +210,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .tc-btn-sm.edit{background:#eff6ff;color:var(--primary)}.tc-btn-sm.edit:hover{background:var(--primary-light)}
 .tc-btn-sm.del{background:#fee2e2;color:var(--danger)}.tc-btn-sm.del:hover{background:#fca5a5}
 .tc-status-sel{border:none;background:none;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;padding:0}
-.tc-status-sel.received{color:#ef4444}.tc-status-sel.checking{color:#ca8a04}.tc-status-sel.done{color:#10b981}
+.tc-status-sel.received{color:#f59e0b}.tc-status-sel.checking{color:#3b82f6}.tc-status-sel.done{color:#10b981}
 .tk-empty{text-align:center;padding:24px;color:#cbd5e1;font-size:12px}
 /* table view */
 .tk-table-wrap{overflow-y:auto;flex:1;padding:0 18px 18px}
@@ -222,8 +222,8 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .tk-table tbody tr.tr-done{opacity:.6}
 .tk-table tbody tr:last-child td{border-bottom:none}
 .tk-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
-.tk-pill.received{background:#fee2e2;color:#991b1b}
-.tk-pill.checking{background:#fef9c3;color:#854d0e}
+.tk-pill.received{background:#fef9c3;color:#92400e}
+.tk-pill.checking{background:#dbeafe;color:#1e40af}
 .tk-pill.done{background:#dcfce7;color:#065f46}
 /* task form */
 .task-modal-hdr{background:var(--card);border-radius:12px 12px 0 0;border-bottom:1px solid var(--border)}
@@ -290,7 +290,6 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .uc-name{font-size:11px;color:#fff;font-weight:600}
 /* ===== USER MANAGEMENT ===== */
 .um-item{border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:6px;background:var(--bg)}
-.um-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.1)!important}
 .um-av{width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
 .um-info{flex:1}
 .um-name{font-size:13px;font-weight:700}
@@ -303,15 +302,6 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .token-badge{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:700;margin-left:4px}
 .token-badge.set{background:#d1fae5;color:#065f46}
 .token-badge.unset{background:#fee2e2;color:#991b1b}
-/* ===== COMPANY MASTER ===== */
-.co-item{border:1px solid var(--border);border-radius:10px;margin-bottom:6px;overflow:hidden}
-.co-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
-.co-row{padding:10px 14px;display:grid;grid-template-columns:1.4fr 1fr 1.6fr auto;gap:10px;align-items:center;background:var(--bg)}
-.co-row:hover{background:#e8eef5}
-.co-name{font-weight:700;font-size:13px}
-.co-abbr{font-size:12px;color:var(--muted);font-family:monospace}
-.co-contact{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.co-col{padding:5px 14px;display:grid;grid-template-columns:1.4fr 1fr 1.6fr auto;gap:10px;background:var(--bg);font-size:11px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.4px}
 /* ===== WEATHER WIDGET ===== */
 .weather-btn{display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);border-radius:10px;padding:5px 10px;cursor:pointer;color:#fff;font-family:inherit;font-size:12px;transition:background .15s;position:relative}
 .weather-btn:hover{background:rgba(255,255,255,.2)}
@@ -371,9 +361,9 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .cal-day.today:hover{background:var(--primary-dark)}
 .cal-day.other-month{color:#d1d5db;cursor:default}
 .cal-day.selected:not(.today){background:#eff6ff;border-color:var(--primary);font-weight:700;color:var(--primary)}
-.cal-day.holiday{color:#059669;font-weight:700}
+.cal-day.holiday{color:#ef4444;font-weight:700}
 .cal-day.holiday.today{color:#fff}
-.cal-day.weekend{color:#059669}
+.cal-day.weekend{color:#ef4444}
 .cal-day.weekend.today{color:#fff}
 /* Event dots */
 .cal-dot-row{display:flex;gap:2px;position:absolute;bottom:2px;justify-content:center}
@@ -536,7 +526,6 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   <div class="header-info">
     <h1 id="appTitle">FreeWill FX — Support Assistant</h1>
     <p id="appSubtitle">Terminus Fleet Management | GPS Support Bot</p>
-    <p style="font-size:9px;opacity:.45;margin-top:1px;letter-spacing:.3px">Ver. 1.2</p>
   </div>
   <div class="header-right">
     <div class="status"><div class="dot"></div><span id="syncStatus">Online</span></div>
@@ -562,9 +551,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     </button>
     <button class="hbtn purple" onclick="openTaskPanel()">📋 งาน<span class="task-badge" id="taskBadge">0</span></button>
     <button class="hbtn yellow" onclick="openPW()">🔑 Password Manager</button>
-    <button class="hbtn blue" onclick="openAdmin()">📖 Wiki</button>
-    <button class="hbtn" style="background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4)" onclick="openCompanyMaster()">🏢 บริษัท</button>
-    <button class="hbtn" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)" onclick="openTokenSetup()" id="tokenBtn" title="ตั้งค่า GitHub Token">🔐 Token<span class="token-badge unset" id="tokenBadge">ยังไม่ตั้ง</span></button>
+    <button class="hbtn blue" onclick="openAdmin()">📚 Knowledge Base</button>
+    <button class="hbtn" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)" onclick="openTokenSetup()" id="tokenBtn" title="ตั้งค่า API Keys">
+      ⚙️ Keys
+      <span class="token-badge unset" id="tokenBadge">GH</span>
+      <span class="token-badge unset" id="geminiBadge" style="margin-left:2px">AI</span>
+    </button>
     <div class="user-chip" onclick="openUserMenu()" id="userChip" title="จัดการผู้ใช้ / ออกจากระบบ">
       <div class="uc-av" id="currentUserAv">?</div>
       <span class="uc-name" id="currentUserName">-</span>
@@ -577,10 +569,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   <div class="sidebar">
     <div class="sidebar-top">
       <span>🔗 Quick Links</span>
-      <div style="display:flex;gap:4px">
-        <button class="sidebar-edit-btn" onclick="quickAddSLSection()" title="เพิ่มหัวข้อใหม่">➕</button>
-        <button class="sidebar-edit-btn" onclick="openSidebarEditor()" title="แก้ไข Quick Links">✏️</button>
-      </div>
+      <button class="sidebar-edit-btn" onclick="openSidebarEditor()">✏️</button>
     </div>
     <div class="quick-links" id="sidebarLinks"></div>
   </div>
@@ -632,12 +621,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
         <div><div class="tstat-num" id="tstat-all">0</div><div class="tstat-lbl">ทั้งหมด</div></div>
       </div>
       <div class="tstat" onclick="setTaskFilter('received')">
-        <div class="tstat-dot" style="background:#ef4444"></div>
-        <div><div class="tstat-num" style="color:#ef4444" id="tstat-received">0</div><div class="tstat-lbl">รับเรื่อง</div></div>
+        <div class="tstat-dot" style="background:#f59e0b"></div>
+        <div><div class="tstat-num" style="color:#f59e0b" id="tstat-received">0</div><div class="tstat-lbl">รับเรื่อง</div></div>
       </div>
       <div class="tstat" onclick="setTaskFilter('checking')">
-        <div class="tstat-dot" style="background:#eab308"></div>
-        <div><div class="tstat-num" style="color:#eab308" id="tstat-checking">0</div><div class="tstat-lbl">กำลังตรวจสอบ</div></div>
+        <div class="tstat-dot" style="background:#3b82f6"></div>
+        <div><div class="tstat-num" style="color:#3b82f6" id="tstat-checking">0</div><div class="tstat-lbl">กำลังตรวจสอบ</div></div>
       </div>
       <div class="tstat" onclick="setTaskFilter('done')">
         <div class="tstat-dot" style="background:#10b981"></div>
@@ -709,7 +698,10 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
             onblur="setTimeout(()=>closeAC('t-pic-dd'),200)">
           <div class="ac-dropdown" id="t-pic-dd"></div>
         </div>
-        <div style="font-size:10px;color:var(--muted);margin-top:3px">รายชื่อ sync กับ User ในระบบ</div>
+        <div style="display:flex;gap:5px;margin-top:5px">
+          <input type="text" id="t-new-pic" placeholder="เพิ่มสมาชิกทีมใหม่..." style="flex:1;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none">
+          <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="addNewPIC()">+ เพิ่ม</button>
+        </div>
       </div>
       <!-- สถานะ -->
       <div class="field">
@@ -828,17 +820,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   <div class="modal">
     <div class="modal-hdr pw-modal-hdr"><h3 id="pwFormTitle">➕ เพิ่มรหัสผ่าน</h3><button class="close-btn" onclick="closeModal('pwFormModal')">×</button></div>
     <div class="modal-body">
-      <div class="field">
-        <label>ชื่อบริษัท *</label>
-        <div class="ac-wrap">
-          <input type="text" id="pw-f-company" placeholder="พิมพ์หรือเลือกจาก Master บริษัท..." autocomplete="off"
-            oninput="acSearchCo(this.value)"
-            onfocus="acSearchCo(this.value)"
-            onblur="setTimeout(()=>closeAC('pw-co-dd'),200)">
-          <div class="ac-dropdown" id="pw-co-dd"></div>
-        </div>
-      </div>
-      <div class="field"><label>ชื่อย่อบริษัท</label><input type="text" id="pw-f-abbr" placeholder="เช่น SCCO, DLT" style="text-transform:uppercase"><div class="hint">ดึงอัตโนมัติจาก Master บริษัท หรือกรอกเอง</div></div>
+      <div class="field"><label>ชื่อบริษัท *</label><input type="text" id="pw-f-company"></div>
       <div class="field"><label>Alias (comma)</label><input type="text" id="pw-f-alias" placeholder="scco, สยาม"><div class="hint">ใช้ค้นหาด้วย /pw [alias]</div></div>
       <div class="field"><label>URL</label><input type="text" id="pw-f-url" placeholder="https://..."></div>
       <div class="field"><label>Username *</label><input type="text" id="pw-f-user" autocomplete="off"></div>
@@ -865,16 +847,15 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 
 <!-- ===== USER MANAGEMENT PANEL ===== -->
 <div class="overlay" id="userMgmtOverlay" onclick="closeOverlayBg(event,'userMgmtOverlay')">
-  <div class="panel wide" style="max-width:800px">
+  <div class="panel sm">
     <div class="panel-hdr" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">
       <span style="font-size:20px">👥</span>
-      <h2 style="color:#065f46">ทีมงาน</h2>
-      <span id="umTeamCount" style="font-size:12px;color:#065f46"></span>
+      <h2 style="color:#065f46">จัดการผู้ใช้</h2>
       <button class="close-btn" onclick="closePanel('userMgmtOverlay')">×</button>
     </div>
-    <!-- current user bar -->
+    <!-- current user info -->
     <div id="umCurrentUserBar" style="padding:10px 18px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;display:flex;align-items:center;gap:10px">
-      <div style="width:36px;height:36px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;overflow:hidden;flex-shrink:0" id="umCurAv">?</div>
+      <div class="uc-av" style="width:32px;height:32px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700" id="umCurAv">?</div>
       <div style="flex:1">
         <div style="font-size:13px;font-weight:700" id="umCurName">-</div>
         <div style="font-size:11px;color:var(--muted)" id="umCurRole">-</div>
@@ -882,16 +863,15 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
           <a id="umCurEmailLink" href="https://mail.google.com/" target="_blank" style="font-size:11px;color:var(--primary);text-decoration:none">📧 <span id="umCurEmailTxt"></span></a>
         </div>
       </div>
-      <button class="btn btn-ghost" style="font-size:12px" onclick="openChangePinSelf()">🔑 เปลี่ยน PIN</button>
-      <button class="btn btn-ghost" style="font-size:12px" onclick="doLogout()">🚪 ออกจากระบบ</button>
+      <button class="btn btn-ghost" style="margin-left:auto;font-size:12px" onclick="doLogout()">🚪 ออกจากระบบ</button>
     </div>
     <div class="toolbar" id="umAdminTools" style="display:none">
       <button class="btn btn-success" onclick="openAddUserModal()">➕ เพิ่มผู้ใช้</button>
-      <span style="font-size:11px;color:var(--muted)">เฉพาะ Admin เพิ่ม/แก้ไขได้</span>
+      <span style="font-size:11px;color:var(--muted)">เฉพาะ Admin</span>
     </div>
-    <div class="panel-body" id="umUserList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:start"></div>
+    <div class="panel-body" id="umUserList"></div>
     <div class="panel-footer">
-      <span style="font-size:11px;color:var(--muted);flex:1">💡 คลิกที่ card เพื่อดูรายละเอียด | Admin เท่านั้นที่แก้ไขได้</span>
+      <span style="font-size:11px;color:var(--muted);flex:1">💡 Quick Links ของแต่ละคนบันทึกแยกกัน | PW / KB / งาน — ข้อมูลร่วม</span>
     </div>
   </div>
 </div>
@@ -1172,70 +1152,50 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   </div>
 </div>
 
-<!-- ===== COMPANY MASTER PANEL ===== -->
-<div class="overlay" id="companyOverlay" onclick="closeOverlayBg(event,'companyOverlay')">
-  <div class="panel wide">
-    <div class="panel-hdr" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7)">
-      <span style="font-size:22px">🏢</span>
-      <h2 style="color:#065f46">Master บริษัท</h2>
-      <span id="co-total" style="font-size:12px;color:#065f46"></span>
-      <button class="close-btn" onclick="closePanel('companyOverlay')">×</button>
-    </div>
-    <div class="toolbar">
-      <input type="text" id="coSearch" placeholder="🔍 ค้นหา ชื่อบริษัท / ชื่อย่อ / ผู้ติดต่อ..." oninput="renderCompanyList()">
-      <button class="btn btn-success" onclick="openCoForm()">➕ เพิ่มบริษัท</button>
-      <button class="btn btn-ghost" onclick="exportCoXlsx()">📥 xlsx</button>
-      <label class="btn btn-ghost" style="cursor:pointer">📤 Import<input type="file" accept=".xlsx" style="display:none" onchange="importCoXlsx(event)"></label>
-    </div>
-    <div class="co-col"><span>ชื่อบริษัท</span><span>ชื่อย่อ</span><span>ผู้ติดต่อ</span><span></span></div>
-    <div class="panel-body" id="coList"></div>
-    <div class="panel-footer"><span style="font-size:12px;color:var(--muted);flex:1">💡 ข้อมูลบริษัทซิงค์กับงาน, Password Manager และ Knowledge Base</span></div>
-  </div>
-</div>
-
-<!-- Company Form Modal -->
-<div class="modal-overlay" id="coFormModal">
-  <div class="modal" style="max-width:500px">
-    <div class="modal-hdr" style="background:#f0fdf4"><h3 id="coFormTitle" style="color:#065f46">➕ เพิ่มบริษัท</h3><button class="close-btn" onclick="closeModal('coFormModal')">×</button></div>
-    <div class="modal-body">
-      <div class="field"><label>ชื่อบริษัท *</label><input type="text" id="co-f-name" placeholder="บริษัท สยามซิตี้ซีเมนต์ จำกัด"></div>
-      <div class="field"><label>ชื่อย่อ *</label><input type="text" id="co-f-abbr" placeholder="SCCO" style="text-transform:uppercase"></div>
-      <div class="field"><label>ผู้ติดต่อ</label><textarea id="co-f-contacts" placeholder="คุณสมชาย 081-234-5678&#10;คุณสมหญิง 089-876-5432" rows="3"></textarea><div class="hint">ใส่ได้หลายคน แยกบรรทัด</div></div>
-      <div class="field"><label>หมายเหตุ</label><input type="text" id="co-f-note" placeholder="ข้อมูลเพิ่มเติม"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('coFormModal')">ยกเลิก</button>
-      <button class="btn btn-success" onclick="saveCoForm()">💾 บันทึก</button>
-    </div>
-  </div>
-</div>
-
 <!-- Token Setup Modal -->
 <div class="modal-overlay" id="tokenModal">
-  <div class="modal" style="max-width:500px">
+  <div class="modal" style="max-width:540px">
     <div class="modal-hdr" style="background:#1e293b">
-      <h3 style="color:#f1f5f9">🔐 ตั้งค่า GitHub Token</h3>
+      <h3 style="color:#f1f5f9">⚙️ ตั้งค่า API Keys</h3>
       <button class="close-btn" style="color:#94a3b8" onclick="closeModal('tokenModal')">×</button>
     </div>
     <div class="modal-body">
-      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:10px 14px;font-size:12px;color:#78350f;margin-bottom:4px">
-        ⚠️ Token จะเก็บใน <b>localStorage ของเครื่องนี้เท่านั้น</b> — ไม่ได้ส่งหรือเก็บที่อื่น ทุกเครื่องต้องกรอก token ของตัวเอง
+      <!-- GitHub Token -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔐 GitHub Personal Access Token</div>
+      <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;padding:8px 12px;font-size:11px;color:#78350f;margin-bottom:8px">
+        ⚠️ เก็บใน localStorage ของเครื่องนี้เท่านั้น
       </div>
-      <div class="field">
-        <label>GitHub Personal Access Token</label>
+      <div class="field" style="margin:0 0 4px">
         <div style="display:flex;gap:6px">
           <input type="password" id="gh-token-input" placeholder="วาง Personal Access Token ที่นี่" style="flex:1;font-family:monospace;font-size:12px" autocomplete="off">
           <button class="btn btn-ghost" onclick="document.getElementById('gh-token-input').type=document.getElementById('gh-token-input').type==='password'?'text':'password'">👁️</button>
         </div>
-        <div class="hint">สร้างได้ที่ GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens<br>Permissions ที่ต้องการ: <b>Issues: Read & Write</b></div>
+        <div class="hint">Permissions: <b>Issues: Read & Write</b></div>
       </div>
       <div id="tokenTestResult" style="display:none;padding:8px 12px;border-radius:7px;font-size:12px;margin-top:4px"></div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:16px 0">
+
+      <!-- Gemini API Key -->
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">✨ Google Gemini API Key (RAG Chatbot)</div>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 12px;font-size:11px;color:#065f46;margin-bottom:8px">
+        🤖 ใส่ key นี้เพื่อเปิดใช้ Gemini AI — chatbot จะตอบโดยใช้ Knowledge Base เป็น context
+      </div>
+      <div class="field" style="margin:0">
+        <div style="display:flex;gap:6px">
+          <input type="password" id="gemini-key-input" placeholder="วาง Google AI API Key ที่นี่" style="flex:1;font-family:monospace;font-size:12px" autocomplete="off">
+          <button class="btn btn-ghost" onclick="document.getElementById('gemini-key-input').type=document.getElementById('gemini-key-input').type==='password'?'text':'password'">👁️</button>
+        </div>
+        <div class="hint">สร้างได้ที่ <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--primary)">Google AI Studio</a> → Get API Key (ฟรี)</div>
+      </div>
+      <div id="geminiTestResult" style="display:none;padding:8px 12px;border-radius:7px;font-size:12px;margin-top:4px"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="testGHToken()">🔍 ทดสอบ Token</button>
+      <button class="btn btn-ghost" onclick="testGHToken()">🔍 ทดสอบ GitHub</button>
+      <button class="btn btn-ghost" onclick="testGeminiKey()">✨ ทดสอบ Gemini</button>
       <span style="flex:1"></span>
       <button class="btn btn-ghost" onclick="closeModal('tokenModal')">ยกเลิก</button>
-      <button class="btn btn-primary" onclick="saveGHToken()">💾 บันทึก Token</button>
+      <button class="btn btn-primary" onclick="saveAllTokens()">💾 บันทึก</button>
     </div>
   </div>
 </div>
@@ -1319,14 +1279,8 @@ async function ghEnsureLabels(){
       {name:'pw',        color:'e4e669', description:'Password Manager'},
       {name:'task',      color:'7057ff', description:'Task'},
       {name:'quicklinks',color:'0e8a16', description:'Quick Links Master'},
-      {name:'calendar',       color:'d93f0b', description:'Calendar Events'},
-      {name:'chat',           color:'0075ca', description:'Team Chat Messages'},
-      {name:'company-master', color:'0e8a16', description:'Company Master Data'},
-      {name:'task-deleted',   color:'b60205', description:'Deleted Task (hidden)'},
-      {name:'users',          color:'1d76db', description:'User accounts (shared across machines)'},
-      {name:'user-sl',        color:'bfdadc', description:'Per-user Quick Links sidebar'},
-      {name:'notifications',  color:'fbca04', description:'User notifications'},
-      {name:'settings',       color:'5319e7', description:'App settings (logo, title)'},
+      {name:'calendar',  color:'d93f0b', description:'Calendar Events'},
+      {name:'chat',      color:'0075ca', description:'Team Chat Messages'},
       {name:'meta',      color:'cccccc', description:'System'},
     ];
     for(const lb of needed){
@@ -1419,8 +1373,6 @@ async function ghTaskGetAll(){
     const d = ghDecode(iss.body);
     if(!d) return null;
     const labelNames = (iss.labels||[]).map(l=>l.name);
-    // ข้ามงานที่ถูกลบ (task-deleted label)
-    if(labelNames.includes('task-deleted')) return null;
     let status = d.status || 'received';
     if(labelNames.includes('task-done') || iss.state==='closed') status='done';
     else if(labelNames.includes('task-checking')) status='checking';
@@ -1448,8 +1400,7 @@ async function ghTaskSave(item){
 }
 async function ghTaskDelete(issueNumber){
   delete _cache['task_all'];
-  // ใช้ label 'task-deleted' แยกจาก task-done เพื่อไม่ให้โหลดกลับมา
-  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed', labels:['task-deleted', GH_LABELS.task]}});
+  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed', labels:['task-done', GH_LABELS.task]}});
 }
 
 // ---- Quick Links Master via single Issue ----
@@ -1474,104 +1425,6 @@ async function ghQLSave(slData){
   } else {
     const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:[GH_LABELS.ql]}});
     _qlIssueNum = created.number;
-    return created;
-  }
-}
-
-// ---- Users via single Issue (shared across all machines) ----
-let _usersIssueNum = null;
-async function ghUsersGet(){
-  const cached = cacheValid('users_all');
-  if(cached) return cached;
-  const issues = await ghFetch(`/issues?labels=users&state=open&per_page=3`);
-  if(issues.length){
-    _usersIssueNum = issues[0].number;
-    const d = ghDecode(issues[0].body);
-    if(d && Array.isArray(d)){ cacheSet('users_all', d, 5000); return d; }
-  }
-  return null;
-}
-async function ghUsersSave(usersArr){
-  delete _cache['users_all'];
-  const body = ghEncode(usersArr);
-  const title = 'Users Master';
-  if(_usersIssueNum){
-    return ghFetch(`/issues/${_usersIssueNum}`, {method:'PATCH', body:{title, body}});
-  } else {
-    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['users']}});
-    _usersIssueNum = created.number;
-    return created;
-  }
-}
-
-// ---- Per-user Quick Links via single Issue ----
-let _userSLIssueNum = null;
-async function ghUserSLGet(){
-  const cached = cacheValid('user_sl_all');
-  if(cached) return cached;
-  const issues = await ghFetch(`/issues?labels=user-sl&state=open&per_page=3`);
-  if(issues.length){
-    _userSLIssueNum = issues[0].number;
-    const d = ghDecode(issues[0].body);
-    if(d && typeof d==='object'){ cacheSet('user_sl_all', d, 10000); return d; }
-  }
-  return null;
-}
-async function ghUserSLSave(slMap){
-  delete _cache['user_sl_all'];
-  const body = ghEncode(slMap);
-  const title = 'Per-User Quick Links';
-  if(_userSLIssueNum){
-    return ghFetch(`/issues/${_userSLIssueNum}`, {method:'PATCH', body:{title, body}});
-  } else {
-    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['user-sl']}});
-    _userSLIssueNum = created.number;
-    return created;
-  }
-}
-
-// ---- App Settings via single Issue ----
-let _settingsIssueNum = null;
-async function ghSettingsGet(){
-  const issues = await ghFetch(`/issues?labels=settings&state=open&per_page=3`);
-  if(issues.length){
-    _settingsIssueNum = issues[0].number;
-    const d = ghDecode(issues[0].body);
-    if(d && typeof d==='object') return d;
-  }
-  return null;
-}
-async function ghSettingsSave(settings){
-  const body = ghEncode(settings);
-  const title = 'App Settings';
-  if(_settingsIssueNum){
-    return ghFetch(`/issues/${_settingsIssueNum}`, {method:'PATCH', body:{title, body}});
-  } else {
-    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['settings']}});
-    _settingsIssueNum = created.number;
-    return created;
-  }
-}
-
-// ---- Notifications via single Issue ----
-let _notifIssueNum = null;
-async function ghNotifGet(){
-  const issues = await ghFetch(`/issues?labels=notifications&state=open&per_page=3`);
-  if(issues.length){
-    _notifIssueNum = issues[0].number;
-    const d = ghDecode(issues[0].body);
-    if(d && Array.isArray(d)) return d;
-  }
-  return null;
-}
-async function ghNotifSave(notifArr){
-  const body = ghEncode(notifArr);
-  const title = 'Notifications';
-  if(_notifIssueNum){
-    return ghFetch(`/issues/${_notifIssueNum}`, {method:'PATCH', body:{title, body}});
-  } else {
-    const created = await ghFetch('/issues', {method:'POST', body:{title, body, labels:['notifications']}});
-    _notifIssueNum = created.number;
     return created;
   }
 }
@@ -1613,16 +1466,7 @@ function openLogoEditor(){
 }
 function handleLogoUpload(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{SETTINGS.logoImg=ev.target.result;document.getElementById('logoPreview').innerHTML=`<img src="${ev.target.result}">`;};r.readAsDataURL(f);e.target.value='';}
 function clearLogo(){SETTINGS.logoImg='';document.getElementById('logoPreview').textContent=document.getElementById('logoEmoji').value||'🛰️';}
-function saveLogo(){
-  SETTINGS.logoEmoji=document.getElementById('logoEmoji').value||'🛰️';
-  SETTINGS.title=document.getElementById('appTitleInput').value||'FreeWill FX';
-  SETTINGS.subtitle=document.getElementById('appSubtitleInput').value||'';
-  saveSettings();applySettings();closePanel('logoOverlay');showToast('✅ บันทึกแล้ว!');
-  if(getGHToken()){
-    syncStart();
-    ghSettingsSave(SETTINGS).then(syncDone).catch(syncError);
-  }
-}
+function saveLogo(){SETTINGS.logoEmoji=document.getElementById('logoEmoji').value||'🛰️';SETTINGS.title=document.getElementById('appTitleInput').value||'FreeWill FX';SETTINGS.subtitle=document.getElementById('appSubtitleInput').value||'';saveSettings();applySettings();closePanel('logoOverlay');showToast('✅ บันทึกแล้ว!');}
 
 /* ===== TASK MANAGER ===== */
 const TASK_KEY='fw_tasks_v1',COMPANIES_KEY='fw_companies_v1',TEAM_KEY='fw_team_v1';
@@ -1758,9 +1602,7 @@ function renderTasks(){
   document.getElementById('task-total').textContent=`${all} งาน`;
   // pic filter
   const cur=pf;
-  // Filter PIC sync กับ USERS list
-  const allPICs = getUserNames();
-  document.getElementById('taskFilterPIC').innerHTML='<option value="">👤 ทุกคน</option>'+allPICs.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+  document.getElementById('taskFilterPIC').innerHTML='<option value="">👤 ทุกคน</option>'+TEAM.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
 
   const getList=(status)=>TASKS.filter(t=>{
     if(status&&t.status!==status)return false;
@@ -1998,14 +1840,9 @@ function renderImgPreview(){document.getElementById('t-img-list').innerHTML=task
 function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('open');}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 
-function getUserNames(){ return USERS.map(u=>u.name); }
 function acSearch(val,ddId,dataKey,onSelect){
   const dd=document.getElementById(ddId);
-  // TEAM ให้ sync กับ USERS list เสมอ
-  let data;
-  if(dataKey==='TEAM') data=getUserNames();
-  else if(dataKey==='COMPANIES') data=COMPANIES;
-  else data=TEAM;
+  const data=dataKey==='COMPANIES'?COMPANIES:TEAM;
   const q=val.toLowerCase();
   const filtered=q?data.filter(d=>d.toLowerCase().includes(q)):data;
   if(!filtered.length){dd.classList.remove('open');return;}
@@ -2098,45 +1935,6 @@ function renderSLEditor(){
     </div>`).join('');
 }
 function addSLSection(){SL.push({s:'📌 หมวดหมู่ใหม่',open:true,l:[]});renderSLEditor();}
-
-function quickAddSLSection(){
-  // inline mini-form ใน sidebar แทน prompt
-  const ql=document.getElementById('sidebarLinks');
-  // ถ้ามี form อยู่แล้วให้ซ่อน
-  const existing=document.getElementById('_ql-quick-add');
-  if(existing){ existing.remove(); return; }
-  const div=document.createElement('div');
-  div.id='_ql-quick-add';
-  div.style.cssText='padding:8px;border-bottom:1px solid var(--border);background:#f0f9ff';
-  div.innerHTML=`
-    <div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:5px">➕ เพิ่มหัวข้อใหม่</div>
-    <div style="display:flex;gap:5px">
-      <input id="_ql-icon" type="text" value="📌" maxlength="4"
-        style="width:34px;text-align:center;font-size:16px;padding:4px;border:1px solid var(--border);border-radius:6px;font-family:inherit;outline:none">
-      <input id="_ql-name" type="text" placeholder="ชื่อหัวข้อ..."
-        style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none"
-        onkeydown="if(event.key==='Enter')doQuickAddSection();if(event.key==='Escape')document.getElementById('_ql-quick-add')?.remove()">
-    </div>
-    <div style="display:flex;gap:5px;margin-top:5px">
-      <button onclick="doQuickAddSection()"
-        style="flex:1;padding:5px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✓ เพิ่ม</button>
-      <button onclick="document.getElementById('_ql-quick-add')?.remove()"
-        style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>
-    </div>`;
-  ql.insertBefore(div, ql.firstChild);
-  document.getElementById('_ql-name').focus();
-}
-
-function doQuickAddSection(){
-  const icon=document.getElementById('_ql-icon')?.value||'📌';
-  const name=document.getElementById('_ql-name')?.value.trim();
-  if(!name){ document.getElementById('_ql-name')?.focus(); return; }
-  SL.push({s:`${icon} ${name}`,open:true,l:[]});
-  saveDataSL();
-  document.getElementById('_ql-quick-add')?.remove();
-  buildSidebar();
-  showToast(`✅ เพิ่มหัวข้อ "${icon} ${name}" แล้ว`);
-}
 function saveSL(){
   saveDataSL();
   buildSidebar();
@@ -2280,7 +2078,7 @@ function renderPWList(){
   if(!list.length){document.getElementById('pwList').innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';return;}
   // Sort newest first
   const sortedPW=[...list].sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
-  document.getElementById('pwList').innerHTML=sortedPW.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}${p.abbr?` <span style="font-size:10px;background:#d1fae5;color:#065f46;padding:1px 6px;border-radius:4px;font-weight:600">${p.abbr}</span>`:''}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div>${p.createdAt?`<div style="font-size:10px;color:var(--muted);margin-top:2px">➕ ${p.createdBy||'?'} · ${fmtDateFull(p.createdAt)}</div>`:''}</div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
+  document.getElementById('pwList').innerHTML=sortedPW.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div>${p.createdAt?`<div style="font-size:10px;color:var(--muted);margin-top:2px">➕ ${p.createdBy||'?'} · ${fmtDateFull(p.createdAt)}</div>`:''}</div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
 }
 function togglePass(id){showPassIds.has(id)?showPassIds.delete(id):showPassIds.add(id);renderPWList();}
 function deletePW(id){
@@ -2290,54 +2088,15 @@ function deletePW(id){
   renderPWList();
   if(p?._issueNumber){ syncStart(); ghPWDelete(p._issueNumber).then(syncDone).catch(syncError); }
 }
-// Autocomplete ชื่อบริษัทจาก Company Master
-function acSearchCo(val){
-  const dd=document.getElementById('pw-co-dd');
-  const q=(val||'').toLowerCase();
-  const list=COMPANY_MASTER.filter(c=>
-    !q||c.name.toLowerCase().includes(q)||(c.abbr||'').toLowerCase().includes(q)
-  );
-  if(!list.length){dd.classList.remove('open');return;}
-  dd.innerHTML=list.map(c=>`<div class="ac-item" onmousedown="event.preventDefault();selectPWCompany('${c.name.replace(/'/g,"\\'")}','${(c.abbr||'').replace(/'/g,"\\'")}')">
-    <span style="font-weight:600">${c.name}</span>
-    ${c.abbr?`<span style="font-size:10px;color:var(--muted);margin-left:6px">${c.abbr}</span>`:''}
-  </div>`).join('');
-  dd.classList.add('open');
-}
-function selectPWCompany(name,abbr){
-  document.getElementById('pw-f-company').value=name;
-  if(abbr) document.getElementById('pw-f-abbr').value=abbr;
-  // Auto-fill alias จาก abbr
-  const aliasEl=document.getElementById('pw-f-alias');
-  if(abbr&&!aliasEl.value) aliasEl.value=abbr.toLowerCase();
-  closeAC('pw-co-dd');
-}
-
-function openPWForm(id=null){
-  editingPWId=id;
-  const p=id?PW.find(x=>x.id===id):null;
-  document.getElementById('pwFormTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่มรหัสผ่าน';
-  document.getElementById('pw-f-company').value=p?.company||'';
-  document.getElementById('pw-f-abbr').value=p?.abbr||'';
-  document.getElementById('pw-f-alias').value=p?.alias?.join(', ')||'';
-  document.getElementById('pw-f-url').value=p?.url||'';
-  document.getElementById('pw-f-user').value=p?.username||'';
-  document.getElementById('pw-f-pass').value=p?.password||'';
-  document.getElementById('pw-f-note').value=p?.note||'';
-  document.getElementById('pwFormModal').classList.add('open');
-}
+function openPWForm(id=null){editingPWId=id;const p=id?PW.find(x=>x.id===id):null;document.getElementById('pwFormTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่มรหัสผ่าน';document.getElementById('pw-f-company').value=p?.company||'';document.getElementById('pw-f-alias').value=p?.alias?.join(', ')||'';document.getElementById('pw-f-url').value=p?.url||'';document.getElementById('pw-f-user').value=p?.username||'';document.getElementById('pw-f-pass').value=p?.password||'';document.getElementById('pw-f-note').value=p?.note||'';document.getElementById('pwFormModal').classList.add('open');}
 function genPass(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];document.getElementById('pw-f-pass').value=p;}
 function savePWForm(){
   const company=document.getElementById('pw-f-company').value.trim(),username=document.getElementById('pw-f-user').value.trim(),password=document.getElementById('pw-f-pass').value.trim();
   if(!company||!username||!password){alert('กรุณากรอกข้อมูลให้ครบ');return;}
   const aliasRaw=document.getElementById('pw-f-alias').value.trim();
-  const abbr=document.getElementById('pw-f-abbr').value.trim().toUpperCase()||undefined;
   const existing=editingPWId?PW.find(p=>p.id===editingPWId):null;
   const now3=Date.now();
-  // Auto-add abbr to alias if not already present
-  let aliasList=aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[];
-  if(abbr&&!aliasList.includes(abbr.toLowerCase())) aliasList.push(abbr.toLowerCase());
-  const item={id:editingPWId||nxtPWId(),company,abbr,alias:aliasList,url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined,_issueNumber:existing?._issueNumber,createdAt:existing?.createdAt||now3,updatedAt:now3,createdBy:existing?.createdBy||(currentUser?.name||''),updatedBy:currentUser?.name||''};
+  const item={id:editingPWId||nxtPWId(),company,alias:aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[],url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined,_issueNumber:existing?._issueNumber,createdAt:existing?.createdAt||now3,updatedAt:now3,createdBy:existing?.createdBy||(currentUser?.name||''),updatedBy:currentUser?.name||''};
   // Optimistic UI — ใหม่อยู่บนสุด
   if(editingPWId)PW=PW.map(p=>p.id===editingPWId?item:p);else PW.unshift(item);
   closeModal('pwFormModal');renderPWList();
@@ -2384,7 +2143,6 @@ function renderPWResult(r){
 
 // Keywords that trigger PW search in chatbot
 const PW_TRIGGERS=['user','รหัส','password','pass','pw','username','login','เข้าสู่ระบบ','ล็อกอิน'];
-const CO_TRIGGERS=['บริษัท','company','ติดต่อ','contact','เบอร์','โทร','ข้อมูลบริษัท'];
 
 function handleCommand(input){
   const q=input.trim(),cmd=q.split(' ')[0].toLowerCase(),arg=q.slice(cmd.length).trim();
@@ -2399,14 +2157,7 @@ function handleCommand(input){
   if(['/แก้ไข','/edit'].includes(cmd)){if(!arg){addMsg('bot','เช่น /แก้ไข dlt');return true;}const f=searchKB(arg);if(!f){addMsg('bot',`❌ ไม่พบ "${arg}"`);return true;}openAdmin();setTimeout(()=>openForm(f.id),100);return true;}
   if(['/export','/backup'].includes(cmd)){exportKBxlsx();addMsg('bot','📥 Export KB เป็น .xlsx แล้ว');return true;}
   if(['/งาน','/task'].includes(cmd)){openTaskPanel();return true;}
-  if(['/บริษัท','/company','/co'].includes(cmd)){
-    if(!arg){openCompanyMaster();return true;}
-    const coRes=searchCompany(arg);
-    if(!coRes.length){addMsg('bot',`🏢 ไม่พบบริษัท "${arg}"`);return true;}
-    addMsg('bot',`<h3>🏢 พบ ${coRes.length} บริษัท</h3>${renderCompanyResult(coRes)}`);
-    return true;
-  }
-  if(['/help','/?','/ช่วยเหลือ'].includes(cmd)){addMsg('bot',`<h3>📖 คำสั่ง</h3><div class="cmd-hint"><b>/เพิ่ม</b> — สอน chatbot | <b>/แก้ไข</b> — แก้ | <b>/ลบ</b> — ลบ<br><b>/ดู</b> — ดู KB | <b>/export</b> — xlsx | <b>/งาน</b> — เปิดติดตามงาน<br><b>/pw [บริษัท]</b> — password | <b>/บริษัท [ชื่อ]</b> — ข้อมูลบริษัท | <b>/ยกเลิก</b> — ยกเลิกสอน</div>`);return true;}
+  if(['/help','/?','/ช่วยเหลือ'].includes(cmd)){addMsg('bot',`<h3>📖 คำสั่ง</h3><div class="cmd-hint"><b>/เพิ่ม</b> — สอน chatbot | <b>/แก้ไข</b> — แก้ | <b>/ลบ</b> — ลบ<br><b>/ดู</b> — ดู KB | <b>/export</b> — xlsx | <b>/งาน</b> — เปิดติดตามงาน<br><b>/pw [บริษัท]</b> — password | <b>/ยกเลิก</b> — ยกเลิกสอน</div>`);return true;}
   return false;
 }
 
@@ -2417,54 +2168,165 @@ function sendMessage(){
   if(teachState){handleTeachInput(q);return;}
   if(q.startsWith('/')){if(!handleCommand(q))addMsg('bot',`ไม่รู้จักคำสั่ง <b>${q}</b> ลอง <b>/help</b>`);return;}
   showTyping();
+
+  // ตรวจ PW / Company triggers ก่อน (ไม่ต้องใช้ Gemini)
+  const ql = q.toLowerCase();
+  const hasPWTrigger = PW_TRIGGERS.some(t=>ql.includes(t));
+  const hasCoTrigger = typeof CO_TRIGGERS!=='undefined' && CO_TRIGGERS.some(t=>ql.includes(t));
+
+  if(hasPWTrigger){
+    let searchTerm=ql; PW_TRIGGERS.forEach(t=>{searchTerm=searchTerm.replace(t,'').trim();}); if(!searchTerm)searchTerm=ql;
+    const pwRes=searchPW(searchTerm);
+    if(pwRes.length){ removeTyping(); addMsg('bot',`<h3>🔑 พบ Password "${searchTerm}" — ${pwRes.length} รายการ</h3>${renderPWResult(pwRes)}`); return; }
+  }
+  if(hasCoTrigger){
+    let searchTerm=ql; CO_TRIGGERS.forEach(t=>{searchTerm=searchTerm.replace(t,'').trim();}); if(!searchTerm)searchTerm=ql;
+    const coRes=searchCompany(searchTerm);
+    if(coRes.length){ removeTyping(); addMsg('bot',`<h3>🏢 พบข้อมูลบริษัท — ${coRes.length} รายการ</h3>${renderCompanyResult(coRes)}`); return; }
+  }
+
+  // ถ้ามี Gemini API key — ใช้ RAG เสมอ
+  const geminiKey = getGeminiKey();
+  if(geminiKey){
+    (async()=>{
+      try{
+        const relatedKB = findRelevantKB(q, 3);
+        const answer = await askGemini(q);
+        removeTyping();
+        addMsg('bot', renderGeminiAnswer(answer, relatedKB));
+      }catch(err){
+        console.warn('Gemini error:', err.message);
+        removeTyping();
+        // Fallback to KB search
+        const r=searchKB(q);
+        if(r){ addMsg('bot',renderResult(r)+`<div style="font-size:10px;color:var(--muted);margin-top:6px">⚠️ Gemini ไม่พร้อม — แสดงผลจาก KB แทน</div>`); }
+        else { addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p>Gemini: ${err.message}</p><p style="font-size:12px">ลองพิมพ์ <b>/เพิ่ม</b> เพื่อสอน KB</p>`); }
+      }
+    })();
+    return;
+  }
+
+  // ไม่มี Gemini key — ใช้ KB search ปกติ
   setTimeout(()=>{
     removeTyping();
-    const ql = q.toLowerCase();
-
-    // 1. ตรวจ Company trigger ก่อน
-    const hasCoTrigger = CO_TRIGGERS.some(t => ql.includes(t));
-    if(hasCoTrigger){
-      let searchTerm = ql;
-      CO_TRIGGERS.forEach(t=>{ searchTerm=searchTerm.replace(t,'').trim(); });
-      if(!searchTerm) searchTerm=ql;
-      const coRes=searchCompany(searchTerm);
-      if(coRes.length){
-        addMsg('bot',`<h3>🏢 พบข้อมูลบริษัท "${searchTerm}" — ${coRes.length} รายการ</h3>${renderCompanyResult(coRes)}`);
-        return;
-      }
-    }
-
-    // 2. ตรวจ PW trigger
-    const hasPWTrigger = PW_TRIGGERS.some(t => ql.includes(t));
-    if(hasPWTrigger){
-      let searchTerm = ql;
-      PW_TRIGGERS.forEach(t => { searchTerm = searchTerm.replace(t,'').trim(); });
-      if(!searchTerm) searchTerm = ql;
-      const pwRes = searchPW(searchTerm);
-      if(pwRes.length){
-        addMsg('bot',`<h3>🔑 พบ Password "${searchTerm}" — ${pwRes.length} รายการ</h3>${renderPWResult(pwRes)}`);
-        return;
-      }
-    }
-
-    // 3. ค้น KB ปกติ — แต่ถ้าเป็นชื่อบริษัทใน COMPANY_MASTER ตรงๆ ให้แสดง company info ด้วย
-    const directCo = searchCompany(q);
-    if(directCo.length && q.length >= 2){
-      const r=searchKB(q);
-      const coHtml=`<h3>🏢 ข้อมูลบริษัท</h3>${renderCompanyResult(directCo.slice(0,3))}`;
-      r ? addMsg('bot', coHtml+'<hr style="margin:8px 0;border-color:#e2e8f0">'+renderResult(r))
-        : addMsg('bot', coHtml);
-      return;
-    }
-
-    // 4. ค้น KB
     const r=searchKB(q);
-    r?addMsg('bot',renderResult(r)):addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p>ลองถามด้วยคำอื่น หรือพิมพ์ <b>/เพิ่ม</b> เพื่อสอน chatbot</p><p style="font-size:12px;color:var(--muted)">💡 ค้นหาด้วย: <b>รหัส/บริษัท [ชื่อ]</b> | <b>ติดต่อ [บริษัท]</b></p>`);
+    r?addMsg('bot',renderResult(r)):addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p>ลองถามด้วยคำอื่น หรือพิมพ์ <b>/เพิ่ม</b> เพื่อสอน chatbot</p><p style="font-size:12px;color:var(--muted)">💡 เปิดใช้ Gemini AI ได้ที่ ⚙️ Settings → Gemini Key</p>`);
   },300);
 }
 function handleSugg(t){document.getElementById('userInput').value=t;sendMessage();}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,90)+'px';}
+
+/* ===== GEMINI RAG ===== */
+function getGeminiKey(){
+  const fromConfig = window.FW_CONFIG?.gemini_key;
+  if(fromConfig && fromConfig !== '__TOKEN_NOT_SET__') return fromConfig;
+  return localStorage.getItem('fw_gemini_key') || '';
+}
+function setGeminiKey(k){ localStorage.setItem('fw_gemini_key', k); }
+
+// Build RAG context from KB + Company Master
+function buildRAGContext(){
+  const kbText = KB.map(item=>{
+    let txt = `[${item.title}]\nKeywords: ${(item.keywords||[]).join(', ')}`;
+    if(item.answer) txt += `\nคำตอบ: ${item.answer}`;
+    if(item.steps?.length) txt += `\nขั้นตอน:\n${item.steps.map((s,i)=>`${i+1}. ${s}`).join('\n')}`;
+    if(item.extra) txt += `\nข้อมูลเพิ่มเติม: ${item.extra.replace(/<[^>]+>/g,'')}`;
+    if(item.links?.length) txt += `\nลิงก์: ${item.links.map(l=>`${l.title}: ${l.url}`).join(', ')}`;
+    return txt;
+  }).join('\n\n---\n\n');
+
+  const coText = COMPANY_MASTER.length
+    ? 'รายชื่อบริษัทลูกค้า:\n' + COMPANY_MASTER.map(c=>`- ${c.name}${c.abbr?' ('+c.abbr+')':''}${c.contacts?' ผู้ติดต่อ: '+c.contacts.replace(/\n/g,', ')':''}`).join('\n')
+    : '';
+
+  return `คุณคือ AI ผู้ช่วยของ FreeWill FX บริษัทพัฒนาระบบ Fleet Management (Terminus) และ GPS ติดตามรถ
+ตอบคำถามเป็นภาษาไทย กระชับ ชัดเจน และเป็นประโยชน์ ใช้ข้อมูลจาก Knowledge Base ด้านล่างเป็นหลัก
+ถ้าไม่พบในฐานข้อมูล ให้บอกตรงๆ และแนะนำวิธีหาข้อมูลเพิ่มเติม
+
+=== Knowledge Base ===
+${kbText}
+
+${coText ? '=== ข้อมูลบริษัทลูกค้า ===\n' + coText : ''}`;
+}
+
+// Score KB matches to find most relevant for citation
+function findRelevantKB(query, topN=3){
+  const q = query.toLowerCase();
+  const scored = KB.map(item=>{
+    let score = 0;
+    (item.keywords||[]).forEach(kw=>{ if(q.includes(kw.toLowerCase())||kw.toLowerCase().includes(q)) score+=3; });
+    if(item.title.toLowerCase().includes(q)) score+=2;
+    if(item.answer?.toLowerCase().includes(q)) score+=1;
+    return {item, score};
+  }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+  return scored.slice(0,topN).map(x=>x.item);
+}
+
+async function askGemini(question){
+  const key = getGeminiKey();
+  if(!key){ return null; }
+
+  const context = buildRAGContext();
+  const prompt = `${context}\n\n=== คำถาม ===\n${question}`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+    {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        contents: [{parts: [{text: prompt}]}],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 800,
+          topP: 0.8
+        },
+        safetySettings: [
+          {category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_NONE'},
+          {category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_NONE'}
+        ]
+      })
+    }
+  );
+
+  if(!res.ok){
+    const err = await res.json().catch(()=>({}));
+    throw new Error(`Gemini API ${res.status}: ${err?.error?.message||res.statusText}`);
+  }
+
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text) throw new Error('Gemini ไม่ส่งคำตอบกลับมา');
+  return text;
+}
+
+function renderGeminiAnswer(text, relatedKB=[]){
+  // Convert markdown-ish to HTML
+  let html = text
+    .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+    .replace(/\*(.+?)\*/g,'<i>$1</i>')
+    .replace(/`(.+?)`/g,'<code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:11px">$1</code>')
+    .replace(/^#{1,3}\s+(.+)$/gm,'<div style="font-weight:700;margin-top:8px;margin-bottom:3px">$1</div>')
+    .replace(/^\d+\.\s+(.+)$/gm,'<div class="step"><div class="snum" style="background:var(--primary);color:#fff;min-width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center">•</div><div style="font-size:12px">$1</div></div>')
+    .replace(/^[-•]\s+(.+)$/gm,'<div style="display:flex;gap:6px;margin-bottom:3px"><span style="color:var(--primary)">▸</span><span style="font-size:12px">$1</span></div>')
+    .replace(/\n\n/g,'<br>')
+    .replace(/\n/g,'<br>');
+
+  let footer = '';
+  if(relatedKB.length){
+    footer = `<div style="margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);margin-bottom:5px">📚 แหล่งข้อมูลที่เกี่ยวข้อง</div>
+      ${relatedKB.map(k=>`<div style="font-size:11px;background:var(--primary-light);border-radius:6px;padding:4px 8px;margin-bottom:3px;color:var(--primary-dark)">📖 ${k.title}</div>`).join('')}
+    </div>`;
+  }
+
+  const badge = `<div style="display:inline-flex;align-items:center;gap:4px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;color:#065f46;margin-bottom:8px">
+    ✨ Gemini AI
+  </div>`;
+
+  return `<div>${badge}<div style="font-size:13px;line-height:1.7">${html}</div>${footer}</div>`;
+}
 
 /* ===== SUGGESTIONS ===== */
 const SUGGS=['📋 งานช่าง daily','⚡ Event/PTO','🏛️ DLT masterfile','📡 Device Code','📷 กล้อง ESP เสีย','🛰️ เช็คแบตสำรอง'];
@@ -2507,13 +2369,12 @@ function clearSession() { localStorage.removeItem(SESSION_KEY); }
 function slKey(uid) { return `fw_sl_${uid}`; }
 
 /* --- Init Login --- */
-async function initApp() {
-  // Show splash/loading first
+function initApp() {
+  applySettings();
   buildSuggs();
   updateTaskBadge();
 
-  // 1) Apply local-cached settings immediately so UI doesn't flicker blank
-  applySettings();
+  // Apply logo to login screen
   const ls = SETTINGS;
   const ll = document.getElementById('loginLogo');
   const llp = document.getElementById('loginLogoPin');
@@ -2527,30 +2388,7 @@ async function initApp() {
   }
   lt.textContent = ls.title || 'FreeWill FX Support';
 
-  // 2) Try to load USERS & SETTINGS from GitHub before showing login screen
-  //    This is critical so users created on machine A appear on machine B
-  if(getGHToken()){
-    try {
-      const [remoteUsers, remoteSettings] = await Promise.all([
-        ghUsersGet().catch(()=>null),
-        ghSettingsGet().catch(()=>null)
-      ]);
-      if(remoteUsers && Array.isArray(remoteUsers) && remoteUsers.length){
-        USERS = remoteUsers;
-        saveData(USERS_KEY, USERS); // cache locally for next time / offline
-      } else {
-        // No remote users yet — push current local users so other machines can see them
-        ghUsersSave(USERS).catch(e=>console.warn('seed users to GH:',e.message));
-      }
-      if(remoteSettings){
-        SETTINGS = { ...SETTINGS, ...remoteSettings };
-        saveSettings();
-        applySettings();
-      }
-    } catch(e){ console.warn('initial sync failed:', e.message); }
-  }
-
-  // 3) Check existing session (same tab session)
+  // Check existing session (same tab session)
   const sess = loadSession();
   if (sess) {
     const u = USERS.find(x => x.id === sess.id);
@@ -2644,24 +2482,13 @@ function loginSuccess(user) {
   saveSession(user);
   document.getElementById('loginScreen').classList.add('hidden');
 
-  // Load this user's Quick Links from local cache first (fast paint)
+  // Load this user's Quick Links
   const userSLData = loadData(slKey(user.id), null);
   SL = userSLData || JSON.parse(JSON.stringify(DEFAULT_SL));
 
   buildSidebar();
   updateUserChip();
   renderChatTabs();
-
-  // Then try to fetch latest from GitHub (other-machine sync)
-  if(getGHToken()){
-    ghUserSLGet().then(slMap=>{
-      if(slMap && slMap[user.id]){
-        SL = slMap[user.id];
-        saveData(slKey(user.id), SL);
-        buildSidebar();
-      }
-    }).catch(()=>{/* offline ok */});
-  }
 }
 
 function updateUserChip() {
@@ -2688,27 +2515,12 @@ function doLogout() {
   showLoginStep(1);
 }
 
-/* --- Override saveSL to use per-user key, then sync to GitHub --- */
-let _slSaveDebounce = null;
+/* --- Override saveSL to use per-user key --- */
 function saveDataSL() {
   if (currentUser) {
     saveData(slKey(currentUser.id), SL);
   } else {
     saveData(SL_KEY, SL);
-  }
-  // Debounced sync to GitHub: build the full per-user map from local copies
-  if(currentUser && getGHToken()){
-    clearTimeout(_slSaveDebounce);
-    _slSaveDebounce = setTimeout(async ()=>{
-      try {
-        // Start from remote map so we don't lose other users' edits
-        const remoteMap = await ghUserSLGet().catch(()=>null) || {};
-        remoteMap[currentUser.id] = SL;
-        syncStart();
-        await ghUserSLSave(remoteMap);
-        syncDone();
-      } catch(e){ syncError(e); }
-    }, 1500);
   }
 }
 
@@ -2723,116 +2535,33 @@ function openUserMenu() {
 
 function openUserMgmt() {
   if (!currentUser) return;
+  // show admin tools only for admin
   document.getElementById('umAdminTools').style.display = currentUser.role === 'admin' ? 'flex' : 'none';
-  // Current user avatar
-  const av = document.getElementById('umCurAv');
-  if(currentUser.avatarImg){
-    av.innerHTML=`<img src="${currentUser.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    av.style.background='transparent';
-  } else {
-    av.textContent = currentUser.emoji || currentUser.name[0].toUpperCase();
-    av.style.background = userColor(currentUser.id);
-  }
+  document.getElementById('umCurAv').textContent = currentUser.emoji || currentUser.name[0].toUpperCase();
+  document.getElementById('umCurAv').style.background = userColor(currentUser.id);
   document.getElementById('umCurName').textContent = currentUser.name;
   document.getElementById('umCurRole').textContent = currentUser.role === 'admin' ? '⚙️ Admin' : '👤 User';
-  // Email link
-  const emailDiv = document.getElementById('umCurEmail');
-  if(currentUser.email){
-    emailDiv.style.display='block';
-    document.getElementById('umCurEmailLink').href=`https://mail.google.com/mail/u/0/?view=cm&to=${currentUser.email}`;
-    document.getElementById('umCurEmailTxt').textContent=currentUser.email;
-  } else { emailDiv.style.display='none'; }
   renderUMList();
   document.getElementById('userMgmtOverlay').classList.add('open');
 }
 
 function renderUMList() {
   const isAdmin = currentUser?.role === 'admin';
-  const total = USERS.length;
-  const tc = document.getElementById('umTeamCount');
-  if(tc) tc.textContent = total + ' คน';
-
-  document.getElementById('umUserList').innerHTML = USERS.map(u => {
-    const isSelf = u.id === currentUser?.id;
-    const color = userColor(u.id);
-    // Avatar HTML
-    let avHtml = '';
-    if(u.avatarImg){
-      avHtml = `<img src="${u.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    } else if(u.pixelData){
-      avHtml = `<canvas width="64" height="64" style="width:100%;height:100%;border-radius:50%;image-rendering:pixelated" data-uid="${u.id}-card"></canvas>`;
-    } else {
-      avHtml = `<span style="font-size:28px">${u.emoji||u.name[0].toUpperCase()}</span>`;
-    }
-    return `<div style="background:#fff;border:1.5px solid ${isSelf?'var(--primary)':'var(--border)'};border-radius:14px;padding:18px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:box-shadow .12s;position:relative" onclick="showUserDetail('${u.id}')" class="um-card" title="คลิกดูรายละเอียด">
-      ${isSelf?'<div style="position:absolute;top:8px;right:8px;font-size:9px;background:var(--primary);color:#fff;padding:1px 6px;border-radius:8px">คุณ</div>':''}
-      <div style="width:64px;height:64px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid ${color}22;flex-shrink:0">${avHtml}</div>
-      <div style="text-align:center">
-        <div style="font-size:13px;font-weight:700;color:var(--text)">${u.name}</div>
-        <div style="margin-top:3px"><span class="role-badge ${u.role||'user'}">${u.role==='admin'?'⚙️ Admin':'👤 User'}</span></div>
-        ${u.email?`<div style="font-size:10px;color:var(--muted);margin-top:3px">📧 ${u.email}</div>`:''}
-        ${u.phone?`<div style="font-size:10px;color:var(--muted)">📱 ${u.phone}</div>`:''}
+  document.getElementById('umUserList').innerHTML = USERS.map(u => `
+    <div class="um-item">
+      <div class="um-av" style="background:${userColor(u.id)}">${u.emoji || u.name[0].toUpperCase()}</div>
+      <div class="um-info">
+        <div class="um-name">${u.name} ${u.id === currentUser?.id ? '<span style="font-size:10px;color:var(--muted)">(คุณ)</span>' : ''}</div>
+        <div class="um-role">
+          <span class="role-badge ${u.role}">${u.role === 'admin' ? '⚙️ Admin' : '👤 User'}</span>
+          <span class="um-pin-badge" style="margin-left:4px">PIN: ••••</span>
+        </div>
       </div>
-      ${isAdmin?`<div style="display:flex;gap:5px;margin-top:4px" onclick="event.stopPropagation()">
-        <button class="btn-edit" onclick="openEditUser('${u.id}')">✏️ แก้ไข</button>
-        ${u.id!==currentUser?.id?`<button class="btn-del" onclick="deleteUser('${u.id}')">🗑️</button>`:''}
-      </div>`:''}
-    </div>`;
-  }).join('');
-
-  // Render pixel art canvases after DOM update
-  setTimeout(()=>{
-    USERS.forEach(u=>{
-      if(u.pixelData){
-        const c = document.querySelector(`[data-uid="${u.id}-card"]`);
-        if(c) renderPixelToCanvas(u.pixelData, c);
-      }
-    });
-  }, 50);
-}
-
-function showUserDetail(uid){
-  const u = USERS.find(x=>x.id===uid);
-  if(!u) return;
-  const isAdmin = currentUser?.role==='admin';
-  const color = userColor(u.id);
-  let avHtml='';
-  if(u.avatarImg) avHtml=`<img src="${u.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-  else if(u.pixelData) avHtml=`<canvas id="detail-av-canvas" width="80" height="80" style="width:80px;height:80px;border-radius:50%;image-rendering:pixelated"></canvas>`;
-  else avHtml=`<span style="font-size:36px">${u.emoji||u.name[0].toUpperCase()}</span>`;
-
-  const html=`<div style="text-align:center;padding:20px 0 10px">
-    <div style="width:80px;height:80px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;overflow:hidden;margin:0 auto 10px;border:3px solid ${color}44">${avHtml}</div>
-    <div style="font-size:16px;font-weight:700">${u.name}</div>
-    <div style="margin-top:4px"><span class="role-badge ${u.role||'user'}">${u.role==='admin'?'⚙️ Admin':'👤 User'}</span></div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:7px;padding:10px 16px 16px">
-    ${u.email?`<div style="display:flex;align-items:center;gap:8px;font-size:13px">📧 <a href="https://mail.google.com/mail/u/0/?view=cm&to=${u.email}" target="_blank" style="color:var(--primary)">${u.email}</a></div>`:''}
-    ${u.phone?`<div style="font-size:13px">📱 ${u.phone}</div>`:''}
-    ${u.break1?`<div style="font-size:13px">⏰ เวลาพัก: ${u.break1} น.</div>`:''}
-  </div>`;
-
-  // show in a simple confirm-style modal
-  const existing = document.getElementById('_userDetailModal');
-  if(existing) existing.remove();
-  const modal = document.createElement('div');
-  modal.id='_userDetailModal';
-  modal.className='modal-overlay open';
-  modal.innerHTML=`<div class="modal" style="max-width:340px">
-    <div class="modal-hdr"><h3>👤 รายละเอียดผู้ใช้</h3><button class="close-btn" onclick="document.getElementById('_userDetailModal').remove()">×</button></div>
-    <div>${html}</div>
-    <div class="modal-footer">
-      ${isAdmin?`<button class="btn btn-primary" onclick="document.getElementById('_userDetailModal').remove();openEditUser('${uid}')">✏️ แก้ไข</button>`:''}
-      <button class="btn btn-ghost" onclick="document.getElementById('_userDetailModal').remove()">ปิด</button>
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
-  if(u.pixelData){
-    setTimeout(()=>{
-      const c=document.getElementById('detail-av-canvas');
-      if(c) renderPixelToCanvas(u.pixelData,c);
-    },50);
-  }
+      ${isAdmin ? `
+        <button class="btn-edit" onclick="openEditUser('${u.id}')">✏️</button>
+        ${u.id !== currentUser?.id ? `<button class="btn-del" onclick="deleteUser('${u.id}')">🗑️</button>` : ''}
+      ` : ''}
+    </div>`).join('');
 }
 
 function openAddUserModal() {
@@ -2903,11 +2632,6 @@ function saveUserForm() {
   closeModal('addUserModal');
   renderUMList(); buildUserGrid();
   showToast(editingUserId ? '✅ แก้ไขแล้ว!' : '✅ เพิ่มผู้ใช้แล้ว!');
-  // Push to GitHub so other machines see this change
-  if(getGHToken()){
-    syncStart();
-    ghUsersSave(USERS).then(syncDone).catch(syncError);
-  }
 }
 
 function deleteUser(uid) {
@@ -2919,10 +2643,6 @@ function deleteUser(uid) {
   renderUMList();
   buildUserGrid();
   showToast('🗑️ ลบแล้ว');
-  if(getGHToken()){
-    syncStart();
-    ghUsersSave(USERS).then(syncDone).catch(syncError);
-  }
 }
 
 function openChangePinSelf() {
@@ -2942,182 +2662,6 @@ function savePinChange() {
   saveData(USERS_KEY, USERS);
   closeModal('changePinModal');
   showToast('✅ เปลี่ยน PIN แล้ว!');
-  if(getGHToken()){
-    syncStart();
-    ghUsersSave(USERS).then(syncDone).catch(syncError);
-  }
-}
-
-/* ===== COMPANY MASTER ===== */
-const CO_KEY = 'fw_companies_master_v1';
-const CO_GH_LABEL = 'company-master';
-let COMPANY_MASTER = loadData(CO_KEY, [
-  {id:1, name:'SCCO (สยามซิตี้ซีเมนต์)', abbr:'SCCO', contacts:'', note:''},
-  {id:2, name:'CPAC', abbr:'CPAC', contacts:'', note:''},
-  {id:3, name:'กรมการขนส่งทางบก', abbr:'DLT', contacts:'', note:''},
-  {id:4, name:'ORC', abbr:'ORC', contacts:'', note:''},
-]);
-let editingCoId = null;
-let _coGHIssueNum = null;
-
-function nxtCoId(){ return Math.max(...COMPANY_MASTER.map(c=>c.id||0),0)+1; }
-
-// Sync Company master names into COMPANIES array (for task autocomplete)
-function syncCompaniesToTasks(){
-  COMPANY_MASTER.forEach(c=>{
-    const name = c.abbr || c.name;
-    if(name && !COMPANIES.includes(name)) COMPANIES.push(name);
-    if(c.name && !COMPANIES.includes(c.name)) COMPANIES.push(c.name);
-  });
-  saveData(COMPANIES_KEY, COMPANIES);
-}
-
-async function loadCoFromGH(){
-  if(!getGHToken()) return;
-  try{
-    const issues = await ghFetch(`/issues?labels=${CO_GH_LABEL}&state=open&per_page=3`);
-    if(issues.length){
-      _coGHIssueNum = issues[0].number;
-      const d = ghDecode(issues[0].body);
-      if(d && Array.isArray(d)){
-        COMPANY_MASTER = d;
-        saveData(CO_KEY, COMPANY_MASTER);
-        syncCompaniesToTasks();
-        renderCompanyList();
-      }
-    }
-  }catch(e){ console.warn('Company load GH:', e.message); }
-}
-
-async function saveCoToGH(){
-  saveData(CO_KEY, COMPANY_MASTER);
-  syncCompaniesToTasks();
-  if(!getGHToken()) return;
-  syncStart();
-  const body = ghEncode(COMPANY_MASTER);
-  const title = 'Company Master';
-  try{
-    if(_coGHIssueNum){
-      await ghFetch(`/issues/${_coGHIssueNum}`,{method:'PATCH',body:{title,body}});
-    } else {
-      const created = await ghFetch('/issues',{method:'POST',body:{title,body,labels:[CO_GH_LABEL]}});
-      _coGHIssueNum = created.number;
-    }
-    syncDone();
-  }catch(e){ syncError(e); }
-}
-
-function openCompanyMaster(){
-  renderCompanyList();
-  document.getElementById('companyOverlay').classList.add('open');
-  loadCoFromGH();
-}
-
-function renderCompanyList(){
-  const q = (document.getElementById('coSearch')?.value||'').toLowerCase();
-  const list = COMPANY_MASTER.filter(c=>!q||
-    c.name.toLowerCase().includes(q)||
-    (c.abbr||'').toLowerCase().includes(q)||
-    (c.contacts||'').toLowerCase().includes(q));
-  document.getElementById('co-total').textContent = `${COMPANY_MASTER.length} บริษัท`;
-  document.getElementById('coList').innerHTML = list.length
-    ? list.map(c=>`<div class="co-item">
-        <div class="co-row">
-          <div class="co-name">${c.name}</div>
-          <div class="co-abbr">${c.abbr||'-'}</div>
-          <div class="co-contact">${(c.contacts||'-').replace(/\n/g,' · ')}</div>
-          <div style="display:flex;gap:5px">
-            <button class="btn-edit" onclick="openCoForm(${c.id})">✏️</button>
-            <button class="btn-del" onclick="deleteCompany(${c.id})">🗑️</button>
-          </div>
-        </div>
-      </div>`).join('')
-    : '<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';
-}
-
-function openCoForm(id=null){
-  editingCoId = id;
-  const c = id ? COMPANY_MASTER.find(x=>x.id===id) : null;
-  document.getElementById('coFormTitle').textContent = id ? '✏️ แก้ไขบริษัท' : '➕ เพิ่มบริษัท';
-  document.getElementById('co-f-name').value = c?.name||'';
-  document.getElementById('co-f-abbr').value = c?.abbr||'';
-  document.getElementById('co-f-contacts').value = c?.contacts||'';
-  document.getElementById('co-f-note').value = c?.note||'';
-  document.getElementById('coFormModal').classList.add('open');
-}
-
-function saveCoForm(){
-  const name = document.getElementById('co-f-name').value.trim();
-  const abbr = document.getElementById('co-f-abbr').value.trim().toUpperCase();
-  if(!name){ alert('กรุณากรอกชื่อบริษัท'); return; }
-  const item = {
-    id: editingCoId || nxtCoId(),
-    name, abbr,
-    contacts: document.getElementById('co-f-contacts').value.trim(),
-    note: document.getElementById('co-f-note').value.trim(),
-    updatedAt: Date.now(),
-    updatedBy: currentUser?.name||''
-  };
-  if(editingCoId) COMPANY_MASTER = COMPANY_MASTER.map(c=>c.id===editingCoId?item:c);
-  else COMPANY_MASTER.unshift(item);
-  closeModal('coFormModal');
-  renderCompanyList();
-  saveCoToGH();
-  showToast(editingCoId?'✅ แก้ไขแล้ว!':'✅ เพิ่มบริษัทแล้ว!');
-}
-
-function deleteCompany(id){
-  const c = COMPANY_MASTER.find(x=>x.id===id);
-  if(!confirm(`ลบ "${c?.name}"?`)) return;
-  COMPANY_MASTER = COMPANY_MASTER.filter(x=>x.id!==id);
-  renderCompanyList();
-  saveCoToGH();
-  showToast('🗑️ ลบแล้ว');
-}
-
-function exportCoXlsx(){
-  const rows=[['id','ชื่อบริษัท','ชื่อย่อ','ผู้ติดต่อ','หมายเหตุ']];
-  COMPANY_MASTER.forEach(c=>rows.push([c.id,c.name,c.abbr||'',c.contacts||'',c.note||'']));
-  const ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:5},{wch:40},{wch:12},{wch:40},{wch:25}];
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'Companies');
-  XLSX.writeFile(wb,'company_master.xlsx');
-}
-
-function importCoXlsx(e){
-  const f=e.target.files[0]; if(!f) return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    try{
-      const wb=XLSX.read(ev.target.result,{type:'binary'});
-      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1}).slice(1).filter(r=>r[1]);
-      const data=rows.map((r,i)=>({id:parseInt(r[0])||Date.now()+i,name:r[1],abbr:r[2]||'',contacts:r[3]||'',note:r[4]||''}));
-      if(confirm(`Import ${data.length} บริษัท?`)){
-        COMPANY_MASTER=data; renderCompanyList(); saveCoToGH();
-        showToast('✅ Import สำเร็จ!');
-      }
-    }catch(err){alert('❌ '+err.message);}
-  };
-  r.readAsBinaryString(f); e.target.value='';
-}
-
-// Search company in chatbot
-function searchCompany(q){
-  const nq = q.toLowerCase().replace(/\s/g,'');
-  return COMPANY_MASTER.filter(c=>
-    c.name.toLowerCase().replace(/\s/g,'').includes(nq)||
-    (c.abbr||'').toLowerCase().includes(nq)||
-    (c.contacts||'').toLowerCase().includes(nq)
-  );
-}
-
-function renderCompanyResult(list){
-  return list.map(c=>`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 12px;margin-bottom:6px">
-    <div style="font-weight:700;color:#065f46;font-size:13px">🏢 ${c.name} ${c.abbr?`<span style="background:#d1fae5;padding:1px 6px;border-radius:4px;font-size:10px">${c.abbr}</span>`:''}</div>
-    ${c.contacts?`<div style="font-size:12px;margin-top:5px;color:#374151;white-space:pre-line">${c.contacts}</div>`:''}
-    ${c.note?`<div style="font-size:11px;color:var(--muted);margin-top:3px">📝 ${c.note}</div>`:''}
-  </div>`).join('');
 }
 
 /* ===== NOTIFICATION SYSTEM ===== */
@@ -3821,11 +3365,9 @@ document.addEventListener('click', e=>{
     document.getElementById('weatherPopup').classList.remove('open');
     _weatherPopupOpen=false;
   }
-  // Calendar: ปิดเฉพาะคลิกนอก popup จริงๆ
-  // ใช้ composedPath() เพราะ cal-day re-render ทำให้ element หลุดจาก DOM ก่อน bubble
-  const path = e.composedPath ? e.composedPath() : [];
-  const inCal = path.some(el=>el.id==='calPopup'||el.id==='calBtn'||el.id==='evFormModal'||el.id==='_userDetailModal');
-  if(!inCal){
+  // Calendar: ปิดเฉพาะเมื่อคลิกนอก popup และนอกปุ่ม
+  // ไม่ปิดเมื่อคลิก evFormModal (event form)
+  if(!e.target.closest('#calPopup')&&!e.target.closest('#calBtn')&&!e.target.closest('#evFormModal')){
     document.getElementById('calPopup').classList.remove('open');
   }
 });
@@ -4053,80 +3595,59 @@ function delCalEvent(id){
   showToast('🗑️ ลบแล้ว');
 }
 
-/* ===== GITHUB TOKEN SETUP ===== */
-function saveGHToken(){
-  const t = document.getElementById('gh-token-input').value.trim();
-  if(!t){ alert('กรุณากรอก Token'); return; }
-  setGHToken(t);
-  updateTokenBadge();
-  closeModal('tokenModal');
-  showToast('✅ บันทึก Token แล้ว — ข้อมูลจะ sync กับ GitHub Issues');
-  // Re-init labels after token set
-  setTimeout(()=>ghEnsureLabels(), 500);
-}
-
-async function testGHToken(){
-  const t = document.getElementById('gh-token-input').value.trim();
-  const res = document.getElementById('tokenTestResult');
-  res.style.display = 'block';
-  res.style.background = '#f1f5f9';
-  res.style.border = '1px solid #e2e8f0';
-  res.style.color = '#64748b';
-  res.textContent = '🔄 กำลังทดสอบ...';
-  try {
-    const r = await fetch(`https://api.github.com/repos/${GH_REPO}`, {
-      headers: { 'Authorization': `token ${t}`, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    const data = await r.json();
-    if(r.ok){
-      res.style.background = '#f0fdf4'; res.style.border = '1px solid #bbf7d0'; res.style.color = '#065f46';
-      res.textContent = `✅ Token ใช้งานได้! Repo: ${data.full_name} (${data.private?'Private':'Public'})`;
-    } else {
-      res.style.background = '#fef2f2'; res.style.border = '1px solid #fecaca'; res.style.color = '#991b1b';
-      res.textContent = `❌ Token ผิด: ${data.message}`;
-    }
-  } catch(e){
-    res.style.background = '#fef2f2'; res.style.border = '1px solid #fecaca'; res.style.color = '#991b1b';
-    res.textContent = `❌ Error: ${e.message}`;
-  }
-}
-
-/* ===== GITHUB TOKEN SETUP ===== */
+/* ===== API KEY SETUP (GitHub + Gemini) ===== */
 function updateTokenBadge(){
   const t = getGHToken();
+  const gk = getGeminiKey();
   const badge = document.getElementById('tokenBadge');
-  const btn   = document.getElementById('tokenBtn');
+  const gbadge = document.getElementById('geminiBadge');
+  const btn = document.getElementById('tokenBtn');
   if(!badge) return;
+  // GitHub badge
   if(t && t !== '__TOKEN_NOT_SET__'){
-    badge.textContent='✓';
-    badge.className='token-badge set';
-    // Hide button if config.js loaded successfully (token auto-configured)
+    badge.textContent='GH ✓'; badge.className='token-badge set';
     if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== '__TOKEN_NOT_SET__'){
       if(btn) btn.style.display='none';
     }
   } else {
-    badge.textContent='ยังไม่ตั้ง';
-    badge.className='token-badge unset';
+    badge.textContent='GH'; badge.className='token-badge unset';
+    if(btn) btn.style.display='flex';
+  }
+  // Gemini badge
+  if(gbadge){
+    if(gk){ gbadge.textContent='AI ✓'; gbadge.className='token-badge set'; }
+    else { gbadge.textContent='AI'; gbadge.className='token-badge unset'; }
+    // Always show button if either key missing
+    if(!gk && btn) btn.style.display='flex';
   }
 }
 
 function openTokenSetup(){
   const t = getGHToken();
+  const gk = getGeminiKey();
   document.getElementById('gh-token-input').value = (t && t !== '__TOKEN_NOT_SET__') ? t : '';
   document.getElementById('gh-token-input').type = 'password';
+  document.getElementById('gemini-key-input').value = gk || '';
+  document.getElementById('gemini-key-input').type = 'password';
   document.getElementById('tokenTestResult').style.display = 'none';
+  document.getElementById('geminiTestResult').style.display = 'none';
   document.getElementById('tokenModal').classList.add('open');
 }
 
-function saveGHToken(){
-  const t = document.getElementById('gh-token-input').value.trim();
-  if(!t){ alert('กรุณากรอก Token'); return; }
-  setGHToken(t);
+function saveAllTokens(){
+  const gh = document.getElementById('gh-token-input').value.trim();
+  const gk = document.getElementById('gemini-key-input').value.trim();
+  if(gh) setGHToken(gh);
+  if(gk) setGeminiKey(gk);
   updateTokenBadge();
   closeModal('tokenModal');
-  showToast('✅ บันทึก Token แล้ว');
-  setTimeout(()=>ghEnsureLabels(), 500);
+  const saved = [gh?'GitHub Token':'', gk?'Gemini Key':''].filter(Boolean).join(' + ');
+  showToast(`✅ บันทึก ${saved} แล้ว`);
+  if(gh) setTimeout(()=>ghEnsureLabels(), 500);
 }
+
+// Keep backward compat
+function saveGHToken(){ saveAllTokens(); }
 
 async function testGHToken(){
   const t = document.getElementById('gh-token-input').value.trim();
@@ -4135,9 +3656,30 @@ async function testGHToken(){
   try{
     const r = await fetch(`https://api.github.com/repos/${GH_REPO}`,{headers:{'Authorization':`token ${t}`,'Accept':'application/vnd.github.v3+json'}});
     const d = await r.json();
-    if(r.ok){ res.style.background='#f0fdf4'; res.style.border='1px solid #bbf7d0'; res.style.color='#065f46'; res.textContent=`✅ Token ใช้งานได้! Repo: ${d.full_name}`; }
-    else { res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ Token ผิด: ${d.message}`; }
-  }catch(e){ res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ Error: ${e.message}`; }
+    if(r.ok){ res.style.background='#f0fdf4'; res.style.border='1px solid #bbf7d0'; res.style.color='#065f46'; res.textContent=`✅ GitHub OK — Repo: ${d.full_name}`; }
+    else { res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ ${d.message}`; }
+  }catch(e){ res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ ${e.message}`; }
+}
+
+async function testGeminiKey(){
+  const k = document.getElementById('gemini-key-input').value.trim();
+  const res = document.getElementById('geminiTestResult');
+  res.style.display='block'; res.style.background='#f1f5f9'; res.style.border='1px solid #e2e8f0'; res.style.color='#64748b'; res.textContent='🔄 กำลังทดสอบ Gemini...';
+  try{
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${k}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({contents:[{parts:[{text:'ตอบว่า "OK" เป็นภาษาไทย'}]}]})
+    });
+    const d = await r.json();
+    if(r.ok){
+      const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text||'OK';
+      res.style.background='#f0fdf4'; res.style.border='1px solid #bbf7d0'; res.style.color='#065f46';
+      res.textContent=`✅ Gemini พร้อมใช้งาน! ตอบว่า: "${txt.trim()}"`;
+    } else {
+      res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b';
+      res.textContent=`❌ ${d?.error?.message||r.status}`;
+    }
+  }catch(e){ res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ ${e.message}`; }
 }
 
 /* ===== INIT ===== */
@@ -4171,9 +3713,6 @@ loadConfig().then(()=>{
   setTimeout(()=>loadCalEvents(), 1000);
   // Init notifications
   loadNotifications();
-  // Init company master (sync & task autocomplete)
-  syncCompaniesToTasks();
-  setTimeout(()=>loadCoFromGH(), 1200);
   // Init chat (poll every 60s)
   setTimeout(()=>loadChatMsgs(), 1500);
   setInterval(()=>{ if(!_chatOpen) loadChatMsgs(); }, 60000);
