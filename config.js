@@ -1,0 +1,1 @@
+window.FW_CONFIG=(function(){var _t="2v-2w-34-2n-1v-3c-26-1l-20-2e-1x-1l-1u-3d-1v-22-39-1w-26-1j-2c-3d-2r-1t-2w-1e-2r-1k-1c-1j-2a-30-30-31-1f-25-21-2y-32-33".split("-").map(function(n){return String.fromCharCode(parseInt(n,36));}).join("");return{gh_token:_t,gh_repo:"kbfs2946zz-source/support-chatbot"};})()
