@@ -706,10 +706,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
             onblur="setTimeout(()=>closeAC('t-pic-dd'),200)">
           <div class="ac-dropdown" id="t-pic-dd"></div>
         </div>
-        <div style="display:flex;gap:5px;margin-top:5px">
-          <input type="text" id="t-new-pic" placeholder="เพิ่มสมาชิกทีมใหม่..." style="flex:1;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none">
-          <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px" onclick="addNewPIC()">+ เพิ่ม</button>
-        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">รายชื่อ sync กับ User ในระบบ</div>
       </div>
       <!-- สถานะ -->
       <div class="field">
@@ -828,7 +825,17 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   <div class="modal">
     <div class="modal-hdr pw-modal-hdr"><h3 id="pwFormTitle">➕ เพิ่มรหัสผ่าน</h3><button class="close-btn" onclick="closeModal('pwFormModal')">×</button></div>
     <div class="modal-body">
-      <div class="field"><label>ชื่อบริษัท *</label><input type="text" id="pw-f-company"></div>
+      <div class="field">
+        <label>ชื่อบริษัท *</label>
+        <div class="ac-wrap">
+          <input type="text" id="pw-f-company" placeholder="พิมพ์หรือเลือกจาก Master บริษัท..." autocomplete="off"
+            oninput="acSearchCo(this.value)"
+            onfocus="acSearchCo(this.value)"
+            onblur="setTimeout(()=>closeAC('pw-co-dd'),200)">
+          <div class="ac-dropdown" id="pw-co-dd"></div>
+        </div>
+      </div>
+      <div class="field"><label>ชื่อย่อบริษัท</label><input type="text" id="pw-f-abbr" placeholder="เช่น SCCO, DLT" style="text-transform:uppercase"><div class="hint">ดึงอัตโนมัติจาก Master บริษัท หรือกรอกเอง</div></div>
       <div class="field"><label>Alias (comma)</label><input type="text" id="pw-f-alias" placeholder="scco, สยาม"><div class="hint">ใช้ค้นหาด้วย /pw [alias]</div></div>
       <div class="field"><label>URL</label><input type="text" id="pw-f-url" placeholder="https://..."></div>
       <div class="field"><label>Username *</label><input type="text" id="pw-f-user" autocomplete="off"></div>
@@ -1637,7 +1644,9 @@ function renderTasks(){
   document.getElementById('task-total').textContent=`${all} งาน`;
   // pic filter
   const cur=pf;
-  document.getElementById('taskFilterPIC').innerHTML='<option value="">👤 ทุกคน</option>'+TEAM.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
+  // Filter PIC sync กับ USERS list
+  const allPICs = getUserNames();
+  document.getElementById('taskFilterPIC').innerHTML='<option value="">👤 ทุกคน</option>'+allPICs.map(m=>`<option value="${m}" ${m===cur?'selected':''}>${m}</option>`).join('');
 
   const getList=(status)=>TASKS.filter(t=>{
     if(status&&t.status!==status)return false;
@@ -1875,9 +1884,14 @@ function renderImgPreview(){document.getElementById('t-img-list').innerHTML=task
 function openLightbox(src){document.getElementById('lightboxImg').src=src;document.getElementById('lightbox').classList.add('open');}
 function closeLightbox(){document.getElementById('lightbox').classList.remove('open');}
 
+function getUserNames(){ return USERS.map(u=>u.name); }
 function acSearch(val,ddId,dataKey,onSelect){
   const dd=document.getElementById(ddId);
-  const data=dataKey==='COMPANIES'?COMPANIES:TEAM;
+  // TEAM ให้ sync กับ USERS list เสมอ
+  let data;
+  if(dataKey==='TEAM') data=getUserNames();
+  else if(dataKey==='COMPANIES') data=COMPANIES;
+  else data=TEAM;
   const q=val.toLowerCase();
   const filtered=q?data.filter(d=>d.toLowerCase().includes(q)):data;
   if(!filtered.length){dd.classList.remove('open');return;}
@@ -2113,7 +2127,7 @@ function renderPWList(){
   if(!list.length){document.getElementById('pwList').innerHTML='<div style="text-align:center;padding:40px;color:var(--muted)">ไม่พบ</div>';return;}
   // Sort newest first
   const sortedPW=[...list].sort((a,b)=>(b.updatedAt||b.createdAt||0)-(a.updatedAt||a.createdAt||0));
-  document.getElementById('pwList').innerHTML=sortedPW.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div>${p.createdAt?`<div style="font-size:10px;color:var(--muted);margin-top:2px">➕ ${p.createdBy||'?'} · ${fmtDateFull(p.createdAt)}</div>`:''}</div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
+  document.getElementById('pwList').innerHTML=sortedPW.map(p=>{const shown=showPassIds.has(p.id);return`<div class="pw-item"><div class="pw-row"><span style="font-size:14px">${p.url?'🌐':'🔑'}</span><div><div class="pw-company">${p.company}${p.abbr?` <span style="font-size:10px;background:#d1fae5;color:#065f46;padding:1px 6px;border-radius:4px;font-weight:600">${p.abbr}</span>`:''}</div>${p.url?`<a href="${p.url}" target="_blank" style="font-size:10px;color:var(--primary)">${p.url}</a>`:''}<div>${(p.alias||[]).map(a=>`<span class="tag">${a}</span>`).join('')}</div>${p.createdAt?`<div style="font-size:10px;color:var(--muted);margin-top:2px">➕ ${p.createdBy||'?'} · ${fmtDateFull(p.createdAt)}</div>`:''}</div><div class="pw-user" onclick="copyText('${p.username}')" title="copy">${p.username}</div><div style="display:flex;align-items:center;gap:4px"><span class="pw-pass ${shown?'':'hidden'}" onclick="copyText('${p.password}')">${shown?p.password:'••••••••'}</span><button onclick="togglePass(${p.id})" style="background:none;border:none;cursor:pointer;font-size:13px">${shown?'🙈':'👁️'}</button></div><div><div class="pw-note">${p.note||''}</div><div style="margin-top:3px"><button class="pw-copy" onclick="copyText('${p.password}')">📋 Copy</button> <button class="btn-edit" onclick="openPWForm(${p.id})">✏️</button> <button class="btn-del" onclick="deletePW(${p.id})">🗑️</button></div></div></div></div>`;}).join('');
 }
 function togglePass(id){showPassIds.has(id)?showPassIds.delete(id):showPassIds.add(id);renderPWList();}
 function deletePW(id){
@@ -2123,15 +2137,54 @@ function deletePW(id){
   renderPWList();
   if(p?._issueNumber){ syncStart(); ghPWDelete(p._issueNumber).then(syncDone).catch(syncError); }
 }
-function openPWForm(id=null){editingPWId=id;const p=id?PW.find(x=>x.id===id):null;document.getElementById('pwFormTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่มรหัสผ่าน';document.getElementById('pw-f-company').value=p?.company||'';document.getElementById('pw-f-alias').value=p?.alias?.join(', ')||'';document.getElementById('pw-f-url').value=p?.url||'';document.getElementById('pw-f-user').value=p?.username||'';document.getElementById('pw-f-pass').value=p?.password||'';document.getElementById('pw-f-note').value=p?.note||'';document.getElementById('pwFormModal').classList.add('open');}
+// Autocomplete ชื่อบริษัทจาก Company Master
+function acSearchCo(val){
+  const dd=document.getElementById('pw-co-dd');
+  const q=(val||'').toLowerCase();
+  const list=COMPANY_MASTER.filter(c=>
+    !q||c.name.toLowerCase().includes(q)||(c.abbr||'').toLowerCase().includes(q)
+  );
+  if(!list.length){dd.classList.remove('open');return;}
+  dd.innerHTML=list.map(c=>`<div class="ac-item" onmousedown="event.preventDefault();selectPWCompany('${c.name.replace(/'/g,"\\'")}','${(c.abbr||'').replace(/'/g,"\\'")}')">
+    <span style="font-weight:600">${c.name}</span>
+    ${c.abbr?`<span style="font-size:10px;color:var(--muted);margin-left:6px">${c.abbr}</span>`:''}
+  </div>`).join('');
+  dd.classList.add('open');
+}
+function selectPWCompany(name,abbr){
+  document.getElementById('pw-f-company').value=name;
+  if(abbr) document.getElementById('pw-f-abbr').value=abbr;
+  // Auto-fill alias จาก abbr
+  const aliasEl=document.getElementById('pw-f-alias');
+  if(abbr&&!aliasEl.value) aliasEl.value=abbr.toLowerCase();
+  closeAC('pw-co-dd');
+}
+
+function openPWForm(id=null){
+  editingPWId=id;
+  const p=id?PW.find(x=>x.id===id):null;
+  document.getElementById('pwFormTitle').textContent=id?'✏️ แก้ไข':'➕ เพิ่มรหัสผ่าน';
+  document.getElementById('pw-f-company').value=p?.company||'';
+  document.getElementById('pw-f-abbr').value=p?.abbr||'';
+  document.getElementById('pw-f-alias').value=p?.alias?.join(', ')||'';
+  document.getElementById('pw-f-url').value=p?.url||'';
+  document.getElementById('pw-f-user').value=p?.username||'';
+  document.getElementById('pw-f-pass').value=p?.password||'';
+  document.getElementById('pw-f-note').value=p?.note||'';
+  document.getElementById('pwFormModal').classList.add('open');
+}
 function genPass(){const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#$!';let p='';for(let i=0;i<12;i++)p+=c[Math.floor(Math.random()*c.length)];document.getElementById('pw-f-pass').value=p;}
 function savePWForm(){
   const company=document.getElementById('pw-f-company').value.trim(),username=document.getElementById('pw-f-user').value.trim(),password=document.getElementById('pw-f-pass').value.trim();
   if(!company||!username||!password){alert('กรุณากรอกข้อมูลให้ครบ');return;}
   const aliasRaw=document.getElementById('pw-f-alias').value.trim();
+  const abbr=document.getElementById('pw-f-abbr').value.trim().toUpperCase()||undefined;
   const existing=editingPWId?PW.find(p=>p.id===editingPWId):null;
   const now3=Date.now();
-  const item={id:editingPWId||nxtPWId(),company,alias:aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[],url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined,_issueNumber:existing?._issueNumber,createdAt:existing?.createdAt||now3,updatedAt:now3,createdBy:existing?.createdBy||(currentUser?.name||''),updatedBy:currentUser?.name||''};
+  // Auto-add abbr to alias if not already present
+  let aliasList=aliasRaw?aliasRaw.split(',').map(a=>a.trim().toLowerCase()).filter(Boolean):[];
+  if(abbr&&!aliasList.includes(abbr.toLowerCase())) aliasList.push(abbr.toLowerCase());
+  const item={id:editingPWId||nxtPWId(),company,abbr,alias:aliasList,url:document.getElementById('pw-f-url').value.trim()||undefined,username,password,note:document.getElementById('pw-f-note').value.trim()||undefined,_issueNumber:existing?._issueNumber,createdAt:existing?.createdAt||now3,updatedAt:now3,createdBy:existing?.createdBy||(currentUser?.name||''),updatedBy:currentUser?.name||''};
   // Optimistic UI — ใหม่อยู่บนสุด
   if(editingPWId)PW=PW.map(p=>p.id===editingPWId?item:p);else PW.unshift(item);
   closeModal('pwFormModal');renderPWList();
