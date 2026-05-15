@@ -765,7 +765,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
       <div class="field">
         <label>GitHub Personal Access Token</label>
         <div style="display:flex;gap:6px">
-          <input type="password" id="gh-token-input" placeholder="github_pat_xxxxxx หรือ token ของคุณ" style="flex:1;font-family:monospace;font-size:12px" autocomplete="off">
+          <input type="password" id="gh-token-input" placeholder="วาง Personal Access Token ที่นี่" style="flex:1;font-family:monospace;font-size:12px" autocomplete="off">
           <button class="btn btn-ghost" onclick="document.getElementById('gh-token-input').type=document.getElementById('gh-token-input').type==='password'?'text':'password'">👁️</button>
         </div>
         <div class="hint">สร้างได้ที่ GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens<br>Permissions ที่ต้องการ: <b>Issues: Read & Write</b></div>
@@ -801,29 +801,23 @@ function setGHToken(t){ _ghTokenResolved = t; localStorage.setItem('fw_gh_token'
 
 // Load config.js at startup
 async function loadConfig(){
-  // Already loaded via <script src="config.js"> or window.FW_CONFIG
-  if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== 'PASTE_YOUR_TOKEN_HERE'){
+  // Already loaded via <script src="config.js">
+  if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== '__TOKEN_NOT_SET__'){
     _ghTokenResolved = window.FW_CONFIG.gh_token;
     return true;
   }
-  // Fallback: fetch config.js dynamically
+  // Fallback: fetch config.js dynamically (in case script tag failed)
   try {
     const r = await fetch('./config.js?_='+Date.now());
     if(r.ok){
       const txt = await r.text();
-      // Execute the config script
-      const blob = new Blob([txt], {type:'application/javascript'});
-      const url = URL.createObjectURL(blob);
-      await import(url).catch(()=>{
-        // eval fallback
-        try{ eval(txt); }catch(e){}
-      });
-      if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== 'PASTE_YOUR_TOKEN_HERE'){
+      try{ eval(txt); }catch(e){}
+      if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== '__TOKEN_NOT_SET__'){
         _ghTokenResolved = window.FW_CONFIG.gh_token;
         return true;
       }
     }
-  } catch(e){ console.log('config.js not found, using localStorage'); }
+  } catch(e){ console.log('config.js not found, using localStorage token'); }
   return false;
 }
 const GH_API    = `https://api.github.com/repos/${GH_REPO}`;
@@ -1897,11 +1891,11 @@ function updateTokenBadge(){
   const badge = document.getElementById('tokenBadge');
   const btn   = document.getElementById('tokenBtn');
   if(!badge) return;
-  if(t && t !== 'PASTE_YOUR_TOKEN_HERE'){
+  if(t && t !== '__TOKEN_NOT_SET__'){
     badge.textContent='✓';
     badge.className='token-badge set';
     // Hide button if config.js loaded successfully (token auto-configured)
-    if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== 'PASTE_YOUR_TOKEN_HERE'){
+    if(window.FW_CONFIG?.gh_token && window.FW_CONFIG.gh_token !== '__TOKEN_NOT_SET__'){
       if(btn) btn.style.display='none';
     }
   } else {
@@ -1912,7 +1906,7 @@ function updateTokenBadge(){
 
 function openTokenSetup(){
   const t = getGHToken();
-  document.getElementById('gh-token-input').value = (t && t !== 'PASTE_YOUR_TOKEN_HERE') ? t : '';
+  document.getElementById('gh-token-input').value = (t && t !== '__TOKEN_NOT_SET__') ? t : '';
   document.getElementById('gh-token-input').type = 'password';
   document.getElementById('tokenTestResult').style.display = 'none';
   document.getElementById('tokenModal').classList.add('open');
