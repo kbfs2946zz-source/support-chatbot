@@ -185,19 +185,19 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .tk-kanban{display:flex;gap:14px;padding:14px 18px;overflow-x:auto;flex:1;align-items:flex-start}
 .tk-col{flex:1;min-width:260px}
 .tk-col-hdr{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px 10px 0 0;font-size:12px;font-weight:700}
-.tk-col-hdr.received{background:#fefce8;border:1px solid #fde68a;border-bottom:none;color:#92400e}
-.tk-col-hdr.checking{background:#eff6ff;border:1px solid #bfdbfe;border-bottom:none;color:#1e40af}
+.tk-col-hdr.received{background:#fef2f2;border:1px solid #fecaca;border-bottom:none;color:#991b1b}
+.tk-col-hdr.checking{background:#fefce8;border:1px solid #fde68a;border-bottom:none;color:#854d0e}
 .tk-col-hdr.done{background:#f0fdf4;border:1px solid #bbf7d0;border-bottom:none;color:#065f46}
 .tk-col-cnt{margin-left:auto;background:rgba(0,0,0,.07);border-radius:20px;padding:1px 8px;font-size:11px}
 .tk-col-body{border-radius:0 0 10px 10px;padding:8px;display:flex;flex-direction:column;gap:7px;min-height:80px}
-.tk-col-body.received{border:1px solid #fde68a;border-top:none}
+.tk-col-body.received{border:1px solid #fecaca;border-top:none}
 .tk-col-body.checking{border:1px solid #bfdbfe;border-top:none}
 .tk-col-body.done{border:1px solid #bbf7d0;border-top:none}
 /* task card minimal */
 .task-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;cursor:pointer;transition:all .14s;position:relative}
 .task-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.09);border-color:#c7d2fe}
-.task-card.status-received{border-left:3px solid #f59e0b}
-.task-card.status-checking{border-left:3px solid #3b82f6}
+.task-card.status-received{border-left:3px solid #ef4444}
+.task-card.status-checking{border-left:3px solid #eab308}
 .task-card.status-done{border-left:3px solid #10b981;opacity:.72}
 .tc-company{font-weight:700;font-size:13px;color:var(--text);margin-bottom:5px}
 .tc-pic-tag{display:inline-flex;align-items:center;gap:3px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--muted);margin-bottom:6px}
@@ -210,7 +210,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .tc-btn-sm.edit{background:#eff6ff;color:var(--primary)}.tc-btn-sm.edit:hover{background:var(--primary-light)}
 .tc-btn-sm.del{background:#fee2e2;color:var(--danger)}.tc-btn-sm.del:hover{background:#fca5a5}
 .tc-status-sel{border:none;background:none;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;outline:none;padding:0}
-.tc-status-sel.received{color:#f59e0b}.tc-status-sel.checking{color:#3b82f6}.tc-status-sel.done{color:#10b981}
+.tc-status-sel.received{color:#ef4444}.tc-status-sel.checking{color:#ca8a04}.tc-status-sel.done{color:#10b981}
 .tk-empty{text-align:center;padding:24px;color:#cbd5e1;font-size:12px}
 /* table view */
 .tk-table-wrap{overflow-y:auto;flex:1;padding:0 18px 18px}
@@ -222,8 +222,8 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .tk-table tbody tr.tr-done{opacity:.6}
 .tk-table tbody tr:last-child td{border-bottom:none}
 .tk-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
-.tk-pill.received{background:#fef9c3;color:#92400e}
-.tk-pill.checking{background:#dbeafe;color:#1e40af}
+.tk-pill.received{background:#fee2e2;color:#991b1b}
+.tk-pill.checking{background:#fef9c3;color:#854d0e}
 .tk-pill.done{background:#dcfce7;color:#065f46}
 /* task form */
 .task-modal-hdr{background:var(--card);border-radius:12px 12px 0 0;border-bottom:1px solid var(--border)}
@@ -371,9 +371,9 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .cal-day.today:hover{background:var(--primary-dark)}
 .cal-day.other-month{color:#d1d5db;cursor:default}
 .cal-day.selected:not(.today){background:#eff6ff;border-color:var(--primary);font-weight:700;color:var(--primary)}
-.cal-day.holiday{color:#ef4444;font-weight:700}
+.cal-day.holiday{color:#059669;font-weight:700}
 .cal-day.holiday.today{color:#fff}
-.cal-day.weekend{color:#ef4444}
+.cal-day.weekend{color:#059669}
 .cal-day.weekend.today{color:#fff}
 /* Event dots */
 .cal-dot-row{display:flex;gap:2px;position:absolute;bottom:2px;justify-content:center}
@@ -562,7 +562,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     </button>
     <button class="hbtn purple" onclick="openTaskPanel()">📋 งาน<span class="task-badge" id="taskBadge">0</span></button>
     <button class="hbtn yellow" onclick="openPW()">🔑 Password Manager</button>
-    <button class="hbtn blue" onclick="openAdmin()">📚 Knowledge Base</button>
+    <button class="hbtn blue" onclick="openAdmin()">📖 Wiki</button>
     <button class="hbtn" style="background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.4)" onclick="openCompanyMaster()">🏢 บริษัท</button>
     <button class="hbtn" style="background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)" onclick="openTokenSetup()" id="tokenBtn" title="ตั้งค่า GitHub Token">🔐 Token<span class="token-badge unset" id="tokenBadge">ยังไม่ตั้ง</span></button>
     <div class="user-chip" onclick="openUserMenu()" id="userChip" title="จัดการผู้ใช้ / ออกจากระบบ">
@@ -629,12 +629,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
         <div><div class="tstat-num" id="tstat-all">0</div><div class="tstat-lbl">ทั้งหมด</div></div>
       </div>
       <div class="tstat" onclick="setTaskFilter('received')">
-        <div class="tstat-dot" style="background:#f59e0b"></div>
-        <div><div class="tstat-num" style="color:#f59e0b" id="tstat-received">0</div><div class="tstat-lbl">รับเรื่อง</div></div>
+        <div class="tstat-dot" style="background:#ef4444"></div>
+        <div><div class="tstat-num" style="color:#ef4444" id="tstat-received">0</div><div class="tstat-lbl">รับเรื่อง</div></div>
       </div>
       <div class="tstat" onclick="setTaskFilter('checking')">
-        <div class="tstat-dot" style="background:#3b82f6"></div>
-        <div><div class="tstat-num" style="color:#3b82f6" id="tstat-checking">0</div><div class="tstat-lbl">กำลังตรวจสอบ</div></div>
+        <div class="tstat-dot" style="background:#eab308"></div>
+        <div><div class="tstat-num" style="color:#eab308" id="tstat-checking">0</div><div class="tstat-lbl">กำลังตรวจสอบ</div></div>
       </div>
       <div class="tstat" onclick="setTaskFilter('done')">
         <div class="tstat-dot" style="background:#10b981"></div>
@@ -1312,6 +1312,7 @@ async function ghEnsureLabels(){
       {name:'calendar',       color:'d93f0b', description:'Calendar Events'},
       {name:'chat',           color:'0075ca', description:'Team Chat Messages'},
       {name:'company-master', color:'0e8a16', description:'Company Master Data'},
+      {name:'task-deleted',   color:'b60205', description:'Deleted Task (hidden)'},
       {name:'meta',      color:'cccccc', description:'System'},
     ];
     for(const lb of needed){
@@ -1404,6 +1405,8 @@ async function ghTaskGetAll(){
     const d = ghDecode(iss.body);
     if(!d) return null;
     const labelNames = (iss.labels||[]).map(l=>l.name);
+    // ข้ามงานที่ถูกลบ (task-deleted label)
+    if(labelNames.includes('task-deleted')) return null;
     let status = d.status || 'received';
     if(labelNames.includes('task-done') || iss.state==='closed') status='done';
     else if(labelNames.includes('task-checking')) status='checking';
@@ -1431,7 +1434,8 @@ async function ghTaskSave(item){
 }
 async function ghTaskDelete(issueNumber){
   delete _cache['task_all'];
-  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed', labels:['task-done', GH_LABELS.task]}});
+  // ใช้ label 'task-deleted' แยกจาก task-done เพื่อไม่ให้โหลดกลับมา
+  return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed', labels:['task-deleted', GH_LABELS.task]}});
 }
 
 // ---- Quick Links Master via single Issue ----
@@ -3548,9 +3552,11 @@ document.addEventListener('click', e=>{
     document.getElementById('weatherPopup').classList.remove('open');
     _weatherPopupOpen=false;
   }
-  // Calendar: ปิดเฉพาะเมื่อคลิกนอก popup และนอกปุ่ม
-  // ไม่ปิดเมื่อคลิก evFormModal (event form)
-  if(!e.target.closest('#calPopup')&&!e.target.closest('#calBtn')&&!e.target.closest('#evFormModal')){
+  // Calendar: ปิดเฉพาะคลิกนอก popup จริงๆ
+  // ใช้ composedPath() เพราะ cal-day re-render ทำให้ element หลุดจาก DOM ก่อน bubble
+  const path = e.composedPath ? e.composedPath() : [];
+  const inCal = path.some(el=>el.id==='calPopup'||el.id==='calBtn'||el.id==='evFormModal'||el.id==='_userDetailModal');
+  if(!inCal){
     document.getElementById('calPopup').classList.remove('open');
   }
 });
