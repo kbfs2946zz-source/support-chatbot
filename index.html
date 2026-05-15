@@ -536,7 +536,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   <div class="header-info">
     <h1 id="appTitle">FreeWill FX — Support Assistant</h1>
     <p id="appSubtitle">Terminus Fleet Management | GPS Support Bot</p>
-    <p style="font-size:9px;opacity:.45;margin-top:1px;letter-spacing:.3px">Ver. 1.1</p>
+    <p style="font-size:9px;opacity:.45;margin-top:1px;letter-spacing:.3px">Ver. 1.2</p>
   </div>
   <div class="header-right">
     <div class="status"><div class="dot"></div><span id="syncStatus">Online</span></div>
@@ -577,7 +577,10 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
   <div class="sidebar">
     <div class="sidebar-top">
       <span>🔗 Quick Links</span>
-      <button class="sidebar-edit-btn" onclick="openSidebarEditor()">✏️</button>
+      <div style="display:flex;gap:4px">
+        <button class="sidebar-edit-btn" onclick="quickAddSLSection()" title="เพิ่มหัวข้อใหม่">➕</button>
+        <button class="sidebar-edit-btn" onclick="openSidebarEditor()" title="แก้ไข Quick Links">✏️</button>
+      </div>
     </div>
     <div class="quick-links" id="sidebarLinks"></div>
   </div>
@@ -1984,6 +1987,45 @@ function renderSLEditor(){
     </div>`).join('');
 }
 function addSLSection(){SL.push({s:'📌 หมวดหมู่ใหม่',open:true,l:[]});renderSLEditor();}
+
+function quickAddSLSection(){
+  // inline mini-form ใน sidebar แทน prompt
+  const ql=document.getElementById('sidebarLinks');
+  // ถ้ามี form อยู่แล้วให้ซ่อน
+  const existing=document.getElementById('_ql-quick-add');
+  if(existing){ existing.remove(); return; }
+  const div=document.createElement('div');
+  div.id='_ql-quick-add';
+  div.style.cssText='padding:8px;border-bottom:1px solid var(--border);background:#f0f9ff';
+  div.innerHTML=`
+    <div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:5px">➕ เพิ่มหัวข้อใหม่</div>
+    <div style="display:flex;gap:5px">
+      <input id="_ql-icon" type="text" value="📌" maxlength="4"
+        style="width:34px;text-align:center;font-size:16px;padding:4px;border:1px solid var(--border);border-radius:6px;font-family:inherit;outline:none">
+      <input id="_ql-name" type="text" placeholder="ชื่อหัวข้อ..."
+        style="flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;outline:none"
+        onkeydown="if(event.key==='Enter')doQuickAddSection();if(event.key==='Escape')document.getElementById('_ql-quick-add')?.remove()">
+    </div>
+    <div style="display:flex;gap:5px;margin-top:5px">
+      <button onclick="doQuickAddSection()"
+        style="flex:1;padding:5px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">✓ เพิ่ม</button>
+      <button onclick="document.getElementById('_ql-quick-add')?.remove()"
+        style="padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>
+    </div>`;
+  ql.insertBefore(div, ql.firstChild);
+  document.getElementById('_ql-name').focus();
+}
+
+function doQuickAddSection(){
+  const icon=document.getElementById('_ql-icon')?.value||'📌';
+  const name=document.getElementById('_ql-name')?.value.trim();
+  if(!name){ document.getElementById('_ql-name')?.focus(); return; }
+  SL.push({s:`${icon} ${name}`,open:true,l:[]});
+  saveDataSL();
+  document.getElementById('_ql-quick-add')?.remove();
+  buildSidebar();
+  showToast(`✅ เพิ่มหัวข้อ "${icon} ${name}" แล้ว`);
+}
 function saveSL(){
   saveDataSL();
   buildSidebar();
