@@ -545,7 +545,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     <h1 id="appTitle" style="display:flex;align-items:center;gap:8px">
       <span id="appTitleText">FreeWill FX — Support Assistant</span>
       <span class="conn-status" title="สถานะการเชื่อมต่อ">
-        <span class="conn-dot checking" id="connServer" title="กำลังตรวจสอบ..."><span class="cd"></span><span class="cd-label">SRV</span></span>
+        <span class="conn-dot checking clickable" id="connServer" onclick="checkServerConnectivity()" title="คลิกเพื่อตรวจสถานะ Server"><span class="cd"></span><span class="cd-label">SRV</span></span>
         <span class="conn-dot checking clickable" id="connAI" onclick="toggleModelPopup(event)" title="คลิกเพื่อเลือก Gemini model"><span class="cd"></span><span class="cd-label">AI</span></span>
         <div class="model-popup" id="modelPopup" onclick="event.stopPropagation()">
           <div class="mp-head">เลือก Gemini Model</div>
@@ -769,11 +769,24 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     <div class="toolbar">
       <input type="text" id="kbSearch" placeholder="🔍 ค้นหา topic..." oninput="renderKBList()">
       <button class="btn btn-primary" onclick="openForm()">➕ เพิ่ม</button>
+      <button class="btn btn-ghost" onclick="openKBPendingPanel()" style="position:relative">⏳ Pending <span id="kbPendingBadge" style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;display:none">0</span></button>
       <button class="btn btn-ghost" onclick="exportKBxlsx()">📥 xlsx</button>
       <label class="btn btn-ghost" style="cursor:pointer">📤 Import .xlsx<input type="file" accept=".xlsx" style="display:none" onchange="importKBxlsx(event)"></label>
     </div>
     <div class="panel-body" id="kbList"></div>
     <div class="panel-footer"><span style="font-size:12px;color:var(--muted);flex:1">💡 Export .xlsx → เปิดใน Excel แก้ไขแล้ว Import กลับ</span></div>
+  </div>
+</div>
+
+<!-- Pending KB Approval Panel -->
+<div class="overlay" id="kbPendingOverlay" onclick="closeOverlayBg(event,'kbPendingOverlay')">
+  <div class="panel wide">
+    <div class="panel-hdr" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff"><span style="font-size:20px">⏳</span><h2 style="color:#fff">KB รออนุมัติ</h2><span id="kbp-total" style="font-size:12px;color:#fef3c7"></span><button class="close-btn" style="color:#fff" onclick="closePanel('kbPendingOverlay')">×</button></div>
+    <div style="padding:10px 14px;background:#fffbeb;border-bottom:1px solid #fde68a;font-size:12px;color:#78350f">
+      💡 รายการเหล่านี้คือ KB ที่ user เสนอเพิ่มจากคำตอบ AI (จากนอก KB) — admin ต้องตรวจสอบก่อน approve เพื่อความถูกต้อง
+    </div>
+    <div class="panel-body" id="kbPendingList"></div>
+    <div class="panel-footer"><span style="font-size:12px;color:var(--muted);flex:1">👀 ตรวจสอบเนื้อหา → ✅ Approve เพื่อเพิ่มเข้า KB จริง · ❌ Reject เพื่อปฏิเสธ</span></div>
   </div>
 </div>
 
@@ -1287,19 +1300,39 @@ async function ghFetch(path, opts={}){
   const token = getGHToken();
   if(!token) throw new Error('ยังไม่ได้ตั้งค่า GitHub Token — กดปุ่ม ⚙️ Token ในส่วน header');
   const url = path.startsWith('http') ? path : GH_API+path;
-  const res = await fetch(url, {
-    ...opts,
-    headers: {
-      'Authorization': `token ${token}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json',
-      ...(opts.headers||{})
-    },
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(`GitHub API ${res.status}: ${data.message||JSON.stringify(data)}`);
-  return data;
+  try {
+    const res = await fetch(url, {
+      ...opts,
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        ...(opts.headers||{})
+      },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      // Passive status update
+      if(typeof SERVER_STATUS!=='undefined'){
+        SERVER_STATUS={state:'error',message:`${res.status}: ${data.message||'error'}`,lastChecked:Date.now()};
+        if(typeof updateServerStatusUI==='function') updateServerStatusUI();
+      }
+      throw new Error(`GitHub API ${res.status}: ${data.message||JSON.stringify(data)}`);
+    }
+    // Passive success status
+    if(typeof SERVER_STATUS!=='undefined'){
+      SERVER_STATUS={state:'ok',message:'OK',lastChecked:Date.now()};
+      if(typeof updateServerStatusUI==='function') updateServerStatusUI();
+    }
+    return data;
+  } catch(e){
+    if(typeof SERVER_STATUS!=='undefined' && /Failed to fetch|NetworkError/i.test(e.message)){
+      SERVER_STATUS={state:'error',message:'network error',lastChecked:Date.now()};
+      if(typeof updateServerStatusUI==='function') updateServerStatusUI();
+    }
+    throw e;
+  }
 }
 
 // Ensure required labels exist (run once on first load)
@@ -1321,6 +1354,7 @@ async function ghEnsureLabels(){
       {name:'notifications', color:'fbca04', description:'User notifications'},
       {name:'settings',      color:'5319e7', description:'App settings (logo, title)'},
       {name:'gemini-config', color:'00b894', description:'Shared Gemini API key (admin-managed)'},
+      {name:'kb-pending',    color:'f59e0b', description:'KB entry awaiting admin approval'},
       {name:'meta',      color:'cccccc', description:'System'},
     ];
     for(const lb of needed){
@@ -1366,6 +1400,43 @@ async function ghKBSave(item){
 async function ghKBDelete(issueNumber){
   delete _cache['kb_all'];
   return ghFetch(`/issues/${issueNumber}`, {method:'PATCH', body:{state:'closed'}});
+}
+
+// ---- Pending KB (admin approval queue) ----
+async function ghKBPendingGetAll(){
+  const cached = cacheValid('kb_pending_all');
+  if(cached) return cached;
+  if(!getGHToken()) return [];
+  const issues = await ghFetch(`/issues?labels=kb-pending&state=open&per_page=100`);
+  const items = issues.map(iss=>{
+    const d = ghDecode(iss.body);
+    if(!d) return null;
+    return { ...d, _issueNumber: iss.number, _title: iss.title };
+  }).filter(Boolean);
+  cacheSet('kb_pending_all', items, 10000);
+  return items;
+}
+async function ghKBPendingSave(item){
+  delete _cache['kb_pending_all'];
+  const title = '[PENDING] ' + (item.title || 'KB suggestion');
+  const body  = ghEncode(item);
+  return ghFetch('/issues', {method:'POST', body:{title, body, labels:['kb-pending']}});
+}
+async function ghKBPendingApprove(pendingIssueNum, item){
+  // 1) Re-save as approved KB
+  delete _cache['kb_all'];
+  delete _cache['kb_pending_all'];
+  const finalItem = { ...item };
+  delete finalItem._issueNumber;
+  delete finalItem._title;
+  delete finalItem._pending;
+  await ghFetch('/issues', {method:'POST', body:{title: finalItem.title, body: ghEncode(finalItem), labels:[GH_LABELS.kb]}});
+  // 2) Close the pending issue
+  return ghFetch(`/issues/${pendingIssueNum}`, {method:'PATCH', body:{state:'closed'}});
+}
+async function ghKBPendingReject(pendingIssueNum){
+  delete _cache['kb_pending_all'];
+  return ghFetch(`/issues/${pendingIssueNum}`, {method:'PATCH', body:{state:'closed'}});
 }
 
 // ---- PW via GitHub Issues ----
@@ -2204,7 +2275,7 @@ function renderResult(item){
   if(item.links?.length)h+=item.links.map(l=>`<a class="lcard" href="${l.url}" target="_blank"><span style="font-size:15px;flex-shrink:0">${l.icon}</span><span style="flex:1;overflow:hidden"><div style="font-weight:700;font-size:12px">${l.title}</div><div class="lc-u">${l.url}</div></span><span style="font-size:12px;margin-left:auto">↗</span></a>`).join('');
   return h;
 }
-function openAdmin(){document.getElementById('adminOverlay').classList.add('open');renderKBList();loadKBFromGH();}
+function openAdmin(){document.getElementById('adminOverlay').classList.add('open');renderKBList();loadKBFromGH();updateKBPendingBadge();}
 function renderKBList(){
   const q=(document.getElementById('kbSearch').value||'').toLowerCase();
   const f=KB.filter(k=>!q||k.title.toLowerCase().includes(q)||k.keywords.some(kw=>kw.includes(q)));
@@ -2474,7 +2545,7 @@ function sendMessage(){
   const geminiKey = getGeminiKey();
 
   if(relatedKB.length){
-    // 2A) พบใน KB — ถ้ามี Gemini ให้ AI สรุป/ขยายผลจาก KB; ถ้าไม่มีให้แสดง KB ปกติ
+    // 2A) พบใน KB
     if(geminiKey){
       (async()=>{
         try{
@@ -2484,14 +2555,12 @@ function sendMessage(){
         }catch(err){
           console.warn('Gemini error:', err);
           removeTyping();
-          // Gemini พัง → แสดง KB ตรงๆ + แจ้ง error เบาๆ
           const r = searchKB(q) || relatedKB[0];
           const errMsg = (err && err.message) ? err.message : String(err);
           addMsg('bot', renderResult(r) + renderGeminiErrorHint(errMsg, true));
         }
       })();
     } else {
-      // ไม่มี Gemini key — แสดง KB ปกติ
       setTimeout(()=>{
         removeTyping();
         addMsg('bot', renderResult(relatedKB[0]));
@@ -2500,23 +2569,41 @@ function sendMessage(){
     return;
   }
 
-  // 2B) ไม่พบใน KB — ถาม user ว่าจะให้ AI หาข้อมูลภายนอก หรือสอน KB
-  removeTyping();
-  // เก็บ q ไว้ใน data attribute ของ msg เพื่อให้ปุ่มเรียกใช้ได้
-  const qEsc = q.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-  const askExternalBtn = geminiKey
-    ? `<button class="btn btn-primary" style="font-size:12px;padding:7px 14px" onclick="askGeminiExternal('${qEsc}')">✨ ให้ AI หาข้อมูลจากภายนอก</button>`
-    : `<div style="font-size:11px;color:var(--muted);padding:6px 10px;background:#f1f5f9;border-radius:7px">💡 เปิดใช้ Gemini ใน ⚙️ Keys เพื่อให้ AI ช่วยหาคำตอบ</div>`;
-  const teachBtn = `<button class="btn btn-ghost" style="font-size:12px;padding:7px 14px" onclick="startTeachWith('${qEsc}')">📝 สอน AI</button>`;
-  addMsg('bot', `<div>
-    <h3>🤔 ยังไม่พบใน Knowledge Base</h3>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">คำถาม: "<b>${escHtml(q)}</b>"</p>
-    <p style="font-size:12px;margin-bottom:10px">คุณต้องการ:</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      ${askExternalBtn}
-      ${teachBtn}
-    </div>
-  </div>`);
+  // 2B) ไม่พบใน KB → ให้ AI ตอบเลย (จากความรู้ทั่วไป) + เสนอเพิ่มเข้า KB
+  if(geminiKey){
+    (async()=>{
+      try {
+        const answer = await askGeminiOpen(q);
+        removeTyping();
+        const qEsc = q.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const ansEsc = btoa(unescape(encodeURIComponent(answer))); // store full answer for later proposal
+        const externalBadge = '<div style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;color:#78350f;margin-bottom:8px">🌐 นอกเหนือจาก KB · ความรู้ทั่วไป Gemini</div>';
+        const proposeBtn = `<button class="btn btn-primary" style="font-size:12px;padding:7px 14px;margin-top:8px" onclick="proposeKBFromAnswer('${qEsc}','${ansEsc}')">💡 เพิ่มเข้า Knowledge Base (รอ admin approve)</button>`;
+        addMsg('bot', externalBadge + renderGeminiAnswer(answer, []) + `<div style="margin-top:6px">${proposeBtn}</div>`);
+      } catch(err){
+        removeTyping();
+        const errMsg = (err && err.message) ? err.message : String(err);
+        const qEsc = q.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+        const teachBtn = `<button class="btn btn-ghost" style="font-size:12px;padding:7px 14px" onclick="startTeachWith('${qEsc}')">📝 สอน AI ด้วยตัวเอง</button>`;
+        addMsg('bot', `<div>
+          <h3>🤔 ยังไม่พบใน Knowledge Base</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:6px">Gemini ก็ตอบไม่ได้ตอนนี้</p>
+          ${renderGeminiErrorHint(errMsg, true)}
+          <div style="margin-top:10px">${teachBtn}</div>
+        </div>`);
+      }
+    })();
+  } else {
+    // ไม่มี Gemini key
+    removeTyping();
+    const qEsc = q.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    addMsg('bot', `<div>
+      <h3>🤔 ยังไม่พบใน Knowledge Base</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px">คำถาม: "<b>${escHtml(q)}</b>"</p>
+      <div style="font-size:11px;color:var(--muted);padding:6px 10px;background:#f1f5f9;border-radius:7px;margin-bottom:8px">💡 เปิดใช้ Gemini ใน ⚙️ Keys เพื่อให้ AI ช่วยตอบ</div>
+      <button class="btn btn-ghost" style="font-size:12px;padding:7px 14px" onclick="startTeachWith('${qEsc}')">📝 สอน AI ด้วยตัวเอง</button>
+    </div>`);
+  }
 }
 
 // Helper: render Gemini error hint as a compact box appended after KB result
@@ -2532,23 +2619,197 @@ function renderGeminiErrorHint(errMsg, hideHeader){
   return `<div style="margin-top:8px;padding:7px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;font-size:10px;color:#991b1b">${head}<span style="font-family:monospace;color:#7f1d1d">${escHtml(errMsg)}</span>${hint?`<br>${hint}`:''}</div>`;
 }
 
-// Called when user clicks "ให้ AI หาข้อมูลจากภายนอก"
+// Legacy — kept for backward compat (some old saved messages may still call this)
 async function askGeminiExternal(q){
   if(!getGeminiKey()){ showToast('❌ ยังไม่ได้ตั้งค่า Gemini key',3000); return; }
-  // Replace the question chip ui with typing then result
   showTyping();
   try {
     const answer = await askGeminiOpen(q);
     removeTyping();
-    const externalBadge = '<div style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;color:#78350f;margin-bottom:8px">🌐 ข้อมูลจาก Gemini (ภายนอก KB)</div>';
-    addMsg('bot', externalBadge + renderGeminiAnswer(answer, []));
-    // After AI answer, prompt to save into KB
-    addMsg('bot', `<div style="font-size:12px">💡 อยากบันทึกคำตอบนี้เข้า Knowledge Base ไหม? <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;margin-top:6px" onclick="startTeachWith('${q.replace(/'/g,"\\'")}')">📝 สอน AI</button></div>`);
+    const qEsc = q.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    const ansEsc = btoa(unescape(encodeURIComponent(answer)));
+    const externalBadge = '<div style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;color:#78350f;margin-bottom:8px">🌐 นอกเหนือจาก KB</div>';
+    const proposeBtn = `<button class="btn btn-primary" style="font-size:12px;padding:7px 14px;margin-top:8px" onclick="proposeKBFromAnswer('${qEsc}','${ansEsc}')">💡 เพิ่มเข้า Knowledge Base (รอ admin approve)</button>`;
+    addMsg('bot', externalBadge + renderGeminiAnswer(answer, []) + `<div style="margin-top:6px">${proposeBtn}</div>`);
   } catch(err){
     removeTyping();
-    const errMsg = (err && err.message) ? err.message : String(err);
-    addMsg('bot', `<h3>❌ Gemini ไม่ตอบสนอง</h3>` + renderGeminiErrorHint(errMsg, true));
+    addMsg('bot', `<h3>❌ Gemini ไม่ตอบสนอง</h3>` + renderGeminiErrorHint((err&&err.message)||String(err), true));
   }
+}
+
+// User clicks "เพิ่มเข้า KB" → AI สรุปคำถาม+คำตอบเป็น KB entry → submit ไป pending queue
+async function proposeKBFromAnswer(qEsc, answerB64){
+  if(!getGHToken()){ showToast('❌ ยังไม่ได้ตั้งค่า GitHub token',3000); return; }
+  if(!getGeminiKey()){ showToast('❌ ยังไม่ได้ตั้งค่า Gemini key',3000); return; }
+  const question = qEsc.replace(/\\'/g,"'").replace(/&quot;/g,'"');
+  let answer = '';
+  try { answer = decodeURIComponent(escape(atob(answerB64))); } catch(e){}
+  if(!answer){ showToast('❌ ไม่มีคำตอบให้บันทึก',3000); return; }
+  showToast('🔄 AI กำลังสรุปเป็น KB entry...', 2000);
+  try {
+    const extractPrompt = `จาก Q&A นี้ ให้สรุปเป็น Knowledge Base entry ในรูปแบบ JSON
+ตอบกลับเป็น JSON เท่านั้น ไม่ต้องมีคำอธิบายอื่น ไม่ต้องมี \`\`\`json wrapper
+
+คำถาม: ${question}
+
+คำตอบ: ${answer}
+
+Output JSON format:
+{
+  "title": "หัวข้อสั้นกระชับ ไม่เกิน 60 ตัวอักษร",
+  "keywords": ["คีย์เวิร์ดที่เกี่ยวข้อง", "อย่างน้อย 3 คำ", "เป็นภาษาที่ใช้ค้นได้"],
+  "answer": "สรุปคำตอบสั้นๆ 1-2 บรรทัด",
+  "steps": ["ขั้นตอนที่ 1 (ถ้ามี)", "ขั้นตอนที่ 2"],
+  "extra": "ข้อมูลเพิ่มเติม (ถ้ามี ใช้ Markdown ได้)"
+}`;
+    const aiResult = await askGeminiOpen(extractPrompt);
+    // Strip ```json wrapper if AI added it
+    let jsonStr = aiResult.trim();
+    const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if(fenceMatch) jsonStr = fenceMatch[1].trim();
+    let kbItem;
+    try { kbItem = JSON.parse(jsonStr); }
+    catch(e){
+      // Fallback: use basic structure
+      kbItem = {
+        title: question.substring(0,60),
+        keywords: question.toLowerCase().split(/\s+/).filter(w=>w.length>2).slice(0,5),
+        answer: answer.substring(0,500)
+      };
+    }
+    // Add metadata
+    kbItem.id = Date.now();
+    kbItem.createdAt = Date.now();
+    kbItem.createdBy = currentUser?.name || 'unknown';
+    kbItem._source = 'gemini-proposed';
+    kbItem._originalQuestion = question;
+    // Save to pending queue (NOT main KB)
+    await ghKBPendingSave(kbItem);
+    // Show success + notify admins
+    addMsg('bot', `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 13px">
+      <div style="font-weight:700;color:#065f46;margin-bottom:6px">✅ ส่งเข้าคิวรอ Admin approve แล้ว</div>
+      <div style="font-size:12px;color:#166534">หัวข้อ: <b>${escHtml(kbItem.title)}</b></div>
+      <div style="font-size:11px;color:#065f46;margin-top:4px">Admin จะได้รับการแจ้งเตือนเพื่อพิจารณา</div>
+    </div>`);
+    // Trigger admin notification
+    notifyAdminsKBPending(kbItem);
+  } catch(err){
+    addMsg('bot', `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 13px;color:#991b1b"><b>❌ ส่งไม่สำเร็จ</b><br><span style="font-family:monospace;font-size:10px">${escHtml(err.message)}</span></div>`);
+  }
+}
+
+// ---- Admin: Pending KB review panel ----
+let _kbPendingCache = [];
+async function openKBPendingPanel(){
+  if(currentUser?.role !== 'admin'){ showToast('❌ เฉพาะ admin เท่านั้น',3000); return; }
+  document.getElementById('kbPendingOverlay').classList.add('open');
+  document.getElementById('kbPendingList').innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">🔄 กำลังโหลด...</div>';
+  try {
+    const items = await ghKBPendingGetAll();
+    _kbPendingCache = items;
+    renderKBPendingList(items);
+    updateKBPendingBadge();
+  } catch(e){
+    document.getElementById('kbPendingList').innerHTML = `<div style="padding:20px;color:#991b1b">❌ โหลดไม่สำเร็จ: ${escHtml(e.message)}</div>`;
+  }
+}
+function renderKBPendingList(items){
+  const cnt = document.getElementById('kbp-total');
+  if(cnt) cnt.textContent = items.length ? `${items.length} รายการ` : '';
+  const list = document.getElementById('kbPendingList');
+  if(!list) return;
+  if(!items.length){
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--muted)">🎉 ไม่มี KB รออนุมัติ</div>';
+    return;
+  }
+  list.innerHTML = items.map((item,idx)=>{
+    const keywords = (item.keywords||[]).join(', ');
+    const steps = (item.steps||[]).map((s,i)=>`<div style="margin:2px 0">${i+1}. ${escHtml(s)}</div>`).join('');
+    const itemJson = btoa(unescape(encodeURIComponent(JSON.stringify(item))));
+    return `<div style="border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fffbeb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">PENDING</span>
+        <b style="font-size:14px;flex:1">${escHtml(item.title||'(no title)')}</b>
+        <span style="font-size:10px;color:#92400e">โดย ${escHtml(item.createdBy||'?')}</span>
+      </div>
+      ${item._originalQuestion?`<div style="font-size:11px;color:#78350f;margin-bottom:6px"><b>คำถามต้นทาง:</b> ${escHtml(item._originalQuestion)}</div>`:''}
+      <div style="font-size:11px;color:#92400e;margin-bottom:4px"><b>Keywords:</b> ${escHtml(keywords)}</div>
+      ${item.answer?`<div style="font-size:12px;color:#1a202c;background:#fff;border-radius:6px;padding:8px 10px;margin:6px 0">${escHtml(item.answer)}</div>`:''}
+      ${steps?`<div style="font-size:11px;color:#1a202c;background:#fff;border-radius:6px;padding:6px 10px;margin:4px 0"><b>ขั้นตอน:</b>${steps}</div>`:''}
+      ${item.extra?`<div style="font-size:11px;color:#1a202c;background:#fff;border-radius:6px;padding:6px 10px;margin:4px 0">${escHtml(item.extra)}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-primary" style="background:#16a34a;border-color:#16a34a;font-size:12px;padding:6px 12px" onclick="approveKBPending(${item._issueNumber},'${itemJson}')">✅ Approve</button>
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px;color:#dc2626" onclick="rejectKBPending(${item._issueNumber})">❌ Reject</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function approveKBPending(issueNum, itemB64){
+  if(!confirm('Approve KB entry นี้เพิ่มเข้า Knowledge Base?')) return;
+  try {
+    const item = JSON.parse(decodeURIComponent(escape(atob(itemB64))));
+    showToast('🔄 กำลัง approve...',1500);
+    await ghKBPendingApprove(issueNum, item);
+    // Reload main KB list + pending list
+    if(typeof loadKBFromGH==='function') await loadKBFromGH();
+    const items = await ghKBPendingGetAll();
+    _kbPendingCache = items;
+    renderKBPendingList(items);
+    updateKBPendingBadge();
+    showToast('✅ Approved! เพิ่มเข้า KB แล้ว',2500);
+  } catch(e){
+    showToast('❌ '+e.message,4000);
+  }
+}
+async function rejectKBPending(issueNum){
+  if(!confirm('Reject (ปฏิเสธ) KB entry นี้?')) return;
+  try {
+    showToast('🔄 กำลัง reject...',1500);
+    await ghKBPendingReject(issueNum);
+    const items = await ghKBPendingGetAll();
+    _kbPendingCache = items;
+    renderKBPendingList(items);
+    updateKBPendingBadge();
+    showToast('🗑️ Rejected',2000);
+  } catch(e){
+    showToast('❌ '+e.message,4000);
+  }
+}
+async function updateKBPendingBadge(){
+  const badge = document.getElementById('kbPendingBadge');
+  if(!badge) return;
+  if(currentUser?.role !== 'admin'){ badge.style.display='none'; return; }
+  try {
+    const items = await ghKBPendingGetAll();
+    _kbPendingCache = items;
+    if(items.length){
+      badge.textContent = items.length;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch(e){ /* silent */ }
+}
+
+// Notify admins via existing notification system (in-app + GitHub-synced)
+async function notifyAdminsKBPending(kbItem){
+  try {
+    const note = {
+      id: 'kbp-'+Date.now(),
+      type: 'kb-pending',
+      title: '📚 มี KB entry ใหม่รออนุมัติ',
+      body: `"${kbItem.title}" — เสนอโดย ${kbItem.createdBy}`,
+      ts: Date.now(),
+      forRole: 'admin',
+      action: 'openKBPendingPanel'
+    };
+    // Push to local notifications array if it exists
+    if(typeof NOTIFICATIONS!=='undefined' && Array.isArray(NOTIFICATIONS)){
+      NOTIFICATIONS.unshift(note);
+      if(typeof saveNotifications==='function') saveNotifications();
+      if(typeof updateNotifBadge==='function') updateNotifBadge();
+    }
+  } catch(e){ console.warn('notifyAdminsKBPending:', e.message); }
 }
 
 // Called when user clicks "สอน AI"
@@ -2799,12 +3060,12 @@ function updateServerStatusUI(){
   const dot = document.getElementById('connServer');
   if(!dot) return;
   const s = SERVER_STATUS;
-  let cls='checking', title='กำลังตรวจสอบ Server...';
+  let cls='checking', title='ยังไม่ได้ตรวจสอบ — คลิกเพื่อทดสอบ';
   if(!getGHToken()){ cls='err'; title='ยังไม่ได้ตั้งค่า GitHub Token'; }
-  else if(s.state==='ok'){ cls='ok'; title=`Server พร้อม · GitHub API ตอบสนอง`; }
+  else if(s.state==='ok'){ cls='ok'; title=`Server พร้อม · update เมื่อ ${fmtAgo(s.lastChecked)}`; }
   else if(s.state==='error'){ cls='err'; title=`Server error: ${s.message}`; }
-  else { cls='checking'; title='กำลังตรวจสอบ Server...'; }
-  dot.className='conn-dot '+cls;
+  else { cls='checking'; title='ยังไม่ได้ตรวจสอบ — คลิกเพื่อทดสอบ'; }
+  dot.className='conn-dot '+cls+' clickable';
   dot.title=title;
 }
 async function pingServer(){
@@ -2824,18 +3085,20 @@ async function pingServer(){
     return false;
   }
 }
-// On-demand connectivity checking — NO periodic ping (to avoid wasting Gemini quota)
-// - Server status: pinged ONCE at boot, then only on user action (saveAllTokens)
-// - Gemini status: pinged ONLY when user clicks "Test" in Settings.
-//   Real success/failure status is updated PASSIVELY from actual chat requests.
+// Fully on-demand connectivity monitoring — NO auto pings anywhere.
+// Both Server and Gemini status are updated:
+//   - Passively from real GitHub API calls (any ghFetch success/failure updates SERVER_STATUS)
+//   - Passively from real chat (success/failure updates GEMINI_STATUS)
+//   - Manually when user clicks the dots (toggleServerCheck / Test button in Settings)
 function startConnectivityMonitor(){
-  // One-shot reachability check on boot (no periodic polling)
-  if(getGHToken()) pingServer();
-  // Mark Gemini as "unknown — test in Settings" if key exists but never pinged
-  if(getGeminiKey() && GEMINI_STATUS.state==='unknown'){
-    updateGeminiStatusUI(); // show yellow "?" badge
+  // Start with "unknown" — do NOT ping at boot
+  if(getGHToken() && SERVER_STATUS.state==='unknown'){
+    updateServerStatusUI(); // show yellow ? badge
   }
-  // React to browser online/offline events ONLY for the Server dot (no Gemini ping)
+  if(getGeminiKey() && GEMINI_STATUS.state==='unknown'){
+    updateGeminiStatusUI();
+  }
+  // Only react to browser-level online/offline (free, no API call)
   window.addEventListener('offline', ()=>{
     SERVER_STATUS={state:'error',message:'offline',lastChecked:Date.now()};
     setGeminiStatus('error', GEMINI_STATUS.model, 'offline');
@@ -2843,14 +3106,27 @@ function startConnectivityMonitor(){
     updateGeminiStatusUI();
   });
   window.addEventListener('online', ()=>{
-    // re-check server only (lightweight GET, no quota)
-    if(getGHToken()) pingServer();
-    // Gemini status reverts to "unknown" — wait for next user chat to verify
+    // Reset to unknown — let the next user action verify
+    if(SERVER_STATUS.state==='error' && SERVER_STATUS.message==='offline'){
+      SERVER_STATUS={state:'unknown',message:'',lastChecked:Date.now()};
+      updateServerStatusUI();
+    }
     if(getGeminiKey() && GEMINI_STATUS.state==='error' && GEMINI_STATUS.message==='offline'){
-      setGeminiStatus('unknown', GEMINI_STATUS.model, 'รอ user เริ่มแชท หรือกด Test');
+      setGeminiStatus('unknown', GEMINI_STATUS.model, '');
       updateGeminiStatusUI();
     }
   });
+}
+
+// Manually trigger Server connectivity check (called from clicking SRV dot)
+async function checkServerConnectivity(){
+  if(!getGHToken()){
+    showToast('❌ ยังไม่ได้ตั้งค่า GitHub Token',3000);
+    return;
+  }
+  showToast('🔄 กำลังตรวจสอบ Server...',1500);
+  const ok = await pingServer();
+  showToast(ok ? '✅ Server เชื่อมต่อได้' : `❌ ${SERVER_STATUS.message}`, 2500);
 }
 
 // On-demand connectivity check (single GET — no quota cost).
@@ -2892,36 +3168,11 @@ const GEMINI_MODEL_NOTES = {
 let GEMINI_MODEL_LIST = ['gemini-2.5-flash'];
 let _modelListFetched = false;
 
-// Fetch real available models from Google (populates GEMINI_MODEL_LIST)
-// Filters to FREE-tier only: keeps Flash variants, drops Pro/preview/embedding/tts/image/aqa
+// DISABLED — we only support gemini-2.5-flash. Kept as stub for any legacy caller.
 async function fetchAvailableModels(){
-  const key = getGeminiKey();
-  if(!key) return null;
-  try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-    if(!r.ok) return null;
-    const data = await r.json();
-    if(!data.models) return null;
-    const available = data.models
-      .filter(m => (m.supportedGenerationMethods||[]).includes('generateContent'))
-      .map(m => m.name.replace(/^models\//,''))
-      .filter(name => /gemini/i.test(name))
-      .filter(name => !/embedding|aqa|tts|image|imagen|veo|vision/i.test(name))
-      // FREE TIER FILTER — drop Pro and explicit preview model IDs
-      .filter(name => !/pro/i.test(name))
-      .filter(name => !/preview/i.test(name))
-      // Keep only "flash" family (or alias "latest")
-      .filter(name => /flash|latest/i.test(name));
-    if(available.length){
-      // De-dupe + sort: latest first, then 2.5, then 2.0, then lite, then exp
-      const order = ['gemini-flash-latest','gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash','gemini-2.0-flash-lite'];
-      const sorted = [...order.filter(o=>available.includes(o)), ...available.filter(a=>!order.includes(a))];
-      GEMINI_MODEL_LIST = sorted;
-      _modelListFetched = true;
-      return sorted;
-    }
-  } catch(e){ console.warn('fetchAvailableModels:', e.message); }
-  return null;
+  GEMINI_MODEL_LIST = ['gemini-2.5-flash'];
+  _modelListFetched = true;
+  return GEMINI_MODEL_LIST;
 }
 
 async function toggleModelPopup(e){
@@ -4475,9 +4726,11 @@ async function saveAllTokens(){
   const saved = [gh?'GitHub Token':'', gk?'Gemini Key (shared)':''].filter(Boolean).join(' + ');
   showToast(`✅ บันทึก ${saved} แล้ว`);
   if(gh) setTimeout(()=>ghEnsureLabels(), 500);
-  if(gh) setTimeout(()=>pingServer(), 600);
-  // NOTE: no auto pingGemini — user should click "Test Gemini" in Settings or just start chatting.
-  // Reset Gemini status to "unknown" so the AI dot turns yellow until verified.
+  // No auto pings — both dots stay yellow until user explicitly checks or until next API call.
+  if(gh){
+    SERVER_STATUS = {state:'unknown',message:'',lastChecked:0};
+    updateServerStatusUI();
+  }
   if(gk){
     setGeminiStatus('unknown', 'gemini-2.5-flash', 'กรุณาแชทหรือกด Test เพื่อตรวจสถานะ');
     updateGeminiStatusUI();
