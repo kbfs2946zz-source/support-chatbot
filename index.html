@@ -2522,7 +2522,8 @@ function sendMessage(){
 // Helper: render Gemini error hint as a compact box appended after KB result
 function renderGeminiErrorHint(errMsg, hideHeader){
   let hint = '';
-  if(/401|403|API key not valid|API_KEY/i.test(errMsg)) hint = '🔑 API Key ไม่ถูกต้อง — เปิด ⚙️ Keys เพื่อแก้ไข';
+  if(/limit: ?0/i.test(errMsg)) hint = '💳 Model นี้ไม่มี Free tier — คลิก AI dot บน header แล้วเลือก <b>2.5 Flash</b> หรือ <b>Flash Latest</b>';
+  else if(/401|403|API key not valid|API_KEY/i.test(errMsg)) hint = '🔑 API Key ไม่ถูกต้อง — เปิด ⚙️ Keys เพื่อแก้ไข';
   else if(/429|quota|rate/i.test(errMsg)) hint = '⏱️ เกินโควต้ารายวัน — รอ 24 ชม. หรือเปลี่ยน model';
   else if(/safety|blocked/i.test(errMsg)) hint = '🚫 คำถามถูก safety filter บล็อก';
   else if(/Failed to fetch|NetworkError/i.test(errMsg)) hint = '🌐 เชื่อมต่อ Gemini ไม่ได้';
@@ -2634,16 +2635,21 @@ function findRelevantKB(query, topN=3){
 
 // Model fallback chain — try newer first, fall back if 404/403
 // Updated model list (May 2026) — 1.x series deprecated, 3.x added
-// Order = fallback priority: newest stable first, preview last
+// Order = fallback priority for Free tier users (Flash models first, no Pro)
+// Pro models are excluded from auto-fallback because they have $0 free quota.
 const GEMINI_MODELS = [
   'gemini-flash-latest',          // auto alias — Google decides
-  'gemini-2.5-flash',             // stable, default workhorse
-  'gemini-2.5-flash-lite',        // cheaper
-  'gemini-2.0-flash',             // deprecated 2026-06-01 but works for now
-  'gemini-3.1-flash',             // preview
-  'gemini-3.1-pro-preview',       // preview pro
-  'gemini-2.5-pro'                // stable pro
+  'gemini-2.5-flash',             // ★ Free tier daily quota — แนะนำ
+  'gemini-2.5-flash-lite',        // ★ Free tier highest quota — ประหยัดสุด
+  'gemini-2.0-flash',             // ★ Free tier (deprecated มิ.ย. 2026)
+  'gemini-3.1-flash'              // 🌟 preview (free tier ยังไม่ stable)
 ];
+// Models with NO free tier (paid only) — skipped in auto fallback
+const GEMINI_PAID_ONLY = new Set([
+  'gemini-2.5-pro',
+  'gemini-1.5-pro',
+  'gemini-3.1-pro-preview'
+]);
 let _geminiPreferredModel = localStorage.getItem('fw_gemini_model') || null;
 // Connection status: 'unknown' | 'ok' | 'error' | 'no-key'
 let GEMINI_STATUS = { state: 'unknown', model: null, message: '', lastChecked: 0 };
@@ -2716,9 +2722,13 @@ async function _callGeminiAPI(prompt){
   // Try preferred model first, then walk down the fallback list
   // Prefer live list from Google if we've fetched it
   const baseList = (_modelListFetched && GEMINI_MODEL_LIST.length) ? GEMINI_MODEL_LIST : GEMINI_MODELS;
+  // In auto mode, skip paid-only models (no free quota); in explicit mode honor user's choice
+  const filteredList = _geminiPreferredModel
+    ? baseList
+    : baseList.filter(m => !GEMINI_PAID_ONLY.has(m));
   const tryOrder = _geminiPreferredModel
-    ? [_geminiPreferredModel, ...baseList.filter(m=>m!==_geminiPreferredModel)]
-    : baseList.slice();
+    ? [_geminiPreferredModel, ...filteredList.filter(m=>m!==_geminiPreferredModel)]
+    : filteredList.slice();
 
   let lastErr = null;
   for(const model of tryOrder){
@@ -2735,7 +2745,24 @@ async function _callGeminiAPI(prompt){
           lastErr = new Error(`[${model}] ${res.status}: ${msg}`);
           continue;
         }
-        // Other errors (401/403/429/500) — fail immediately
+        // 429 quota exceeded — if model is paid-only with no free tier, mark + fallback
+        // (the error message says "limit: 0" for paid-only models on free tier accounts)
+        if(res.status===429 && /limit: ?0/i.test(msg)){
+          GEMINI_PAID_ONLY.add(model); // mark dynamically — never try again automatically
+          lastErr = new Error(`[${model}] ไม่มี Free tier — ข้ามไป model ถัดไป`);
+          // If this was the preferred model, clear it so future calls fall back automatically
+          if(model === _geminiPreferredModel){
+            _geminiPreferredModel = null;
+            localStorage.removeItem('fw_gemini_model');
+          }
+          continue;
+        }
+        // 429 daily quota exceeded — wait time included in message
+        if(res.status===429){
+          lastErr = new Error(`[${model}] เกินโควต้ารายวัน · ${msg}`);
+          continue;
+        }
+        // Other errors (401/403/500) — fail immediately
         setGeminiStatus('error', model, `${res.status}: ${msg}`);
         throw new Error(`Gemini API ${res.status}: ${msg}`);
       }
@@ -2872,9 +2899,13 @@ function startConnectivityMonitor(){
 async function pingGemini(){
   const key = getGeminiKey();
   if(!key){ setGeminiStatus('no-key','',''); return false; }
+  // Skip paid-only models when auto-selecting (no free tier => limit:0)
+  const baseList = _geminiPreferredModel
+    ? GEMINI_MODELS
+    : GEMINI_MODELS.filter(m => !GEMINI_PAID_ONLY.has(m));
   const tryOrder = _geminiPreferredModel
-    ? [_geminiPreferredModel, ...GEMINI_MODELS.filter(m=>m!==_geminiPreferredModel)]
-    : GEMINI_MODELS.slice();
+    ? [_geminiPreferredModel, ...baseList.filter(m=>m!==_geminiPreferredModel)]
+    : baseList.slice();
   let lastErr = null;
   for(const model of tryOrder){
     try {
@@ -2891,7 +2922,17 @@ async function pingGemini(){
       }
       const err = await r.json().catch(()=>({}));
       lastErr = err?.error?.message || `HTTP ${r.status}`;
-      if(r.status!==404 && !/model/i.test(lastErr||'')) {
+      // 429 with limit:0 means this model has no free tier — mark + continue
+      if(r.status===429 && /limit: ?0/i.test(lastErr)){
+        GEMINI_PAID_ONLY.add(model);
+        if(model === _geminiPreferredModel){
+          _geminiPreferredModel = null;
+          localStorage.removeItem('fw_gemini_model');
+        }
+        continue;
+      }
+      // 404 or model-not-found → try next; other errors fail fast
+      if(r.status!==404 && r.status!==429 && !/model/i.test(lastErr||'')) {
         setGeminiStatus('error', model, `${r.status}: ${lastErr}`);
         return false;
       }
@@ -2905,22 +2946,31 @@ async function pingGemini(){
 
 // ---- Model picker popup ----
 const GEMINI_MODEL_LABELS = {
-  'gemini-flash-latest':       '⚡ Flash Latest (auto)',
-  'gemini-2.5-flash':          '🚀 2.5 Flash (แนะนำ)',
-  'gemini-2.5-flash-lite':     '🪶 2.5 Flash Lite (ประหยัด)',
-  'gemini-2.5-pro':            '💎 2.5 Pro (คุณภาพสูง)',
-  'gemini-2.0-flash':          '✨ 2.0 Flash (ถูก deprecate มิ.ย. 2026)',
-  'gemini-3.1-flash':          '🌟 3.1 Flash (preview)',
-  'gemini-3.1-pro-preview':    '💠 3.1 Pro (preview, แพง)'
+  'gemini-flash-latest':       '⚡ Flash Latest',
+  'gemini-2.5-flash':          '🚀 2.5 Flash',
+  'gemini-2.5-flash-lite':     '🪶 2.5 Flash Lite',
+  'gemini-2.5-pro':            '💎 2.5 Pro',
+  'gemini-2.0-flash':          '✨ 2.0 Flash',
+  'gemini-3.1-flash':          '🌟 3.1 Flash',
+  'gemini-3.1-pro-preview':    '💠 3.1 Pro'
+};
+const GEMINI_MODEL_NOTES = {
+  'gemini-flash-latest':       'auto-update เป็นล่าสุด',
+  'gemini-2.5-flash':          'แนะนำ · stable · ฟรี',
+  'gemini-2.5-flash-lite':     'ประหยัดสุด · ฟรี',
+  'gemini-2.5-pro':            'คุณภาพสูง · ต้องจ่าย',
+  'gemini-2.0-flash':          'deprecate มิ.ย. 2026 · ฟรี',
+  'gemini-3.1-flash':          'preview · อาจไม่ฟรี',
+  'gemini-3.1-pro-preview':    'preview pro · ต้องจ่าย'
 };
 // Default list — will be replaced by live list from Google when popup opens
 let GEMINI_MODEL_LIST = [
   'gemini-flash-latest',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
-  'gemini-2.5-pro',
   'gemini-2.0-flash',
   'gemini-3.1-flash',
+  'gemini-2.5-pro',
   'gemini-3.1-pro-preview'
 ];
 let _modelListFetched = false;
@@ -2976,13 +3026,36 @@ function renderModelPopup(){
   if(!list) return;
   const cur = _geminiPreferredModel || '(auto)';
   if(curEl) curEl.textContent = cur;
-  const sourceLabel = _modelListFetched ? '✓ จาก Google API' : '⚠️ จาก default list (กดเพื่อ refresh)';
-  list.innerHTML = GEMINI_MODEL_LIST.map(m=>{
+  const sourceLabel = _modelListFetched ? '✓ จาก Google API' : '⚠️ default list';
+  // Group: Free tier first, then Paid
+  const freeList = GEMINI_MODEL_LIST.filter(m => !GEMINI_PAID_ONLY.has(m));
+  const paidList = GEMINI_MODEL_LIST.filter(m => GEMINI_PAID_ONLY.has(m));
+  const renderItem = (m)=>{
     const active = m===_geminiPreferredModel ? 'active' : '';
     const label = GEMINI_MODEL_LABELS[m] || ('🤖 '+m);
-    return `<div class="mp-item ${active}" onclick="selectGeminiModel('${m}')"><span class="mp-dot"></span><span>${label}</span></div>`;
-  }).join('') + `<div class="mp-item ${!_geminiPreferredModel?'active':''}" onclick="selectGeminiModel('')"><span class="mp-dot"></span><span>🔄 Auto (ลองหลาย model)</span></div>`;
-  // Update footer with source info + refresh link
+    const note = GEMINI_MODEL_NOTES[m] || '';
+    const tag = GEMINI_PAID_ONLY.has(m)
+      ? '<span style="background:#fee2e2;color:#991b1b;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto">💳 paid</span>'
+      : '<span style="background:#dcfce7;color:#166534;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto">✓ free</span>';
+    return `<div class="mp-item ${active}" onclick="selectGeminiModel('${m}')">
+      <span class="mp-dot"></span>
+      <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:6px"><span>${label}</span>${tag}</div>
+        ${note?`<span style="font-size:9px;color:#9ca3af">${note}</span>`:''}
+      </div>
+    </div>`;
+  };
+  let html = '';
+  if(freeList.length){
+    html += '<div class="mp-head" style="font-size:9px;color:#166534">FREE TIER</div>';
+    html += freeList.map(renderItem).join('');
+  }
+  if(paidList.length){
+    html += '<div class="mp-head" style="font-size:9px;color:#991b1b;margin-top:6px">⚠️ ต้องเปิดบัญชี Paid</div>';
+    html += paidList.map(renderItem).join('');
+  }
+  html += `<div class="mp-item ${!_geminiPreferredModel?'active':''}" style="margin-top:6px;border-top:1px solid #e2e8f0;padding-top:8px" onclick="selectGeminiModel('')"><span class="mp-dot"></span><span>🔄 Auto (ลองหลาย model Free)</span></div>`;
+  list.innerHTML = html;
   const foot = document.getElementById('modelPopupFoot');
   if(foot) foot.innerHTML = `ใช้: <b id="mpCurModel">${cur}</b><br><span style="font-size:9px">${sourceLabel}</span> · <a href="#" onclick="refreshModelList(event)" style="color:#3b82f6;font-size:9px">🔄 refresh</a>`;
 }
