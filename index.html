@@ -2633,7 +2633,17 @@ function findRelevantKB(query, topN=3){
 }
 
 // Model fallback chain — try newer first, fall back if 404/403
-const GEMINI_MODELS = ['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash','gemini-2.5-pro','gemini-1.5-pro'];
+// Updated model list (May 2026) — 1.x series deprecated, 3.x added
+// Order = fallback priority: newest stable first, preview last
+const GEMINI_MODELS = [
+  'gemini-flash-latest',          // auto alias — Google decides
+  'gemini-2.5-flash',             // stable, default workhorse
+  'gemini-2.5-flash-lite',        // cheaper
+  'gemini-2.0-flash',             // deprecated 2026-06-01 but works for now
+  'gemini-3.1-flash',             // preview
+  'gemini-3.1-pro-preview',       // preview pro
+  'gemini-2.5-pro'                // stable pro
+];
 let _geminiPreferredModel = localStorage.getItem('fw_gemini_model') || null;
 // Connection status: 'unknown' | 'ok' | 'error' | 'no-key'
 let GEMINI_STATUS = { state: 'unknown', model: null, message: '', lastChecked: 0 };
@@ -2704,9 +2714,11 @@ async function _callGeminiAPI(prompt){
   };
 
   // Try preferred model first, then walk down the fallback list
+  // Prefer live list from Google if we've fetched it
+  const baseList = (_modelListFetched && GEMINI_MODEL_LIST.length) ? GEMINI_MODEL_LIST : GEMINI_MODELS;
   const tryOrder = _geminiPreferredModel
-    ? [_geminiPreferredModel, ...GEMINI_MODELS.filter(m=>m!==_geminiPreferredModel)]
-    : GEMINI_MODELS.slice();
+    ? [_geminiPreferredModel, ...baseList.filter(m=>m!==_geminiPreferredModel)]
+    : baseList.slice();
 
   let lastErr = null;
   for(const model of tryOrder){
@@ -2893,25 +2905,62 @@ async function pingGemini(){
 
 // ---- Model picker popup ----
 const GEMINI_MODEL_LABELS = {
-  'gemini-flash-latest':  '⚡ Flash Latest (auto-updated)',
-  'gemini-2.5-flash':     '🚀 2.5 Flash (fast, newest)',
-  'gemini-2.0-flash':     '✨ 2.0 Flash (stable)',
-  'gemini-1.5-flash':     '🧊 1.5 Flash (legacy)',
-  'gemini-2.5-pro':       '💎 2.5 Pro (best quality, slow)',
-  'gemini-1.5-pro':       '💠 1.5 Pro (legacy pro)'
+  'gemini-flash-latest':       '⚡ Flash Latest (auto)',
+  'gemini-2.5-flash':          '🚀 2.5 Flash (แนะนำ)',
+  'gemini-2.5-flash-lite':     '🪶 2.5 Flash Lite (ประหยัด)',
+  'gemini-2.5-pro':            '💎 2.5 Pro (คุณภาพสูง)',
+  'gemini-2.0-flash':          '✨ 2.0 Flash (ถูก deprecate มิ.ย. 2026)',
+  'gemini-3.1-flash':          '🌟 3.1 Flash (preview)',
+  'gemini-3.1-pro-preview':    '💠 3.1 Pro (preview, แพง)'
 };
-const GEMINI_MODEL_LIST = [
-  'gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash','gemini-2.5-pro','gemini-1.5-pro'
+// Default list — will be replaced by live list from Google when popup opens
+let GEMINI_MODEL_LIST = [
+  'gemini-flash-latest',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.5-pro',
+  'gemini-2.0-flash',
+  'gemini-3.1-flash',
+  'gemini-3.1-pro-preview'
 ];
+let _modelListFetched = false;
 
-function toggleModelPopup(e){
+// Fetch real available models from Google (populates GEMINI_MODEL_LIST)
+async function fetchAvailableModels(){
+  const key = getGeminiKey();
+  if(!key) return null;
+  try {
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if(!r.ok) return null;
+    const data = await r.json();
+    if(!data.models) return null;
+    // Filter: only models that support generateContent
+    const available = data.models
+      .filter(m => (m.supportedGenerationMethods||[]).includes('generateContent'))
+      .map(m => m.name.replace(/^models\//,''))
+      .filter(name => /gemini/i.test(name) && !/embedding|aqa|tts|image/i.test(name));
+    if(available.length){
+      GEMINI_MODEL_LIST = available;
+      _modelListFetched = true;
+      return available;
+    }
+  } catch(e){ console.warn('fetchAvailableModels:', e.message); }
+  return null;
+}
+
+async function toggleModelPopup(e){
   if(e) e.stopPropagation();
   const pop = document.getElementById('modelPopup');
   if(!pop) return;
   const open = pop.classList.toggle('open');
   if(open){
-    renderModelPopup();
-    // Close on outside click
+    renderModelPopup(); // render with cached list first
+    // Then fetch live list from Google (silent — re-render if different)
+    if(!_modelListFetched && getGeminiKey()){
+      fetchAvailableModels().then(list=>{
+        if(list && list.length) renderModelPopup();
+      });
+    }
     setTimeout(()=>{
       document.addEventListener('click', _closeModelPopupOnce, {once:true});
     },10);
@@ -2927,11 +2976,28 @@ function renderModelPopup(){
   if(!list) return;
   const cur = _geminiPreferredModel || '(auto)';
   if(curEl) curEl.textContent = cur;
+  const sourceLabel = _modelListFetched ? '✓ จาก Google API' : '⚠️ จาก default list (กดเพื่อ refresh)';
   list.innerHTML = GEMINI_MODEL_LIST.map(m=>{
     const active = m===_geminiPreferredModel ? 'active' : '';
-    const label = GEMINI_MODEL_LABELS[m] || m;
+    const label = GEMINI_MODEL_LABELS[m] || ('🤖 '+m);
     return `<div class="mp-item ${active}" onclick="selectGeminiModel('${m}')"><span class="mp-dot"></span><span>${label}</span></div>`;
   }).join('') + `<div class="mp-item ${!_geminiPreferredModel?'active':''}" onclick="selectGeminiModel('')"><span class="mp-dot"></span><span>🔄 Auto (ลองหลาย model)</span></div>`;
+  // Update footer with source info + refresh link
+  const foot = document.getElementById('modelPopupFoot');
+  if(foot) foot.innerHTML = `ใช้: <b id="mpCurModel">${cur}</b><br><span style="font-size:9px">${sourceLabel}</span> · <a href="#" onclick="refreshModelList(event)" style="color:#3b82f6;font-size:9px">🔄 refresh</a>`;
+}
+
+async function refreshModelList(e){
+  if(e){ e.preventDefault(); e.stopPropagation(); }
+  _modelListFetched = false;
+  showToast('🔄 กำลังดึง model list จาก Google...', 1500);
+  const list = await fetchAvailableModels();
+  if(list && list.length){
+    renderModelPopup();
+    showToast(`✅ พบ ${list.length} models`, 2000);
+  } else {
+    showToast('❌ ดึง list ไม่ได้ — ใช้ default list', 2500);
+  }
 }
 async function selectGeminiModel(model){
   if(model){
@@ -3058,6 +3124,15 @@ async function initApp() {
       }
       if(remoteGemKey){
         _geminiKeyCache = remoteGemKey;
+        // Fetch live model list from Google in background (so popup + fallback uses real list)
+        fetchAvailableModels().catch(()=>{});
+        // Clear stale preferred model if it's known to be deprecated
+        const deprecated = ['gemini-1.5-pro','gemini-1.5-flash','gemini-pro','gemini-pro-vision'];
+        if(_geminiPreferredModel && deprecated.includes(_geminiPreferredModel)){
+          console.log('Clearing deprecated preferred model:', _geminiPreferredModel);
+          _geminiPreferredModel = null;
+          localStorage.removeItem('fw_gemini_model');
+        }
       }
     } catch(e){ console.warn('initial sync failed:', e.message); }
   }
