@@ -22,13 +22,24 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
 .header-right{margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .status{display:flex;align-items:center;gap:5px;font-size:12px;opacity:.9}
 .dot{width:7px;height:7px;background:#34d399;border-radius:50%;animation:pulse 2s infinite}
-.conn-status{display:flex;align-items:center;gap:8px;margin-left:6px;padding:3px 9px;background:rgba(0,0,0,.18);border-radius:12px;font-size:10px;font-weight:600}
+.conn-status{display:flex;align-items:center;gap:8px;margin-left:6px;padding:3px 9px;background:rgba(0,0,0,.18);border-radius:12px;font-size:10px;font-weight:600;position:relative}
 .conn-dot{display:inline-flex;align-items:center;gap:3px;cursor:help}
+.conn-dot.clickable{cursor:pointer}
+.conn-dot.clickable:hover{filter:brightness(1.2)}
 .conn-dot .cd{width:7px;height:7px;border-radius:50%;background:#94a3b8;transition:background .2s,box-shadow .2s}
 .conn-dot.ok .cd{background:#34d399;box-shadow:0 0 6px rgba(52,211,153,.6)}
 .conn-dot.err .cd{background:#ef4444;box-shadow:0 0 6px rgba(239,68,68,.6)}
 .conn-dot.checking .cd{background:#fbbf24;animation:pulse 1s infinite}
 .conn-dot .cd-label{color:#fff;letter-spacing:.5px}
+.model-popup{position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#fff;color:#1a202c;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.25);min-width:240px;padding:8px;z-index:1000;display:none}
+.model-popup.open{display:block}
+.model-popup .mp-head{font-size:10px;color:#6b7280;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:6px 8px 4px}
+.model-popup .mp-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;font-size:12px;cursor:pointer;transition:background .12s}
+.model-popup .mp-item:hover{background:#f1f5f9}
+.model-popup .mp-item.active{background:#dbeafe;font-weight:700;color:#1e40af}
+.model-popup .mp-item .mp-dot{width:6px;height:6px;border-radius:50%;background:#cbd5e1;flex-shrink:0}
+.model-popup .mp-item.active .mp-dot{background:#3b82f6}
+.model-popup .mp-foot{font-size:10px;color:#9ca3af;padding:5px 9px 2px;border-top:1px solid #e2e8f0;margin-top:4px;line-height:1.5}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 .hbtn{border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 11px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s;position:relative}
 .hbtn.blue{background:rgba(255,255,255,.15)}.hbtn.blue:hover{background:rgba(255,255,255,.28)}
@@ -535,7 +546,12 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
       <span id="appTitleText">FreeWill FX — Support Assistant</span>
       <span class="conn-status" title="สถานะการเชื่อมต่อ">
         <span class="conn-dot checking" id="connServer" title="กำลังตรวจสอบ..."><span class="cd"></span><span class="cd-label">SRV</span></span>
-        <span class="conn-dot checking" id="connAI" title="กำลังตรวจสอบ..."><span class="cd"></span><span class="cd-label">AI</span></span>
+        <span class="conn-dot checking clickable" id="connAI" onclick="toggleModelPopup(event)" title="คลิกเพื่อเลือก Gemini model"><span class="cd"></span><span class="cd-label">AI</span></span>
+        <div class="model-popup" id="modelPopup" onclick="event.stopPropagation()">
+          <div class="mp-head">เลือก Gemini Model</div>
+          <div id="modelPopupList"></div>
+          <div class="mp-foot" id="modelPopupFoot">Model ที่ใช้ปัจจุบัน: <b id="mpCurModel">-</b></div>
+        </div>
       </span>
     </h1>
     <p id="appSubtitle">Terminus Fleet Management | GPS Support Bot</p>
@@ -2452,42 +2468,98 @@ function sendMessage(){
     if(coRes.length){ removeTyping(); addMsg('bot',`<h3>🏢 พบข้อมูลบริษัท — ${coRes.length} รายการ</h3>${renderCompanyResult(coRes)}`); return; }
   }
 
-  // ถ้ามี Gemini API key — ใช้ RAG เสมอ
+  // ===== KB-first flow =====
+  // 1) ค้น KB ก่อน
+  const relatedKB = findRelevantKB(q, 5);
   const geminiKey = getGeminiKey();
-  if(geminiKey){
-    (async()=>{
-      try{
-        const relatedKB = findRelevantKB(q, 3);
-        const answer = await askGemini(q);
+
+  if(relatedKB.length){
+    // 2A) พบใน KB — ถ้ามี Gemini ให้ AI สรุป/ขยายผลจาก KB; ถ้าไม่มีให้แสดง KB ปกติ
+    if(geminiKey){
+      (async()=>{
+        try{
+          const answer = await askGeminiWithKB(q, relatedKB);
+          removeTyping();
+          addMsg('bot', renderGeminiAnswer(answer, relatedKB));
+        }catch(err){
+          console.warn('Gemini error:', err);
+          removeTyping();
+          // Gemini พัง → แสดง KB ตรงๆ + แจ้ง error เบาๆ
+          const r = searchKB(q) || relatedKB[0];
+          const errMsg = (err && err.message) ? err.message : String(err);
+          addMsg('bot', renderResult(r) + renderGeminiErrorHint(errMsg, true));
+        }
+      })();
+    } else {
+      // ไม่มี Gemini key — แสดง KB ปกติ
+      setTimeout(()=>{
         removeTyping();
-        addMsg('bot', renderGeminiAnswer(answer, relatedKB));
-      }catch(err){
-        console.warn('Gemini error:', err);
-        removeTyping();
-        const errMsg = (err && err.message) ? err.message : String(err);
-        // Categorize error to give actionable hint
-        let hint = '';
-        if(/401|403|API key not valid|API_KEY/i.test(errMsg)) hint = '🔑 API Key ไม่ถูกต้อง — เปิด ⚙️ Keys เพื่อแก้ไข';
-        else if(/429|quota|rate/i.test(errMsg)) hint = '⏱️ เกินโควต้ารายวัน — รอ 24 ชม. หรือใช้ key อื่น';
-        else if(/safety|blocked/i.test(errMsg)) hint = '🚫 คำถามถูก safety filter บล็อก — ลองถามใหม่';
-        else if(/Failed to fetch|NetworkError/i.test(errMsg)) hint = '🌐 เชื่อมต่อ Gemini ไม่ได้ — ตรวจสอบเน็ตเวิร์ก/VPN';
-        else if(/404|model/i.test(errMsg)) hint = '🤖 Model ที่ตั้งไว้ใช้ไม่ได้ — ระบบลองหลาย model แล้ว';
-        // Fallback to KB search
-        const r=searchKB(q);
-        const errBox = `<div style="margin-top:8px;padding:8px 11px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;font-size:11px;color:#991b1b"><b>⚠️ Gemini ไม่พร้อม</b><br><span style="font-family:monospace;font-size:10px;color:#7f1d1d">${escHtml(errMsg)}</span>${hint?`<br><br>${hint}`:''}</div>`;
-        if(r){ addMsg('bot',renderResult(r)+`<div style="font-size:10px;color:var(--muted);margin-top:6px">แสดงผลจาก KB แทน</div>${errBox}`); }
-        else { addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p style="font-size:12px">ลองพิมพ์ <b>/เพิ่ม</b> เพื่อสอน KB</p>${errBox}`); }
-      }
-    })();
+        addMsg('bot', renderResult(relatedKB[0]));
+      }, 200);
+    }
     return;
   }
 
-  // ไม่มี Gemini key — ใช้ KB search ปกติ
-  setTimeout(()=>{
+  // 2B) ไม่พบใน KB — ถาม user ว่าจะให้ AI หาข้อมูลภายนอก หรือสอน KB
+  removeTyping();
+  // เก็บ q ไว้ใน data attribute ของ msg เพื่อให้ปุ่มเรียกใช้ได้
+  const qEsc = q.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  const askExternalBtn = geminiKey
+    ? `<button class="btn btn-primary" style="font-size:12px;padding:7px 14px" onclick="askGeminiExternal('${qEsc}')">✨ ให้ AI หาข้อมูลจากภายนอก</button>`
+    : `<div style="font-size:11px;color:var(--muted);padding:6px 10px;background:#f1f5f9;border-radius:7px">💡 เปิดใช้ Gemini ใน ⚙️ Keys เพื่อให้ AI ช่วยหาคำตอบ</div>`;
+  const teachBtn = `<button class="btn btn-ghost" style="font-size:12px;padding:7px 14px" onclick="startTeachWith('${qEsc}')">📝 สอน AI</button>`;
+  addMsg('bot', `<div>
+    <h3>🤔 ยังไม่พบใน Knowledge Base</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px">คำถาม: "<b>${escHtml(q)}</b>"</p>
+    <p style="font-size:12px;margin-bottom:10px">คุณต้องการ:</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${askExternalBtn}
+      ${teachBtn}
+    </div>
+  </div>`);
+}
+
+// Helper: render Gemini error hint as a compact box appended after KB result
+function renderGeminiErrorHint(errMsg, hideHeader){
+  let hint = '';
+  if(/401|403|API key not valid|API_KEY/i.test(errMsg)) hint = '🔑 API Key ไม่ถูกต้อง — เปิด ⚙️ Keys เพื่อแก้ไข';
+  else if(/429|quota|rate/i.test(errMsg)) hint = '⏱️ เกินโควต้ารายวัน — รอ 24 ชม. หรือเปลี่ยน model';
+  else if(/safety|blocked/i.test(errMsg)) hint = '🚫 คำถามถูก safety filter บล็อก';
+  else if(/Failed to fetch|NetworkError/i.test(errMsg)) hint = '🌐 เชื่อมต่อ Gemini ไม่ได้';
+  else if(/404|model/i.test(errMsg)) hint = '🤖 Model ใช้ไม่ได้ — คลิก AI dot บน header เพื่อเลือก model อื่น';
+  const head = hideHeader ? '' : '<b>⚠️ Gemini ไม่พร้อม</b><br>';
+  return `<div style="margin-top:8px;padding:7px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;font-size:10px;color:#991b1b">${head}<span style="font-family:monospace;color:#7f1d1d">${escHtml(errMsg)}</span>${hint?`<br>${hint}`:''}</div>`;
+}
+
+// Called when user clicks "ให้ AI หาข้อมูลจากภายนอก"
+async function askGeminiExternal(q){
+  if(!getGeminiKey()){ showToast('❌ ยังไม่ได้ตั้งค่า Gemini key',3000); return; }
+  // Replace the question chip ui with typing then result
+  showTyping();
+  try {
+    const answer = await askGeminiOpen(q);
     removeTyping();
-    const r=searchKB(q);
-    r?addMsg('bot',renderResult(r)):addMsg('bot',`<h3>🔍 ไม่พบ: "${q}"</h3><p>ลองถามด้วยคำอื่น หรือพิมพ์ <b>/เพิ่ม</b> เพื่อสอน chatbot</p><p style="font-size:12px;color:var(--muted)">💡 เปิดใช้ Gemini AI ได้ที่ ⚙️ Settings → Gemini Key</p>`);
-  },300);
+    const externalBadge = '<div style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;color:#78350f;margin-bottom:8px">🌐 ข้อมูลจาก Gemini (ภายนอก KB)</div>';
+    addMsg('bot', externalBadge + renderGeminiAnswer(answer, []));
+    // After AI answer, prompt to save into KB
+    addMsg('bot', `<div style="font-size:12px">💡 อยากบันทึกคำตอบนี้เข้า Knowledge Base ไหม? <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;margin-top:6px" onclick="startTeachWith('${q.replace(/'/g,"\\'")}')">📝 สอน AI</button></div>`);
+  } catch(err){
+    removeTyping();
+    const errMsg = (err && err.message) ? err.message : String(err);
+    addMsg('bot', `<h3>❌ Gemini ไม่ตอบสนอง</h3>` + renderGeminiErrorHint(errMsg, true));
+  }
+}
+
+// Called when user clicks "สอน AI"
+function startTeachWith(initialTitle){
+  teachState={step:'title',data:{title:initialTitle||''}};
+  if(initialTitle){
+    // Skip title step — go straight to keywords
+    teachState.step='keywords';
+    addMsg('bot',`📝 <b>สอน chatbot</b> — ชื่อหัวข้อ: "${escHtml(initialTitle)}"<br>🔑 Keywords (comma) เช่น: mdvr, กล้องวีดีโอ<br><span style="font-size:11px;color:var(--muted)">(พิมพ์ /ยกเลิก เพื่อหยุด)</span>`);
+  } else {
+    addMsg('bot','📝 <b>สอน chatbot</b> — กรอกชื่อหัวข้อ<br><span style="font-size:11px;color:var(--muted)">(พิมพ์ /ยกเลิก เพื่อหยุด)</span>');
+  }
 }
 function handleSugg(t){document.getElementById('userInput').value=t;sendMessage();}
 function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
@@ -2561,20 +2633,67 @@ function findRelevantKB(query, topN=3){
 }
 
 // Model fallback chain — try newer first, fall back if 404/403
-const GEMINI_MODELS = ['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash'];
+const GEMINI_MODELS = ['gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash','gemini-2.5-pro','gemini-1.5-pro'];
 let _geminiPreferredModel = localStorage.getItem('fw_gemini_model') || null;
 // Connection status: 'unknown' | 'ok' | 'error' | 'no-key'
 let GEMINI_STATUS = { state: 'unknown', model: null, message: '', lastChecked: 0 };
 
+// ----- Smart wrappers -----
+// Build a focused prompt from already-matched KB items (no full KB dump)
+function buildKBFocusedPrompt(question, kbItems){
+  const kbText = kbItems.map(item=>{
+    let txt = `[${item.title}]`;
+    if(item.keywords?.length) txt += `\nKeywords: ${item.keywords.join(', ')}`;
+    if(item.answer) txt += `\nคำตอบ: ${item.answer}`;
+    if(item.steps?.length) txt += `\nขั้นตอน:\n${item.steps.map((s,i)=>`${i+1}. ${s}`).join('\n')}`;
+    if(item.extra) txt += `\nข้อมูลเพิ่มเติม: ${item.extra.replace(/<[^>]+>/g,'')}`;
+    if(item.links?.length) txt += `\nลิงก์: ${item.links.map(l=>`${l.title}: ${l.url}`).join(', ')}`;
+    return txt;
+  }).join('\n\n---\n\n');
+  return `คุณคือ AI ผู้ช่วยของ FreeWill FX (Terminus Fleet Management / GPS ติดตามรถ)
+ตอบเป็นภาษาไทย กระชับ ชัดเจน และเป็นประโยชน์ ใช้เฉพาะข้อมูลใน Knowledge Base ด้านล่างนี้
+ถ้าข้อมูลไม่พอตอบคำถาม ให้บอกตรงๆ ว่า "ไม่พบข้อมูลที่ตรงกับคำถามใน Knowledge Base"
+
+=== Knowledge Base ที่เกี่ยวข้อง ===
+${kbText}
+
+=== คำถาม ===
+${question}`;
+}
+
+// Open prompt — ไม่มี KB context (สำหรับ "หาข้อมูลภายนอก")
+function buildOpenPrompt(question){
+  return `คุณคือ AI ผู้ช่วยของ FreeWill FX (Terminus Fleet Management / GPS ติดตามรถ)
+ตอบเป็นภาษาไทย กระชับ ชัดเจน เป็นประโยชน์ ใช้ความรู้ทั่วไปของคุณ
+ถ้าเป็นข้อมูลเฉพาะของบริษัท ให้แจ้งว่าเป็นความรู้ทั่วไป — ผู้ใช้ควร verify อีกครั้ง
+
+=== คำถาม ===
+${question}`;
+}
+
+// Public wrappers
+async function askGeminiWithKB(question, kbItems){
+  const prompt = buildKBFocusedPrompt(question, kbItems);
+  return _callGeminiAPI(prompt);
+}
+async function askGeminiOpen(question){
+  const prompt = buildOpenPrompt(question);
+  return _callGeminiAPI(prompt);
+}
+// Legacy alias
 async function askGemini(question){
+  // Default behaviour: full KB dump (kept for any old callers)
+  const prompt = `${buildRAGContext()}\n\n=== คำถาม ===\n${question}`;
+  return _callGeminiAPI(prompt);
+}
+
+async function _callGeminiAPI(prompt){
   const key = getGeminiKey();
   if(!key){
     setGeminiStatus('no-key','','ยังไม่ได้ตั้งค่า API Key');
-    return null;
+    throw new Error('ยังไม่ได้ตั้งค่า Gemini API Key');
   }
 
-  const context = buildRAGContext();
-  const prompt = `${context}\n\n=== คำถาม ===\n${question}`;
   const body = {
     contents: [{parts: [{text: prompt}]}],
     generationConfig: { temperature: 0.3, maxOutputTokens: 800, topP: 0.8 },
@@ -2770,6 +2889,64 @@ async function pingGemini(){
   }
   setGeminiStatus('error', null, lastErr || 'ทุก model ใช้ไม่ได้');
   return false;
+}
+
+// ---- Model picker popup ----
+const GEMINI_MODEL_LABELS = {
+  'gemini-flash-latest':  '⚡ Flash Latest (auto-updated)',
+  'gemini-2.5-flash':     '🚀 2.5 Flash (fast, newest)',
+  'gemini-2.0-flash':     '✨ 2.0 Flash (stable)',
+  'gemini-1.5-flash':     '🧊 1.5 Flash (legacy)',
+  'gemini-2.5-pro':       '💎 2.5 Pro (best quality, slow)',
+  'gemini-1.5-pro':       '💠 1.5 Pro (legacy pro)'
+};
+const GEMINI_MODEL_LIST = [
+  'gemini-flash-latest','gemini-2.5-flash','gemini-2.0-flash','gemini-1.5-flash','gemini-2.5-pro','gemini-1.5-pro'
+];
+
+function toggleModelPopup(e){
+  if(e) e.stopPropagation();
+  const pop = document.getElementById('modelPopup');
+  if(!pop) return;
+  const open = pop.classList.toggle('open');
+  if(open){
+    renderModelPopup();
+    // Close on outside click
+    setTimeout(()=>{
+      document.addEventListener('click', _closeModelPopupOnce, {once:true});
+    },10);
+  }
+}
+function _closeModelPopupOnce(){
+  const pop = document.getElementById('modelPopup');
+  if(pop) pop.classList.remove('open');
+}
+function renderModelPopup(){
+  const list = document.getElementById('modelPopupList');
+  const curEl = document.getElementById('mpCurModel');
+  if(!list) return;
+  const cur = _geminiPreferredModel || '(auto)';
+  if(curEl) curEl.textContent = cur;
+  list.innerHTML = GEMINI_MODEL_LIST.map(m=>{
+    const active = m===_geminiPreferredModel ? 'active' : '';
+    const label = GEMINI_MODEL_LABELS[m] || m;
+    return `<div class="mp-item ${active}" onclick="selectGeminiModel('${m}')"><span class="mp-dot"></span><span>${label}</span></div>`;
+  }).join('') + `<div class="mp-item ${!_geminiPreferredModel?'active':''}" onclick="selectGeminiModel('')"><span class="mp-dot"></span><span>🔄 Auto (ลองหลาย model)</span></div>`;
+}
+async function selectGeminiModel(model){
+  if(model){
+    _geminiPreferredModel = model;
+    localStorage.setItem('fw_gemini_model', model);
+  } else {
+    _geminiPreferredModel = null;
+    localStorage.removeItem('fw_gemini_model');
+  }
+  document.getElementById('modelPopup').classList.remove('open');
+  showToast('🔄 กำลังทดสอบ model...', 1500);
+  setGeminiStatus('unknown', model||null, 'กำลังทดสอบ');
+  updateGeminiStatusUI();
+  const ok = await pingGemini();
+  showToast(ok ? `✅ ใช้งานได้: ${_geminiPreferredModel}` : `❌ Model ใช้ไม่ได้`, 2500);
 }
 
 function renderGeminiAnswer(text, relatedKB=[]){
