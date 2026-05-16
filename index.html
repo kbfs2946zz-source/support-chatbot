@@ -2515,13 +2515,78 @@ function handleCommand(input){
   return false;
 }
 
+let _chatPending = false;
+let _chatPendingTimer = null;
+function _setChatPending(val){
+  _chatPending = val;
+  if(_chatPendingTimer){ clearTimeout(_chatPendingTimer); _chatPendingTimer=null; }
+  if(val){
+    // Safety: auto-release after 60s in case anything hangs
+    _chatPendingTimer = setTimeout(()=>{ _chatPending=false; }, 60000);
+  }
+  // Update send button visual state
+  const btn = document.querySelector('.send-btn');
+  if(btn){
+    if(val){ btn.style.opacity='0.5'; btn.style.cursor='not-allowed'; }
+    else   { btn.style.opacity=''; btn.style.cursor=''; }
+  }
+}
+// Patch removeTyping ONCE — release pending flag whenever it's called
+(function patchRemoveTyping(){
+  if(window._removeTypingPatched) return;
+  window._removeTypingPatched = true;
+  const orig = window.removeTyping || removeTyping;
+  window.removeTyping = function(){
+    _setChatPending(false);
+    return orig.apply(this, arguments);
+  };
+})();
+
+// Visual cooldown countdown when 429 happens
+function showCooldownBanner(seconds){
+  let banner = document.getElementById('chatCooldownBanner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'chatCooldownBanner';
+    banner.style.cssText = 'position:sticky;bottom:0;background:#fef2f2;border-top:2px solid #fecaca;padding:8px 14px;font-size:12px;color:#991b1b;text-align:center;font-weight:600;z-index:5';
+    const inputArea = document.querySelector('.input-area');
+    if(inputArea && inputArea.parentNode) inputArea.parentNode.insertBefore(banner, inputArea);
+  }
+  let remain = Math.ceil(seconds);
+  banner.innerHTML = `⏱️ Gemini เกินโควต้า · กรุณารอ <b id="cdRemain">${remain}</b> วินาที (Free tier 15 RPM)`;
+  banner.style.display = 'block';
+  if(banner._timer) clearInterval(banner._timer);
+  banner._timer = setInterval(()=>{
+    remain--;
+    const el = document.getElementById('cdRemain');
+    if(el) el.textContent = remain;
+    if(remain<=0){
+      clearInterval(banner._timer);
+      banner.style.display = 'none';
+    }
+  }, 1000);
+}
+
 function sendMessage(){
   const inp=document.getElementById('userInput');const q=inp.value.trim();if(!q)return;
+  // Block spam clicks while a previous Gemini call is still pending
+  if(_chatPending){
+    showToast('⏳ กำลังประมวลผลคำถามก่อนหน้า กรุณารอสักครู่...', 2000);
+    return;
+  }
+  // Check global cooldown from previous 429
+  if(typeof _geminiCooldownUntil!=='undefined' && _geminiCooldownUntil > Date.now()){
+    const left = Math.ceil((_geminiCooldownUntil - Date.now())/1000);
+    showToast(`⏱️ Gemini cooldown · รอ ${left} วินาที`, 3000);
+    showCooldownBanner(left);
+    return;
+  }
   document.getElementById('suggs').style.display='none';
   addMsg('user',q);inp.value='';inp.style.height='auto';
   if(teachState){handleTeachInput(q);return;}
   if(q.startsWith('/')){if(!handleCommand(q))addMsg('bot',`ไม่รู้จักคำสั่ง <b>${q}</b> ลอง <b>/help</b>`);return;}
   showTyping();
+  _setChatPending(true);
 
   // ตรวจ PW / Company triggers ก่อน (ไม่ต้องใช้ Gemini)
   const ql = q.toLowerCase();
@@ -2569,17 +2634,21 @@ function sendMessage(){
     return;
   }
 
-  // 2B) ไม่พบใน KB → ให้ AI ตอบเลย (จากความรู้ทั่วไป) + เสนอเพิ่มเข้า KB
+  // 2B) ไม่พบใน KB → ให้ AI ตอบเลย (จากความรู้ทั่วไป) + พ่วง KB-extract ในรอบเดียว
   if(geminiKey){
     (async()=>{
       try {
-        const answer = await askGeminiOpen(q);
+        // Single call returns BOTH the answer AND a structured KB draft (saves 1 API call)
+        const result = await askGeminiOpenWithKBDraft(q);
         removeTyping();
         const qEsc = q.replace(/'/g,"\\'").replace(/"/g,'&quot;');
-        const ansEsc = btoa(unescape(encodeURIComponent(answer))); // store full answer for later proposal
+        // Store the draft so user can submit later without another API call
+        const draftJson = btoa(unescape(encodeURIComponent(JSON.stringify(result.kbDraft||{}))));
         const externalBadge = '<div style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:2px 8px;font-size:9px;font-weight:700;color:#78350f;margin-bottom:8px">🌐 นอกเหนือจาก KB · ความรู้ทั่วไป Gemini</div>';
-        const proposeBtn = `<button class="btn btn-primary" style="font-size:12px;padding:7px 14px;margin-top:8px" onclick="proposeKBFromAnswer('${qEsc}','${ansEsc}')">💡 เพิ่มเข้า Knowledge Base (รอ admin approve)</button>`;
-        addMsg('bot', externalBadge + renderGeminiAnswer(answer, []) + `<div style="margin-top:6px">${proposeBtn}</div>`);
+        const proposeBtn = result.kbDraft
+          ? `<button class="btn btn-primary" style="font-size:12px;padding:7px 14px;margin-top:8px" onclick="proposeKBFromDraft('${qEsc}','${draftJson}')">💡 เพิ่มเข้า Knowledge Base (รอ admin approve)</button>`
+          : '';
+        addMsg('bot', externalBadge + renderGeminiAnswer(result.answer, []) + `<div style="margin-top:6px">${proposeBtn}</div>`);
       } catch(err){
         removeTyping();
         const errMsg = (err && err.message) ? err.message : String(err);
@@ -2637,7 +2706,34 @@ async function askGeminiExternal(q){
   }
 }
 
-// User clicks "เพิ่มเข้า KB" → AI สรุปคำถาม+คำตอบเป็น KB entry → submit ไป pending queue
+// New flow: User clicks "เพิ่มเข้า KB" using draft from same response — 0 extra API calls
+async function proposeKBFromDraft(qEsc, draftB64){
+  if(!getGHToken()){ showToast('❌ ยังไม่ได้ตั้งค่า GitHub token',3000); return; }
+  const question = qEsc.replace(/\\'/g,"'").replace(/&quot;/g,'"');
+  let kbItem;
+  try { kbItem = JSON.parse(decodeURIComponent(escape(atob(draftB64)))); }
+  catch(e){ showToast('❌ Draft เสียหาย',3000); return; }
+  if(!kbItem || !kbItem.title){ showToast('❌ ไม่มี draft ให้บันทึก',3000); return; }
+  showToast('🔄 กำลังส่งเข้าคิว approve...', 1500);
+  try {
+    kbItem.id = Date.now();
+    kbItem.createdAt = Date.now();
+    kbItem.createdBy = currentUser?.name || 'unknown';
+    kbItem._source = 'gemini-proposed';
+    kbItem._originalQuestion = question;
+    await ghKBPendingSave(kbItem);
+    addMsg('bot', `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 13px">
+      <div style="font-weight:700;color:#065f46;margin-bottom:6px">✅ ส่งเข้าคิวรอ Admin approve แล้ว</div>
+      <div style="font-size:12px;color:#166534">หัวข้อ: <b>${escHtml(kbItem.title)}</b></div>
+      <div style="font-size:11px;color:#065f46;margin-top:4px">Admin จะได้รับการแจ้งเตือนเพื่อพิจารณา</div>
+    </div>`);
+    notifyAdminsKBPending(kbItem);
+  } catch(err){
+    addMsg('bot', `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 13px;color:#991b1b"><b>❌ ส่งไม่สำเร็จ</b><br><span style="font-family:monospace;font-size:10px">${escHtml(err.message)}</span></div>`);
+  }
+}
+
+// Legacy fallback: user clicks "เพิ่มเข้า KB" without draft — needs 1 extra AI call (kept for old chat history)
 async function proposeKBFromAnswer(qEsc, answerB64){
   if(!getGHToken()){ showToast('❌ ยังไม่ได้ตั้งค่า GitHub token',3000); return; }
   if(!getGeminiKey()){ showToast('❌ ยังไม่ได้ตั้งค่า Gemini key',3000); return; }
@@ -2947,6 +3043,43 @@ async function askGeminiOpen(question){
   const prompt = buildOpenPrompt(question);
   return _callGeminiAPI(prompt);
 }
+
+// Combined call: answer + KB-extraction in a SINGLE API request.
+// Returns { answer: string, kbDraft: object|null }
+async function askGeminiOpenWithKBDraft(question){
+  const prompt = `คุณคือ AI ผู้ช่วยของ FreeWill FX (Terminus Fleet Management / GPS ติดตามรถ)
+ตอบเป็นภาษาไทย กระชับ ชัดเจน เป็นประโยชน์ ใช้ความรู้ทั่วไปของคุณ
+
+ทำ 2 อย่างใน response เดียว:
+1) ตอบคำถามให้ user
+2) สรุปคำถาม+คำตอบเป็น Knowledge Base entry (เผื่อ user อยากบันทึก)
+
+Output รูปแบบ JSON เท่านั้น ห้ามมี markdown fence หรือคำอธิบายเพิ่ม:
+{
+  "answer": "คำตอบเต็มสำหรับ user (เป็นภาษาไทย ใช้ markdown ได้)",
+  "kb": {
+    "title": "หัวข้อสั้นกระชับ ไม่เกิน 60 ตัวอักษร",
+    "keywords": ["คำสำคัญ", "อย่างน้อย 3 คำ", "ใช้ค้นได้"],
+    "answer": "สรุปสั้น 1-2 บรรทัด",
+    "steps": ["ขั้นตอน 1 (ถ้ามี)"],
+    "extra": "ข้อมูลเพิ่ม (ถ้ามี)"
+  }
+}
+
+คำถาม: ${question}`;
+  const raw = await _callGeminiAPI(prompt);
+  // Strip code fence if AI added one
+  let jsonStr = raw.trim();
+  const fence = jsonStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if(fence) jsonStr = fence[1].trim();
+  try {
+    const parsed = JSON.parse(jsonStr);
+    return { answer: parsed.answer || raw, kbDraft: parsed.kb || null };
+  } catch(e){
+    // Fallback: AI didn't return valid JSON — use raw text as answer
+    return { answer: raw, kbDraft: null };
+  }
+}
 // Legacy alias
 async function askGemini(question){
   // Default behaviour: full KB dump (kept for any old callers)
@@ -2954,11 +3087,74 @@ async function askGemini(question){
   return _callGeminiAPI(prompt);
 }
 
+// ===== Gemini Rate Limiter & Queue =====
+// Free tier Gemini 2.5 Flash limits: ~15 RPM, 1500 RPD
+// We enforce conservative client-side limit (12 RPM) to stay below Google's count
+const GEMINI_RPM_LIMIT = 12;       // requests/minute we'll allow client-side
+const GEMINI_MIN_GAP_MS = 4000;    // minimum gap between consecutive requests
+// History stored in sessionStorage so all tabs in same session share it
+function _geminiHistGet(){
+  try { return JSON.parse(sessionStorage.getItem('fw_gemini_hist')||'[]'); } catch{ return []; }
+}
+function _geminiHistAdd(ts){
+  const arr = _geminiHistGet().filter(t => Date.now()-t < 60000);
+  arr.push(ts);
+  try { sessionStorage.setItem('fw_gemini_hist', JSON.stringify(arr)); } catch{}
+}
+function _geminiRateCheck(){
+  // Returns { ok: boolean, waitMs: number }
+  const arr = _geminiHistGet().filter(t => Date.now()-t < 60000);
+  if(arr.length >= GEMINI_RPM_LIMIT){
+    const oldest = arr[0];
+    const waitMs = 60000 - (Date.now()-oldest) + 100;
+    return { ok:false, waitMs };
+  }
+  // Check minimum gap
+  const last = arr[arr.length-1];
+  if(last && (Date.now()-last) < GEMINI_MIN_GAP_MS){
+    return { ok:false, waitMs: GEMINI_MIN_GAP_MS - (Date.now()-last) };
+  }
+  return { ok:true, waitMs: 0 };
+}
+// Single in-flight queue
+let _geminiQueue = Promise.resolve();
+let _geminiInflight = false;
+let _geminiCooldownUntil = 0; // after 429, block all calls until this ts
+
+function _sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
 async function _callGeminiAPI(prompt){
+  // Wrap in queue so concurrent calls run sequentially
+  const run = async ()=>{
+    return _doCallGeminiAPI(prompt);
+  };
+  _geminiQueue = _geminiQueue.then(run, run);
+  return _geminiQueue;
+}
+
+async function _doCallGeminiAPI(prompt){
   const key = getGeminiKey();
   if(!key){
     setGeminiStatus('no-key','','ยังไม่ได้ตั้งค่า API Key');
     throw new Error('ยังไม่ได้ตั้งค่า Gemini API Key');
+  }
+
+  // Global cooldown after 429 (Retry-After honored)
+  const cdLeft = _geminiCooldownUntil - Date.now();
+  if(cdLeft > 0){
+    throw new Error(`Gemini cooldown · กรุณารอ ${Math.ceil(cdLeft/1000)} วินาที (หลังเจอ rate-limit)`);
+  }
+
+  // Client-side rate limit check (prevent 429 before it happens)
+  let rate = _geminiRateCheck();
+  while(!rate.ok){
+    if(rate.waitMs > 30000){
+      // Too long to wait — fail immediately
+      throw new Error(`Rate limit · ส่ง ${GEMINI_RPM_LIMIT} requests/นาทีไปแล้ว · รอ ${Math.ceil(rate.waitMs/1000)} วินาที`);
+    }
+    console.log(`[Gemini] rate limit hit, waiting ${rate.waitMs}ms...`);
+    await _sleep(rate.waitMs);
+    rate = _geminiRateCheck();
   }
 
   const body = {
@@ -2972,43 +3168,74 @@ async function _callGeminiAPI(prompt){
 
   // Single model — no fallback chain (every Free-tier flash model shares the same quota)
   const model = 'gemini-2.5-flash';
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-      { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }
-    );
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      const msg = err?.error?.message || res.statusText;
-      // Try to parse "Please retry in X.Xs" hint
-      const retryMatch = msg.match(/retry in (\d+\.?\d*)s/i);
-      const retryInfo = retryMatch ? ` (ลองใหม่ใน ${Math.ceil(parseFloat(retryMatch[1]))} วินาที)` : '';
-      // Update status passively from real chat result
-      if(res.status===429){
-        setGeminiStatus('error', model, `เกินโควต้า · ${msg.split('.')[0]}${retryInfo}`);
-        throw new Error(`Gemini เกินโควต้า${retryInfo} · ${msg}`);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const fetchOpts = { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) };
+
+  // Exponential backoff: try up to 3 times (initial + 2 retries) honoring Retry-After
+  const MAX_ATTEMPTS = 3;
+  let lastErr = null;
+  for(let attempt=1; attempt<=MAX_ATTEMPTS; attempt++){
+    try {
+      _geminiInflight = true;
+      _geminiHistAdd(Date.now()); // record before sending so concurrent calls see it
+      const res = await fetch(url, fetchOpts);
+      if(!res.ok){
+        const err = await res.json().catch(()=>({}));
+        const msg = err?.error?.message || res.statusText;
+        // Parse "retry in X.Xs" hint from Google
+        const retryMatch = msg.match(/retry in (\d+\.?\d*)s/i);
+        const serverRetrySec = retryMatch ? parseFloat(retryMatch[1]) : 0;
+
+        if(res.status===429){
+          // Set global cooldown so other queued requests fail fast
+          const cdMs = Math.max(serverRetrySec*1000, 5000);
+          _geminiCooldownUntil = Date.now() + cdMs;
+          setGeminiStatus('error', model, `เกินโควต้า · รอ ${Math.ceil(cdMs/1000)} วินาที`);
+          // Show visual cooldown banner so user sees the timer
+          if(typeof showCooldownBanner==='function') showCooldownBanner(Math.ceil(cdMs/1000));
+
+          // If this is not the last attempt, wait + retry
+          if(attempt < MAX_ATTEMPTS){
+            // Exponential backoff: 2^attempt seconds, capped + bonus from server hint
+            const backoffMs = Math.min(serverRetrySec*1000 + 500, 60000) || (Math.pow(2,attempt)*1000);
+            console.log(`[Gemini] 429 attempt ${attempt}/${MAX_ATTEMPTS}, waiting ${backoffMs}ms...`);
+            await _sleep(backoffMs);
+            // Reset cooldown so retry can proceed
+            _geminiCooldownUntil = 0;
+            continue;
+          }
+          throw new Error(`Gemini เกินโควต้า (retry ${MAX_ATTEMPTS} ครั้งแล้ว) · ${msg}`);
+        }
+        // Non-429 errors — fail immediately, no retry
+        setGeminiStatus('error', model, `${res.status}: ${msg}`);
+        throw new Error(`Gemini API ${res.status}: ${msg}`);
       }
-      setGeminiStatus('error', model, `${res.status}: ${msg}`);
-      throw new Error(`Gemini API ${res.status}: ${msg}`);
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(!text){
+        const finishReason = data?.candidates?.[0]?.finishReason;
+        const blockReason = data?.promptFeedback?.blockReason;
+        const detail = blockReason ? `บล็อกโดย safety filter (${blockReason})` : (finishReason||'no content');
+        setGeminiStatus('error', model, detail);
+        throw new Error(`Gemini: ${detail}`);
+      }
+      // Success
+      setGeminiStatus('ok', model, 'พร้อมใช้งาน');
+      _geminiInflight = false;
+      return text;
+    } catch(e){
+      _geminiInflight = false;
+      lastErr = e;
+      if(/Failed to fetch|NetworkError/i.test(e.message)){
+        setGeminiStatus('error', model, 'เชื่อมต่อไม่ได้ — ตรวจสอบเน็ตเวิร์ก');
+        throw e; // no retry on network error
+      }
+      // Re-throw if not 429-related
+      if(!/429|เกินโควต้า|exceeded/i.test(e.message)) throw e;
+      // Otherwise loop continues
     }
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if(!text){
-      const finishReason = data?.candidates?.[0]?.finishReason;
-      const blockReason = data?.promptFeedback?.blockReason;
-      const detail = blockReason ? `บล็อกโดย safety filter (${blockReason})` : (finishReason||'no content');
-      setGeminiStatus('error', model, detail);
-      throw new Error(`Gemini: ${detail}`);
-    }
-    // Success — passively confirms connectivity
-    setGeminiStatus('ok', model, 'พร้อมใช้งาน');
-    return text;
-  } catch(e){
-    if(/Failed to fetch|NetworkError/i.test(e.message)){
-      setGeminiStatus('error', model, 'เชื่อมต่อไม่ได้ — ตรวจสอบเน็ตเวิร์ก');
-    }
-    throw e;
   }
+  throw lastErr || new Error('Gemini: failed after retries');
 }
 
 function setGeminiStatus(state, model, message){
