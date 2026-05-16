@@ -2634,22 +2634,17 @@ function findRelevantKB(query, topN=3){
 }
 
 // Model fallback chain — try newer first, fall back if 404/403
-// Updated model list (May 2026) — 1.x series deprecated, 3.x added
-// Order = fallback priority for Free tier users (Flash models first, no Pro)
-// Pro models are excluded from auto-fallback because they have $0 free quota.
+// Free-tier only model list (verified working as of May 2026)
+// Order = fallback priority. Paid/preview/Pro models are NOT included.
 const GEMINI_MODELS = [
-  'gemini-flash-latest',          // auto alias — Google decides
-  'gemini-2.5-flash',             // ★ Free tier daily quota — แนะนำ
-  'gemini-2.5-flash-lite',        // ★ Free tier highest quota — ประหยัดสุด
-  'gemini-2.0-flash',             // ★ Free tier (deprecated มิ.ย. 2026)
-  'gemini-3.1-flash'              // 🌟 preview (free tier ยังไม่ stable)
+  'gemini-flash-latest',          // auto alias to current free flash
+  'gemini-2.5-flash',             // ★ stable, แนะนำ
+  'gemini-2.5-flash-lite',        // ★ stable, ประหยัดสุด
+  'gemini-2.0-flash'              // ★ stable (deprecate มิ.ย. 2026)
 ];
-// Models with NO free tier (paid only) — skipped in auto fallback
-const GEMINI_PAID_ONLY = new Set([
-  'gemini-2.5-pro',
-  'gemini-1.5-pro',
-  'gemini-3.1-pro-preview'
-]);
+// Dynamically populated when we detect "limit: 0" from Google for a given model.
+// Items in this set will be skipped automatically in both auto and explicit modes.
+const GEMINI_PAID_ONLY = new Set();
 let _geminiPreferredModel = localStorage.getItem('fw_gemini_model') || null;
 // Connection status: 'unknown' | 'ok' | 'error' | 'no-key'
 let GEMINI_STATUS = { state: 'unknown', model: null, message: '', lastChecked: 0 };
@@ -2944,38 +2939,30 @@ async function pingGemini(){
   return false;
 }
 
-// ---- Model picker popup ----
+// ---- Model picker popup (Free tier only) ----
 const GEMINI_MODEL_LABELS = {
   'gemini-flash-latest':       '⚡ Flash Latest',
   'gemini-2.5-flash':          '🚀 2.5 Flash',
   'gemini-2.5-flash-lite':     '🪶 2.5 Flash Lite',
-  'gemini-2.5-pro':            '💎 2.5 Pro',
-  'gemini-2.0-flash':          '✨ 2.0 Flash',
-  'gemini-3.1-flash':          '🌟 3.1 Flash',
-  'gemini-3.1-pro-preview':    '💠 3.1 Pro'
+  'gemini-2.0-flash':          '✨ 2.0 Flash'
 };
 const GEMINI_MODEL_NOTES = {
   'gemini-flash-latest':       'auto-update เป็นล่าสุด',
-  'gemini-2.5-flash':          'แนะนำ · stable · ฟรี',
-  'gemini-2.5-flash-lite':     'ประหยัดสุด · ฟรี',
-  'gemini-2.5-pro':            'คุณภาพสูง · ต้องจ่าย',
-  'gemini-2.0-flash':          'deprecate มิ.ย. 2026 · ฟรี',
-  'gemini-3.1-flash':          'preview · อาจไม่ฟรี',
-  'gemini-3.1-pro-preview':    'preview pro · ต้องจ่าย'
+  'gemini-2.5-flash':          'แนะนำ · stable',
+  'gemini-2.5-flash-lite':     'ประหยัดสุด · quota สูง',
+  'gemini-2.0-flash':          'จะ deprecate มิ.ย. 2026'
 };
-// Default list — will be replaced by live list from Google when popup opens
+// Default list — will be replaced/filtered by live list from Google when popup opens
 let GEMINI_MODEL_LIST = [
   'gemini-flash-latest',
   'gemini-2.5-flash',
   'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-3.1-flash',
-  'gemini-2.5-pro',
-  'gemini-3.1-pro-preview'
+  'gemini-2.0-flash'
 ];
 let _modelListFetched = false;
 
 // Fetch real available models from Google (populates GEMINI_MODEL_LIST)
+// Filters to FREE-tier only: keeps Flash variants, drops Pro/preview/embedding/tts/image/aqa
 async function fetchAvailableModels(){
   const key = getGeminiKey();
   if(!key) return null;
@@ -2984,15 +2971,23 @@ async function fetchAvailableModels(){
     if(!r.ok) return null;
     const data = await r.json();
     if(!data.models) return null;
-    // Filter: only models that support generateContent
     const available = data.models
       .filter(m => (m.supportedGenerationMethods||[]).includes('generateContent'))
       .map(m => m.name.replace(/^models\//,''))
-      .filter(name => /gemini/i.test(name) && !/embedding|aqa|tts|image/i.test(name));
+      .filter(name => /gemini/i.test(name))
+      .filter(name => !/embedding|aqa|tts|image|imagen|veo|vision/i.test(name))
+      // FREE TIER FILTER — drop Pro and explicit preview model IDs
+      .filter(name => !/pro/i.test(name))
+      .filter(name => !/preview/i.test(name))
+      // Keep only "flash" family (or alias "latest")
+      .filter(name => /flash|latest/i.test(name));
     if(available.length){
-      GEMINI_MODEL_LIST = available;
+      // De-dupe + sort: latest first, then 2.5, then 2.0, then lite, then exp
+      const order = ['gemini-flash-latest','gemini-2.5-flash','gemini-2.5-flash-lite','gemini-2.0-flash','gemini-2.0-flash-lite'];
+      const sorted = [...order.filter(o=>available.includes(o)), ...available.filter(a=>!order.includes(a))];
+      GEMINI_MODEL_LIST = sorted;
       _modelListFetched = true;
-      return available;
+      return sorted;
     }
   } catch(e){ console.warn('fetchAvailableModels:', e.message); }
   return null;
@@ -3027,34 +3022,23 @@ function renderModelPopup(){
   const cur = _geminiPreferredModel || '(auto)';
   if(curEl) curEl.textContent = cur;
   const sourceLabel = _modelListFetched ? '✓ จาก Google API' : '⚠️ default list';
-  // Group: Free tier first, then Paid
-  const freeList = GEMINI_MODEL_LIST.filter(m => !GEMINI_PAID_ONLY.has(m));
-  const paidList = GEMINI_MODEL_LIST.filter(m => GEMINI_PAID_ONLY.has(m));
+  // Free tier only — skip anything in PAID_ONLY (populated dynamically when we see limit:0)
+  const showList = GEMINI_MODEL_LIST.filter(m => !GEMINI_PAID_ONLY.has(m));
   const renderItem = (m)=>{
     const active = m===_geminiPreferredModel ? 'active' : '';
     const label = GEMINI_MODEL_LABELS[m] || ('🤖 '+m);
     const note = GEMINI_MODEL_NOTES[m] || '';
-    const tag = GEMINI_PAID_ONLY.has(m)
-      ? '<span style="background:#fee2e2;color:#991b1b;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto">💳 paid</span>'
-      : '<span style="background:#dcfce7;color:#166534;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto">✓ free</span>';
     return `<div class="mp-item ${active}" onclick="selectGeminiModel('${m}')">
       <span class="mp-dot"></span>
       <div style="display:flex;flex-direction:column;flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:6px"><span>${label}</span>${tag}</div>
+        <div style="display:flex;align-items:center;gap:6px"><span>${label}</span><span style="background:#dcfce7;color:#166534;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:auto">✓ free</span></div>
         ${note?`<span style="font-size:9px;color:#9ca3af">${note}</span>`:''}
       </div>
     </div>`;
   };
-  let html = '';
-  if(freeList.length){
-    html += '<div class="mp-head" style="font-size:9px;color:#166534">FREE TIER</div>';
-    html += freeList.map(renderItem).join('');
-  }
-  if(paidList.length){
-    html += '<div class="mp-head" style="font-size:9px;color:#991b1b;margin-top:6px">⚠️ ต้องเปิดบัญชี Paid</div>';
-    html += paidList.map(renderItem).join('');
-  }
-  html += `<div class="mp-item ${!_geminiPreferredModel?'active':''}" style="margin-top:6px;border-top:1px solid #e2e8f0;padding-top:8px" onclick="selectGeminiModel('')"><span class="mp-dot"></span><span>🔄 Auto (ลองหลาย model Free)</span></div>`;
+  let html = '<div class="mp-head" style="font-size:9px;color:#166534">FREE TIER MODELS</div>';
+  html += showList.map(renderItem).join('');
+  html += `<div class="mp-item ${!_geminiPreferredModel?'active':''}" style="margin-top:6px;border-top:1px solid #e2e8f0;padding-top:8px" onclick="selectGeminiModel('')"><span class="mp-dot"></span><span>🔄 Auto (ลองหลาย model)</span></div>`;
   list.innerHTML = html;
   const foot = document.getElementById('modelPopupFoot');
   if(foot) foot.innerHTML = `ใช้: <b id="mpCurModel">${cur}</b><br><span style="font-size:9px">${sourceLabel}</span> · <a href="#" onclick="refreshModelList(event)" style="color:#3b82f6;font-size:9px">🔄 refresh</a>`;
@@ -3199,12 +3183,18 @@ async function initApp() {
         _geminiKeyCache = remoteGemKey;
         // Fetch live model list from Google in background (so popup + fallback uses real list)
         fetchAvailableModels().catch(()=>{});
-        // Clear stale preferred model if it's known to be deprecated
-        const deprecated = ['gemini-1.5-pro','gemini-1.5-flash','gemini-pro','gemini-pro-vision'];
-        if(_geminiPreferredModel && deprecated.includes(_geminiPreferredModel)){
-          console.log('Clearing deprecated preferred model:', _geminiPreferredModel);
-          _geminiPreferredModel = null;
-          localStorage.removeItem('fw_gemini_model');
+        // Clear stale preferred model — anything not in the free-tier list now gets reset.
+        // Examples: deprecated 1.x, paid Pro variants, removed preview models like gemini-3.1-flash.
+        if(_geminiPreferredModel){
+          const isStillFree = GEMINI_MODELS.includes(_geminiPreferredModel) ||
+            /flash|latest/i.test(_geminiPreferredModel);
+          const looksDeprecated = /^gemini-(1\.5|pro|3\.1)/i.test(_geminiPreferredModel) ||
+            /preview/i.test(_geminiPreferredModel);
+          if(!isStillFree || looksDeprecated){
+            console.log('Clearing stale preferred model:', _geminiPreferredModel);
+            _geminiPreferredModel = null;
+            localStorage.removeItem('fw_gemini_model');
+          }
         }
       }
     } catch(e){ console.warn('initial sync failed:', e.message); }
