@@ -938,6 +938,7 @@ body{font-family:'Segoe UI','Noto Sans Thai',sans-serif;background:var(--bg);hei
     <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
       <button class="btn btn-ghost" style="justify-content:flex-start;gap:10px;font-size:13px" onclick="closeModal('userMenuModal');openUserMgmt()">👥 จัดการผู้ใช้</button>
       <button class="btn btn-ghost" onclick="closeModal('userMenuModal');openChangePinSelf()" style="justify-content:flex-start;gap:10px;font-size:13px">🔑 เปลี่ยน PIN ตัวเอง</button>
+      <button class="btn btn-ghost" onclick="closeModal('userMenuModal');doClearChatHistory()" style="justify-content:flex-start;gap:10px;font-size:13px">🗑️ ล้างประวัติแชท <span id="umChatCount" style="margin-left:auto;font-size:11px;color:var(--muted)"></span></button>
       <hr style="border:none;border-top:1px solid var(--border);margin:2px 0">
       <button class="btn btn-danger" style="justify-content:flex-start;gap:10px;font-size:13px" onclick="closeModal('userMenuModal');doLogout()">🚪 ออกจากระบบ</button>
     </div>
@@ -2218,7 +2219,95 @@ function importPWxlsx(e){const f=e.target.files[0];if(!f)return;const r=new File
 
 /* ===== CHAT ===== */
 let teachState=null;
-function addMsg(role,html){const m=document.getElementById('messages');const d=document.createElement('div');d.className=`msg ${role}`;const av=SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(SETTINGS.logoEmoji||'🤖');d.innerHTML=role==='bot'?`<div class="av bot">${av}</div><div class="bubble">${html}</div>`:`<div class="av usr">👤</div><div class="bubble">${html}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;}
+
+// Per-user chat history (kept locally for 7 days)
+const CHATHIST_TTL_MS = 7*24*60*60*1000; // 7 days
+function chathistKey(uid){ return `fw_chathist_${uid||'guest'}`; }
+function loadChatHistory(uid){
+  const arr = loadData(chathistKey(uid), []);
+  if(!Array.isArray(arr)) return [];
+  const cutoff = Date.now() - CHATHIST_TTL_MS;
+  const fresh = arr.filter(m=>m && m.ts && m.ts>=cutoff);
+  if(fresh.length !== arr.length) saveData(chathistKey(uid), fresh); // prune on read
+  return fresh;
+}
+function appendChatHistory(uid, role, html){
+  if(!uid) return;
+  const arr = loadChatHistory(uid);
+  arr.push({ role, html, ts: Date.now() });
+  // Cap at 500 entries per user to avoid quota issues
+  while(arr.length > 500) arr.shift();
+  saveData(chathistKey(uid), arr);
+}
+function clearChatHistory(uid){
+  if(!uid) return;
+  localStorage.removeItem(chathistKey(uid));
+}
+
+function addMsg(role,html,opts){
+  const m=document.getElementById('messages');
+  const d=document.createElement('div');
+  d.className=`msg ${role}`;
+  const av=SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(SETTINGS.logoEmoji||'🤖');
+  d.innerHTML=role==='bot'?`<div class="av bot">${av}</div><div class="bubble">${html}</div>`:`<div class="av usr">👤</div><div class="bubble">${html}</div>`;
+  m.appendChild(d);
+  m.scrollTop=m.scrollHeight;
+  // Persist to per-user history (skip when replaying history to avoid double-save)
+  if(currentUser && !(opts && opts.skipSave)){
+    appendChatHistory(currentUser.id, role, html);
+  }
+}
+
+// Replay saved messages on login (does NOT save back to history)
+function renderChatHistory(){
+  if(!currentUser) return;
+  const m = document.getElementById('messages');
+  if(!m) return;
+  const hist = loadChatHistory(currentUser.id);
+  if(!hist.length) return; // keep the default welcome bubble
+  // Replace the welcome with history + a small "history loaded" hint
+  m.innerHTML = '';
+  // Group-by-date separator
+  let lastDay = '';
+  hist.forEach(entry=>{
+    const d = new Date(entry.ts);
+    const day = d.toLocaleDateString('th-TH',{weekday:'short',day:'2-digit',month:'short'});
+    if(day !== lastDay){
+      const sep = document.createElement('div');
+      sep.style.cssText = 'text-align:center;margin:10px 0 6px;font-size:10px;color:var(--muted);font-weight:600';
+      sep.textContent = `— ${day} —`;
+      m.appendChild(sep);
+      lastDay = day;
+    }
+    addMsg(entry.role, entry.html, {skipSave:true});
+  });
+  // Footer hint
+  const hint = document.createElement('div');
+  hint.style.cssText='text-align:center;margin:8px 0;font-size:10px;color:var(--muted)';
+  hint.innerHTML = `📜 โหลดประวัติ ${hist.length} ข้อความ (เก็บ 7 วัน) · <a href="#" onclick="doClearChatHistory();return false" style="color:var(--primary)">ล้างประวัติ</a>`;
+  m.appendChild(hint);
+  m.scrollTop = m.scrollHeight;
+}
+
+function doClearChatHistory(){
+  if(!currentUser) return;
+  if(!confirm('ล้างประวัติแชทของคุณทั้งหมด?')) return;
+  clearChatHistory(currentUser.id);
+  // Reset to default welcome
+  const m = document.getElementById('messages');
+  if(m){
+    m.innerHTML = `<div class="msg bot">
+      <div class="av bot" id="botAvatar">${SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(SETTINGS.logoEmoji||'🤖')}</div>
+      <div class="bubble">
+        <h3>สวัสดีครับ! 👋 ยินดีต้อนรับสู่ FreeWill FX Support Bot</h3>
+        <p>ผมช่วยค้นหาข้อมูลจาก Knowledge Base ได้เลยครับ</p>
+        <div class="cmd-hint"><b>💡 คำสั่ง:</b> <b>/เพิ่ม</b> สอน | <b>/pw [บริษัท]</b> password | <b>/ดู</b> KB | <b>/export</b> | <b>/help</b></div>
+      </div>
+    </div>`;
+  }
+  document.getElementById('suggs').style.display='';
+  showToast('🗑️ ล้างประวัติแชทแล้ว');
+}
 function showTyping(){const m=document.getElementById('messages');const d=document.createElement('div');d.className='msg bot';d.id='typing';const av=SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(SETTINGS.logoEmoji||'🤖');d.innerHTML=`<div class="av bot">${av}</div><div class="typing"><div class="dot2"></div><div class="dot2"></div><div class="dot2"></div></div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;}
 function removeTyping(){const t=document.getElementById('typing');if(t)t.remove();}
 
@@ -2732,6 +2821,9 @@ function loginSuccess(user) {
   updateUserChip();
   renderChatTabs();
 
+  // Restore this user's chat history (last 7 days)
+  renderChatHistory();
+
   // Pull this user's quick links from GitHub (other-machine sync)
   if(getGHToken()){
     ghUserSLGet().then(slMap=>{
@@ -2763,6 +2855,18 @@ function doLogout() {
   currentUser = null;
   loginSelectedUser = null;
   pinBuffer = '';
+  // Reset DOM chat area to default welcome so next user doesn't see previous user's messages
+  const m = document.getElementById('messages');
+  if(m){
+    m.innerHTML = `<div class="msg bot">
+      <div class="av bot" id="botAvatar">${SETTINGS.logoImg?`<img src="${SETTINGS.logoImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`:(SETTINGS.logoEmoji||'🤖')}</div>
+      <div class="bubble">
+        <h3>สวัสดีครับ! 👋 ยินดีต้อนรับสู่ FreeWill FX Support Bot</h3>
+        <p>ผมช่วยค้นหาข้อมูลจาก Knowledge Base ได้เลยครับ</p>
+        <div class="cmd-hint"><b>💡 คำสั่ง:</b> <b>/เพิ่ม</b> สอน | <b>/pw [บริษัท]</b> password | <b>/ดู</b> KB | <b>/export</b> | <b>/help</b></div>
+      </div>
+    </div>`;
+  }
   document.getElementById('loginScreen').classList.remove('hidden');
   buildUserGrid();
   showLoginStep(1);
@@ -2796,6 +2900,10 @@ function openUserMenu() {
   document.getElementById('umMenuAv').textContent = currentUser.emoji || currentUser.name[0].toUpperCase();
   document.getElementById('umMenuAv').style.background = userColor(currentUser.id);
   document.getElementById('umMenuName').textContent = currentUser.name + (currentUser.role === 'admin' ? ' ⚙️' : '');
+  // Show how many chat messages are stored
+  const cnt = loadChatHistory(currentUser.id).length;
+  const cntEl = document.getElementById('umChatCount');
+  if(cntEl) cntEl.textContent = cnt ? `(${cnt} ข้อความ)` : '(ว่างเปล่า)';
   document.getElementById('userMenuModal').classList.add('open');
 }
 
@@ -2910,6 +3018,8 @@ function deleteUser(uid) {
   if (!confirm(`ลบผู้ใช้ "${u.name}"?`)) return;
   USERS = USERS.filter(x => x.id !== uid);
   saveData(USERS_KEY, USERS);
+  // also delete their local chat history
+  clearChatHistory(uid);
   renderUMList();
   buildUserGrid();
   showToast('🗑️ ลบแล้ว');
