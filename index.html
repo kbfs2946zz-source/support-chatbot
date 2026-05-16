@@ -2634,16 +2634,11 @@ function findRelevantKB(query, topN=3){
 }
 
 // Model fallback chain — try newer first, fall back if 404/403
-// Free-tier only model list (verified working as of May 2026)
-// Order = fallback priority. Paid/preview/Pro models are NOT included.
-const GEMINI_MODELS = [
-  'gemini-flash-latest',          // auto alias to current free flash
-  'gemini-2.5-flash',             // ★ stable, แนะนำ
-  'gemini-2.5-flash-lite',        // ★ stable, ประหยัดสุด
-  'gemini-2.0-flash'              // ★ stable (deprecate มิ.ย. 2026)
-];
-// Dynamically populated when we detect "limit: 0" from Google for a given model.
-// Items in this set will be skipped automatically in both auto and explicit modes.
+// Single-model setup — no fallback chain to avoid amplifying API spam.
+// ALL models share the same per-minute quota on free tier, so fallback never helps —
+// it only multiplies 429 errors. Use exactly one model: gemini-2.5-flash.
+const GEMINI_MODELS = ['gemini-2.5-flash'];
+// Kept for backward-compat with code paths that reference it (always empty now)
 const GEMINI_PAID_ONLY = new Set();
 let _geminiPreferredModel = localStorage.getItem('fw_gemini_model') || null;
 // Connection status: 'unknown' | 'ok' | 'error' | 'no-key'
@@ -2714,79 +2709,45 @@ async function _callGeminiAPI(prompt){
     ]
   };
 
-  // Try preferred model first, then walk down the fallback list
-  // Prefer live list from Google if we've fetched it
-  const baseList = (_modelListFetched && GEMINI_MODEL_LIST.length) ? GEMINI_MODEL_LIST : GEMINI_MODELS;
-  // In auto mode, skip paid-only models (no free quota); in explicit mode honor user's choice
-  const filteredList = _geminiPreferredModel
-    ? baseList
-    : baseList.filter(m => !GEMINI_PAID_ONLY.has(m));
-  const tryOrder = _geminiPreferredModel
-    ? [_geminiPreferredModel, ...filteredList.filter(m=>m!==_geminiPreferredModel)]
-    : filteredList.slice();
-
-  let lastErr = null;
-  for(const model of tryOrder){
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-        { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }
-      );
-      if(!res.ok){
-        const err = await res.json().catch(()=>({}));
-        const msg = err?.error?.message || res.statusText;
-        // 404 (model not found) or 400 with model error → try next model
-        if(res.status===404 || /model/i.test(msg)){
-          lastErr = new Error(`[${model}] ${res.status}: ${msg}`);
-          continue;
-        }
-        // 429 quota exceeded — if model is paid-only with no free tier, mark + fallback
-        // (the error message says "limit: 0" for paid-only models on free tier accounts)
-        if(res.status===429 && /limit: ?0/i.test(msg)){
-          GEMINI_PAID_ONLY.add(model); // mark dynamically — never try again automatically
-          lastErr = new Error(`[${model}] ไม่มี Free tier — ข้ามไป model ถัดไป`);
-          // If this was the preferred model, clear it so future calls fall back automatically
-          if(model === _geminiPreferredModel){
-            _geminiPreferredModel = null;
-            localStorage.removeItem('fw_gemini_model');
-          }
-          continue;
-        }
-        // 429 daily quota exceeded — wait time included in message
-        if(res.status===429){
-          lastErr = new Error(`[${model}] เกินโควต้ารายวัน · ${msg}`);
-          continue;
-        }
-        // Other errors (401/403/500) — fail immediately
-        setGeminiStatus('error', model, `${res.status}: ${msg}`);
-        throw new Error(`Gemini API ${res.status}: ${msg}`);
+  // Single model — no fallback chain (every Free-tier flash model shares the same quota)
+  const model = 'gemini-2.5-flash';
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+      { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) }
+    );
+    if(!res.ok){
+      const err = await res.json().catch(()=>({}));
+      const msg = err?.error?.message || res.statusText;
+      // Try to parse "Please retry in X.Xs" hint
+      const retryMatch = msg.match(/retry in (\d+\.?\d*)s/i);
+      const retryInfo = retryMatch ? ` (ลองใหม่ใน ${Math.ceil(parseFloat(retryMatch[1]))} วินาที)` : '';
+      // Update status passively from real chat result
+      if(res.status===429){
+        setGeminiStatus('error', model, `เกินโควต้า · ${msg.split('.')[0]}${retryInfo}`);
+        throw new Error(`Gemini เกินโควต้า${retryInfo} · ${msg}`);
       }
-      const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if(!text){
-        // Check for safety block reason
-        const finishReason = data?.candidates?.[0]?.finishReason;
-        const blockReason = data?.promptFeedback?.blockReason;
-        const detail = blockReason ? `บล็อกโดย safety filter (${blockReason})` : (finishReason||'no content');
-        lastErr = new Error(`[${model}] ${detail}`);
-        continue;
-      }
-      // Success — remember which model worked
-      _geminiPreferredModel = model;
-      localStorage.setItem('fw_gemini_model', model);
-      setGeminiStatus('ok', model, 'พร้อมใช้งาน');
-      return text;
-    } catch(e){
-      // Network errors, CORS, etc.
-      lastErr = e;
-      if(/Failed to fetch|NetworkError/i.test(e.message)){
-        setGeminiStatus('error', model, 'เชื่อมต่อไม่ได้ — ตรวจสอบเน็ตเวิร์ก');
-        throw e;
-      }
+      setGeminiStatus('error', model, `${res.status}: ${msg}`);
+      throw new Error(`Gemini API ${res.status}: ${msg}`);
     }
+    const data = await res.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!text){
+      const finishReason = data?.candidates?.[0]?.finishReason;
+      const blockReason = data?.promptFeedback?.blockReason;
+      const detail = blockReason ? `บล็อกโดย safety filter (${blockReason})` : (finishReason||'no content');
+      setGeminiStatus('error', model, detail);
+      throw new Error(`Gemini: ${detail}`);
+    }
+    // Success — passively confirms connectivity
+    setGeminiStatus('ok', model, 'พร้อมใช้งาน');
+    return text;
+  } catch(e){
+    if(/Failed to fetch|NetworkError/i.test(e.message)){
+      setGeminiStatus('error', model, 'เชื่อมต่อไม่ได้ — ตรวจสอบเน็ตเวิร์ก');
+    }
+    throw e;
   }
-  setGeminiStatus('error', null, lastErr?.message || 'ทุก model ใช้ไม่ได้');
-  throw lastErr || new Error('Gemini: ทุก model ใช้ไม่ได้');
 }
 
 function setGeminiStatus(state, model, message){
@@ -2822,12 +2783,12 @@ function updateGeminiStatusUI(){
   const dot = document.getElementById('connAI');
   if(dot){
     const key = getGeminiKey();
-    let cls='checking', title='กำลังตรวจสอบ...';
+    let cls='checking', title='ยังไม่ได้ตรวจสอบ — แชทเพื่อทดสอบ หรือ ⚙️ Keys → Test';
     if(!key){ cls='err'; title='ไม่มี Gemini key — Admin ต้องตั้งค่า'; }
-    else if(GEMINI_STATUS.state==='ok'){ cls='ok'; title=`Gemini พร้อม · ${GEMINI_STATUS.model}`; }
+    else if(GEMINI_STATUS.state==='ok'){ cls='ok'; title=`Gemini พร้อม · ${GEMINI_STATUS.model} · update เมื่อ ${fmtAgo(GEMINI_STATUS.lastChecked)}`; }
     else if(GEMINI_STATUS.state==='error'){ cls='err'; title=`Gemini error: ${GEMINI_STATUS.message}`; }
-    else { cls='checking'; title='Gemini ยังไม่ได้ทดสอบ'; }
-    dot.className='conn-dot '+cls;
+    else { cls='checking'; title='Gemini key ตั้งค่าแล้ว — รอแชทหรือกด Test เพื่อตรวจสถานะ'; }
+    dot.className='conn-dot '+cls+' clickable';
     dot.title=title;
   }
 }
@@ -2863,102 +2824,72 @@ async function pingServer(){
     return false;
   }
 }
-// Re-check periodically
+// On-demand connectivity checking — NO periodic ping (to avoid wasting Gemini quota)
+// - Server status: pinged ONCE at boot, then only on user action (saveAllTokens)
+// - Gemini status: pinged ONLY when user clicks "Test" in Settings.
+//   Real success/failure status is updated PASSIVELY from actual chat requests.
 function startConnectivityMonitor(){
-  // Initial ping
-  pingServer();
-  if(getGeminiKey()) pingGemini();
-  // Every 60s
-  setInterval(()=>{
-    if(navigator.onLine === false){
-      SERVER_STATUS={state:'error',message:'offline',lastChecked:Date.now()};
-      setGeminiStatus('error', GEMINI_STATUS.model, 'offline');
-      updateServerStatusUI();
-      updateGeminiStatusUI();
-      return;
-    }
-    pingServer();
-    if(getGeminiKey()) pingGemini();
-  }, 60000);
-  // React to browser online/offline events
-  window.addEventListener('online', ()=>{ pingServer(); if(getGeminiKey()) pingGemini(); });
+  // One-shot reachability check on boot (no periodic polling)
+  if(getGHToken()) pingServer();
+  // Mark Gemini as "unknown — test in Settings" if key exists but never pinged
+  if(getGeminiKey() && GEMINI_STATUS.state==='unknown'){
+    updateGeminiStatusUI(); // show yellow "?" badge
+  }
+  // React to browser online/offline events ONLY for the Server dot (no Gemini ping)
   window.addEventListener('offline', ()=>{
     SERVER_STATUS={state:'error',message:'offline',lastChecked:Date.now()};
     setGeminiStatus('error', GEMINI_STATUS.model, 'offline');
     updateServerStatusUI();
     updateGeminiStatusUI();
   });
+  window.addEventListener('online', ()=>{
+    // re-check server only (lightweight GET, no quota)
+    if(getGHToken()) pingServer();
+    // Gemini status reverts to "unknown" — wait for next user chat to verify
+    if(getGeminiKey() && GEMINI_STATUS.state==='error' && GEMINI_STATUS.message==='offline'){
+      setGeminiStatus('unknown', GEMINI_STATUS.model, 'รอ user เริ่มแชท หรือกด Test');
+      updateGeminiStatusUI();
+    }
+  });
 }
 
-// Lightweight ping to verify Gemini is reachable + key works, without sending RAG context
+// On-demand connectivity check (single GET — no quota cost).
+// Called only when user clicks "Test Gemini" in Settings.
+// Uses GET /models endpoint (not generateContent) so it doesn't consume RPM quota.
 async function pingGemini(){
   const key = getGeminiKey();
-  if(!key){ setGeminiStatus('no-key','',''); return false; }
-  // Skip paid-only models when auto-selecting (no free tier => limit:0)
-  const baseList = _geminiPreferredModel
-    ? GEMINI_MODELS
-    : GEMINI_MODELS.filter(m => !GEMINI_PAID_ONLY.has(m));
-  const tryOrder = _geminiPreferredModel
-    ? [_geminiPreferredModel, ...baseList.filter(m=>m!==_geminiPreferredModel)]
-    : baseList.slice();
-  let lastErr = null;
-  for(const model of tryOrder){
-    try {
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-        { method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({contents:[{parts:[{text:'ping'}]}], generationConfig:{maxOutputTokens:5}}) }
-      );
-      if(r.ok){
-        _geminiPreferredModel = model;
-        localStorage.setItem('fw_gemini_model', model);
-        setGeminiStatus('ok', model, 'พร้อมใช้งาน');
+  if(!key){ setGeminiStatus('no-key','','ยังไม่ได้ตั้งค่า API Key'); return false; }
+  try {
+    // GET /models — does NOT count against generate_content quota
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if(r.ok){
+      const data = await r.json().catch(()=>({}));
+      const hasFlash = (data.models||[]).some(m => /gemini-2\.5-flash/.test(m.name||''));
+      if(hasFlash){
+        setGeminiStatus('ok', 'gemini-2.5-flash', 'Key ถูกต้อง · พร้อมใช้งาน');
         return true;
       }
-      const err = await r.json().catch(()=>({}));
-      lastErr = err?.error?.message || `HTTP ${r.status}`;
-      // 429 with limit:0 means this model has no free tier — mark + continue
-      if(r.status===429 && /limit: ?0/i.test(lastErr)){
-        GEMINI_PAID_ONLY.add(model);
-        if(model === _geminiPreferredModel){
-          _geminiPreferredModel = null;
-          localStorage.removeItem('fw_gemini_model');
-        }
-        continue;
-      }
-      // 404 or model-not-found → try next; other errors fail fast
-      if(r.status!==404 && r.status!==429 && !/model/i.test(lastErr||'')) {
-        setGeminiStatus('error', model, `${r.status}: ${lastErr}`);
-        return false;
-      }
-    } catch(e){
-      lastErr = e.message;
+      setGeminiStatus('error', 'gemini-2.5-flash', 'Key ใช้ได้ แต่ไม่พบ Gemini 2.5 Flash ใน list');
+      return false;
     }
+    const err = await r.json().catch(()=>({}));
+    const msg = err?.error?.message || `HTTP ${r.status}`;
+    setGeminiStatus('error', 'gemini-2.5-flash', `${r.status}: ${msg}`);
+    return false;
+  } catch(e){
+    setGeminiStatus('error', 'gemini-2.5-flash', e.message || 'network error');
+    return false;
   }
-  setGeminiStatus('error', null, lastErr || 'ทุก model ใช้ไม่ได้');
-  return false;
 }
 
-// ---- Model picker popup (Free tier only) ----
+// ---- Model picker popup (single model only) ----
 const GEMINI_MODEL_LABELS = {
-  'gemini-flash-latest':       '⚡ Flash Latest',
-  'gemini-2.5-flash':          '🚀 2.5 Flash',
-  'gemini-2.5-flash-lite':     '🪶 2.5 Flash Lite',
-  'gemini-2.0-flash':          '✨ 2.0 Flash'
+  'gemini-2.5-flash': '🚀 Gemini 2.5 Flash'
 };
 const GEMINI_MODEL_NOTES = {
-  'gemini-flash-latest':       'auto-update เป็นล่าสุด',
-  'gemini-2.5-flash':          'แนะนำ · stable',
-  'gemini-2.5-flash-lite':     'ประหยัดสุด · quota สูง',
-  'gemini-2.0-flash':          'จะ deprecate มิ.ย. 2026'
+  'gemini-2.5-flash': 'Free tier · 10 RPM · 250 RPD'
 };
-// Default list — will be replaced/filtered by live list from Google when popup opens
-let GEMINI_MODEL_LIST = [
-  'gemini-flash-latest',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash'
-];
+let GEMINI_MODEL_LIST = ['gemini-2.5-flash'];
 let _modelListFetched = false;
 
 // Fetch real available models from Google (populates GEMINI_MODEL_LIST)
@@ -2999,13 +2930,8 @@ async function toggleModelPopup(e){
   if(!pop) return;
   const open = pop.classList.toggle('open');
   if(open){
-    renderModelPopup(); // render with cached list first
-    // Then fetch live list from Google (silent — re-render if different)
-    if(!_modelListFetched && getGeminiKey()){
-      fetchAvailableModels().then(list=>{
-        if(list && list.length) renderModelPopup();
-      });
-    }
+    renderModelPopup();
+    // NOTE: no more live model fetch — we only support gemini-2.5-flash
     setTimeout(()=>{
       document.addEventListener('click', _closeModelPopupOnce, {once:true});
     },10);
@@ -4550,7 +4476,12 @@ async function saveAllTokens(){
   showToast(`✅ บันทึก ${saved} แล้ว`);
   if(gh) setTimeout(()=>ghEnsureLabels(), 500);
   if(gh) setTimeout(()=>pingServer(), 600);
-  if(gk) setTimeout(()=>pingGemini(), 300); // verify connectivity immediately
+  // NOTE: no auto pingGemini — user should click "Test Gemini" in Settings or just start chatting.
+  // Reset Gemini status to "unknown" so the AI dot turns yellow until verified.
+  if(gk){
+    setGeminiStatus('unknown', 'gemini-2.5-flash', 'กรุณาแชทหรือกด Test เพื่อตรวจสถานะ');
+    updateGeminiStatusUI();
+  }
 }
 
 // Keep backward compat
@@ -4568,6 +4499,8 @@ async function testGHToken(){
   }catch(e){ res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b'; res.textContent=`❌ ${e.message}`; }
 }
 
+// Test Gemini key — uses GET /models (NOT generateContent) so it does NOT consume RPM quota.
+// Only does ONE generateContent call as final verification with a tiny prompt.
 async function testGeminiKey(){
   const k = document.getElementById('gemini-key-input').value.trim();
   const res = document.getElementById('geminiTestResult');
@@ -4577,40 +4510,56 @@ async function testGeminiKey(){
     return;
   }
   res.style.display='block'; res.style.background='#f1f5f9'; res.style.border='1px solid #e2e8f0'; res.style.color='#64748b';
-  res.textContent='🔄 กำลังทดสอบ Gemini... (จะลองหลาย model ตามลำดับ)';
-  let workedModel = null;
-  let lastErr = '';
-  for(const model of GEMINI_MODELS){
-    try{
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${k}`,{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({contents:[{parts:[{text:'ตอบว่า "OK" เป็นภาษาไทย'}]}], generationConfig:{maxOutputTokens:20}})
-      });
-      const d = await r.json();
-      if(r.ok){
-        const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text||'OK';
-        workedModel = model;
-        res.style.background='#f0fdf4'; res.style.border='1px solid #bbf7d0'; res.style.color='#065f46';
-        res.innerHTML=`✅ <b>เชื่อมต่อสำเร็จ</b><br>Model: <code style="background:#dcfce7;padding:1px 5px;border-radius:4px">${model}</code><br>ตอบว่า: "${escHtml(txt.trim().substring(0,80))}"`;
-        // Update preferred model + status
-        _geminiPreferredModel = model;
-        localStorage.setItem('fw_gemini_model', model);
-        setGeminiStatus('ok', model, 'พร้อมใช้งาน');
-        renderGeminiConnStatus();
-        return;
-      }
-      lastErr = `[${model}] ${d?.error?.message || r.status}`;
-      // 404 or model-related → try next; other errors fail fast
-      if(r.status!==404 && !/model/i.test(lastErr)) break;
-    } catch(e){
-      lastErr = `[${model}] ${e.message}`;
-      if(/Failed to fetch|NetworkError/i.test(e.message)) break;
+  res.textContent='🔄 กำลังตรวจ Key + reachability (GET /models — ไม่นับ quota)';
+  try {
+    // Step 1: validate key with GET /models (free)
+    const list = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${k}`);
+    if(!list.ok){
+      const d = await list.json().catch(()=>({}));
+      const msg = d?.error?.message || `HTTP ${list.status}`;
+      res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b';
+      res.innerHTML=`❌ <b>Key ไม่ถูกต้อง</b><br><span style="font-family:monospace;font-size:10px">${escHtml(msg)}</span>`;
+      setGeminiStatus('error', 'gemini-2.5-flash', msg);
+      renderGeminiConnStatus();
+      return;
     }
+    const data = await list.json().catch(()=>({}));
+    const hasFlash = (data.models||[]).some(m => /gemini-2\.5-flash/.test(m.name||''));
+    if(!hasFlash){
+      res.style.background='#fef3c7'; res.style.border='1px solid #fde68a'; res.style.color='#78350f';
+      res.innerHTML=`⚠️ <b>Key ใช้ได้</b> แต่ไม่พบ Gemini 2.5 Flash<br>ลอง create key ใหม่จาก project อื่น`;
+      return;
+    }
+    // Step 2: actual generateContent test (ONE call, consumes 1 quota slot)
+    res.textContent='✓ Key OK · กำลังทดสอบ generateContent...';
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${k}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({contents:[{parts:[{text:'ตอบว่า "OK" เป็นภาษาไทย'}]}], generationConfig:{maxOutputTokens:20}})
+    });
+    const d = await r.json();
+    if(r.ok){
+      const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text||'OK';
+      res.style.background='#f0fdf4'; res.style.border='1px solid #bbf7d0'; res.style.color='#065f46';
+      res.innerHTML=`✅ <b>เชื่อมต่อสำเร็จ</b><br>Model: <code style="background:#dcfce7;padding:1px 5px;border-radius:4px">gemini-2.5-flash</code><br>ตอบว่า: "${escHtml(txt.trim().substring(0,80))}"`;
+      setGeminiStatus('ok', 'gemini-2.5-flash', 'พร้อมใช้งาน');
+      renderGeminiConnStatus();
+      return;
+    }
+    const msg = d?.error?.message || `HTTP ${r.status}`;
+    res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b';
+    if(r.status===429){
+      res.innerHTML=`⚠️ <b>เกินโควต้าชั่วคราว</b> (10 RPM)<br><span style="font-family:monospace;font-size:10px">${escHtml(msg)}</span><br>รออีกสักครู่แล้วลองใหม่`;
+    } else {
+      res.innerHTML=`❌ <b>เชื่อมต่อไม่ได้</b><br><span style="font-family:monospace;font-size:10px">${escHtml(msg)}</span>`;
+    }
+    setGeminiStatus('error', 'gemini-2.5-flash', msg);
+    renderGeminiConnStatus();
+  } catch(e){
+    res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b';
+    res.innerHTML=`❌ <b>เชื่อมต่อไม่ได้</b><br><span style="font-family:monospace;font-size:10px">${escHtml(e.message)}</span>`;
+    setGeminiStatus('error', 'gemini-2.5-flash', e.message);
+    renderGeminiConnStatus();
   }
-  res.style.background='#fef2f2'; res.style.border='1px solid #fecaca'; res.style.color='#991b1b';
-  res.innerHTML=`❌ <b>เชื่อมต่อไม่ได้</b><br><span style="font-family:monospace;font-size:10px">${escHtml(lastErr)}</span>`;
-  setGeminiStatus('error', null, lastErr);
-  renderGeminiConnStatus();
 }
 
 /* ===== INIT ===== */
